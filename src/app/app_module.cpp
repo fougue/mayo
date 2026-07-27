@@ -59,8 +59,7 @@ QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
     constexpr QuantityLength baseDeviation = 1 * Quantity_Millimeter;
 
     Bnd_Box bndBox;
-    constexpr bool useTriangulation = true;
-    BRepBndLib::Add(shape, bndBox, !useTriangulation);
+    BRepBndLib::Add(shape, bndBox, false/*!useTriangulation*/);
     if (bndBox.IsVoid())
         return baseDeviation;
 
@@ -420,7 +419,14 @@ OccBRepMeshParameters AppModule::brepMeshParameters(const TopoDS_Shape& shape) c
 
 void AppModule::computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress)
 {
-    BRepUtils::computeMesh(shape, this->brepMeshParameters(shape), progress);
+    // NOTE BRepMesh_IncrementalMesh may go to infinite loop on degenerated cases(eg compound shape
+    //      containing one vertex) because of resulting deflection that would be very small and
+    //      not reachable regarding convergence
+    auto containsSubShape = [&](TopAbs_ShapeEnum shapeType) {
+      return BRepUtils::anySubShape(shape, shapeType, [](const TopoDS_Shape&) { return true; });
+    };
+    if (containsSubShape(TopAbs_EDGE) || containsSubShape(TopAbs_FACE))
+        BRepUtils::computeMesh(shape, this->brepMeshParameters(shape), progress);
 }
 
 void AppModule::computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress)

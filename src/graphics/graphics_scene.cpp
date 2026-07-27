@@ -297,6 +297,10 @@ AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
 
 void GraphicsScene::setOwnerSelected(const GraphicsOwnerPtr& owner, bool on)
 {
+    // Check if owner is null, to avoid exception in AIS_Context::SetSelectedState()
+    if (!owner)
+        return;
+
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     d->m_aisContext->SetSelectedState(owner, on);
 #else
@@ -309,13 +313,13 @@ void GraphicsScene::setOwnerSelected(const GraphicsOwnerPtr& owner, bool on)
 #endif
 }
 
-void GraphicsScene::toggleOwnerSelected(const GraphicsOwnerPtr& gfxOwner)
+void GraphicsScene::toggleOwnerSelected(const GraphicsOwnerPtr& owner)
 {
-    auto gfxObject = GraphicsObjectPtr::DownCast(
-        gfxOwner ? gfxOwner->Selectable() : OccHandle<SelectMgr_SelectableObject>()
+    auto object = GraphicsObjectPtr::DownCast(
+        owner ? owner->Selectable() : OccHandle<SelectMgr_SelectableObject>()
     );
-    if (GraphicsUtils::AisObject_isVisible(gfxObject))
-        d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
+    if (GraphicsUtils::AisObject_isVisible(object))
+        d->m_aisContext->AddOrRemoveSelected(owner, false);
 }
 
 void GraphicsScene::highlightAt(int xPos, int yPos, const OccHandle<V3d_View>& view)
