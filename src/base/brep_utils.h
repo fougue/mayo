@@ -46,6 +46,10 @@ struct BRepUtils {
     template<typename Function>
     static void forEachSubFace(const TopoDS_Shape& shape, Function fn);
 
+    // Checks if unary predicate 'fn' returns true for at least one sub-shape of type 'shapeType'
+    template<typename Predicate>
+    static bool anySubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, Predicate fn);
+
     // Is shape type 'lhs' more complex than 'rhs'?
     // Complexity here is the degree of abstraction provided(eg face type is more complex than edge type)
     static bool moreComplex(TopAbs_ShapeEnum lhs, TopAbs_ShapeEnum rhs);
@@ -102,6 +106,17 @@ void BRepUtils::forEachSubFace(const TopoDS_Shape& shape, Function fn)
 {
     for (TopExp_Explorer expl(shape, TopAbs_FACE); expl.More(); expl.Next())
         fn(TopoDS::Face(expl.Current()));
+}
+
+template<typename Predicate>
+bool BRepUtils::anySubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, Predicate fn)
+{
+    for (TopExp_Explorer expl(shape, shapeType); expl.More(); expl.Next()) {
+        if (fn(expl.Current()))
+            return true;
+    }
+
+    return false;
 }
 
 } // namespace Mayo

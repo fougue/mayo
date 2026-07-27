@@ -47,7 +47,15 @@ private slots:
     void DoubleToString_test();
     void StringConv_test();
 
-    void BRepUtils_test();
+    void BRepUtils_moreComplex_test();
+    void BRepUtils_hashCode_test();
+    void BRepUtils_anySubShape_nullShape_test();
+    void BRepUtils_anySubShape_emptyCompound_test();
+    void BRepUtils_anySubShape_noMatchingShape_test();
+    void BRepUtils_anySubShape_singleMatch_test();
+    void BRepUtils_anySubShape_multipleShapes_test();
+    void BRepUtils_anySubShape_stopOnFirstMatch_test();
+    void BRepUtils_anySubShape_shapeType_test();
 
     void CafUtils_labelTag_test();
     void CafUtils_getNamedDataKeys_test();
