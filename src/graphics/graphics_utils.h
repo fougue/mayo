@@ -9,7 +9,7 @@
 
 #include <Aspect_HatchStyle.hxx>
 #include <Bnd_Box.hxx>
-#include <Graphic3d_Vec2.hxx>
+#include <NCollection_Vec2.hxx>
 #include <Quantity_Color.hxx>
 
 // Note: can't include Aspect_DisplayConnection.hxx as this is causing name conflicts 

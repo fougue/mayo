@@ -32,4 +32,3 @@
 //#include <Standard_Handle.hxx>
 //#include <TDF_Label.hxx>
 //#include <TopoDS_Shape.hxx>
-//#include <NCollection_Vector.hxx>
