@@ -245,7 +245,7 @@ void WidgetClipPlanes::createPlaneCappingTexture()
         m_textureCapping = new GraphicsTexture2D(imageCapping);
         m_textureCapping->EnableModulate();
         m_textureCapping->EnableRepeat();
-        m_textureCapping->GetParams()->SetScale(Graphic3d_Vec2(0.05f, -0.05f));
+        m_textureCapping->GetParams()->SetScale(NCollection_Vec2<float>(0.05f, -0.05f));
     }
 #else
     // TODO Copy the image resource to a temporary file and call Image_AlienPixMap::Load(tempFilePath)

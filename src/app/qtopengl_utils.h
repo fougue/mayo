@@ -10,7 +10,7 @@
 #include <QtGui/QSurfaceFormat>
 
 #include <Aspect_Drawable.hxx>
-#include <Graphic3d_Vec2.hxx>
+#include <NCollection_Vec2.hxx>
 #include <OpenGl_Context.hxx>
 #include <V3d_View.hxx>
 class OpenGl_Caps;
