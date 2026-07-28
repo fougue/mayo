@@ -4,6 +4,7 @@
 ****************************************************************************/
 
 #include "../app/app_module.h"
+#include "../app/app_module_properties.h"
 #include "../app/library_info.h"
 #include "../base/application.h"
 #include "../base/io_system.h"

@@ -10,7 +10,7 @@
 
 #include "test_app.h"
 
-#include "../src/app/app_module.h"
+#include "../src/app/app_ui_state.h"
 #include "../src/app/document_files_watcher.h"
 #include "../src/app/qstring_utils.h"
 #include "../src/app/qtgui_utils.h"
@@ -226,9 +226,9 @@ void TestApp::RecentFiles_test()
     {
         QByteArray data;
         QDataStream wstream(&data, QIODevice::WriteOnly);
-        AppModule::writeRecentFiles(wstream, recentFiles);
+        RecentFileIO::write(wstream, recentFiles);
         QDataStream rstream(&data, QIODevice::ReadOnly);
-        AppModule::readRecentFiles(rstream, &recentFiles_read);
+        RecentFileIO::read(rstream, &recentFiles_read);
     }
 
     QCOMPARE(recentFiles.size(), recentFiles_read.size());
@@ -266,7 +266,7 @@ void TestApp::RecentFiles_QPixmap_test()
         RecentFiles recentFiles;
         QDataStream stream(bytes);
         // Should not crash
-        AppModule::readRecentFiles(stream, &recentFiles);
+        RecentFileIO::read(stream, &recentFiles);
     }
 }
 

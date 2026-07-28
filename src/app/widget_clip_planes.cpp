@@ -13,6 +13,7 @@
 #include "../graphics/graphics_texture2d.h"
 #include "../graphics/graphics_utils.h"
 #include "app_module.h"
+#include "app_module_properties.h"
 #include "ui_widget_clip_planes.h"
 
 #include <QtCore/QFile>

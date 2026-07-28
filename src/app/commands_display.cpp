@@ -12,6 +12,7 @@
 #include "../gui/v3d_view_controller.h"
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
+#include "app_module_properties.h"
 #include "theme.h"
 
 #include <V3d_View.hxx>

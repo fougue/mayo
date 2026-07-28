@@ -5,57 +5,50 @@
 
 #pragma once
 
-#include "app_module_properties.h"
 #include "document_tree_node_properties_providers.h"
 #include "library_info.h"
 #include "qstring_utils.h"
 
 #include "../base/application.h"
-#include "../base/io_parameters_provider.h"
-#include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_brep_mesh_parameters.h"
-#include "../base/property_value_conversion.h"
-#include "../base/settings.h"
-#include "../base/unit_system.h"
-
-#include <QtCore/QSize>
 
 #include <locale>
-#include <mutex>
 
-class QDataStream;
 class TDF_Label;
 class TopoDS_Shape;
 
 namespace Mayo {
 
-class GuiApplication;
-class GuiDocument;
+class AppModuleProperties;
+class Enumeration;
+class Settings;
 class TaskProgress;
+
+namespace IO {
+class System;
+class ParametersProvider;
+}
 
 // Provides the root application object as a singleton
 // Implements also the behavior specific to the application
-class AppModule :
-        public IO::ParametersProvider,
-        public PropertyValueConversion,
-        public Messenger
+class AppModule : public Messenger
 {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
-    virtual ~AppModule() = default;
+    virtual ~AppModule();
 
     // Query singleton instance
     static AppModule* get();
 
     // Application object
-    const ApplicationPtr& application() const { return m_application; }
+    const ApplicationPtr& application() const;
 
     // Settings
-    const AppModuleProperties* properties() const { return &m_props; }
-    AppModuleProperties* properties() { return &m_props; }
-    Settings* settings() { return &m_settings; }
-    const Settings* settings() const { return &m_settings; }
+    const AppModuleProperties* properties() const;
+    AppModuleProperties* properties();
+    Settings* settings();
+    const Settings* settings() const;
 
     // Predicate suitable to Settings::loadFrom() and Settings::saveAs()
     static bool excludeSettingPredicate(const Property& prop);
@@ -80,19 +73,9 @@ public:
 
     // Logging
     void clearMessageLog();
-    gsl::span<const Message> messageLog() const { return m_messageLog; }
+    gsl::span<const Messenger::Message> messageLog() const;
     Signal<const Messenger::Message&> signalMessage;
     Signal<> signalMessageLogCleared;
-
-    // Recent files
-    void prependRecentFile(const FilePath& fp);
-    const RecentFile* findRecentFile(const FilePath& fp) const;
-    void recordRecentFile(GuiDocument* guiDoc);
-    void recordRecentFiles(GuiApplication* guiApp);
-    QSize recentFileThumbnailSize() const { return { 190, 150 }; }
-    void setRecentFileThumbnailRecorder(std::function<Thumbnail(GuiDocument*, QSize)> fn);
-    static void readRecentFiles(QDataStream& stream, RecentFiles* recentFiles);
-    static void writeRecentFiles(QDataStream& stream, const RecentFiles& recentFiles);
 
     // Meshing of BRep shapes
     OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;
@@ -104,17 +87,10 @@ public:
     const DocumentTreeNodePropertiesProvider* findPropertiesProvider(const DocumentTreeNode& treeNode) const;
     std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const;
 
-    // IO::System object
-    const IO::System* ioSystem() const { return &m_ioSystem; }
-    IO::System* ioSystem() { return &m_ioSystem; }
-
-    // -- from IO::ParametersProvider
-    const PropertyGroup* findReaderParameters(IO::Format format) const override;
-    const PropertyGroup* findWriterParameters(IO::Format format) const override;
-
-    // -- from PropertyValueConversion
-    Settings::Variant toVariant(const Property& prop) const override;
-    bool fromVariant(Property* prop, const Settings::Variant& variant) const override;
+    // IO objects
+    const IO::ParametersProvider* ioParametersProvider() const;
+    const IO::System* ioSystem() const;
+    IO::System* ioSystem();
 
     // -- from Messenger
     void emitMessage(MessageType msgType, std::string_view text) override;
@@ -124,19 +100,8 @@ private:
     AppModule(const AppModule&) = delete; // Not copyable
     AppModule& operator=(const AppModule&) = delete; // Not copyable
 
-    bool impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc);
-
-    ApplicationPtr m_application;
-    Settings m_settings;
-    IO::System m_ioSystem;
-    AppModuleProperties m_props;
-    std::vector<Messenger::Message> m_messageLog;
-    std::mutex m_mutexMessageLog;
-    std::locale m_stdLocale;
-    QLocale m_qtLocale;
-    std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecDocTreeNodePropsProvider;
-    std::function<Thumbnail(GuiDocument*, QSize)> m_fnRecentFileThumbnailRecorder;
-    std::vector<LibraryInfo> m_vecLibraryInfo;
+    struct Private;
+    Private* const d = nullptr;
 };
 
 } // namespace Mayo

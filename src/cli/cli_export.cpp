@@ -8,6 +8,7 @@
 #include "console.h"
 #include "../app/app_module.h"
 #include "../base/application.h"
+#include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/task_manager.h"
@@ -106,7 +107,7 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
     const bool okImport = appModule->ioSystem()->importInDocument()
         .targetDocument(doc)
         .withFilepaths(args.filesToOpen)
-        .withParametersProvider(appModule)
+        .withParametersProvider(appModule->ioParametersProvider())
         .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
             appModule->computeBRepMesh(labelEntity, progress);
         })
@@ -132,7 +133,7 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
                 .targetFile(filepath)
                 .targetFormat(format)
                 .withItems(appItems)
-                .withParameters(appModule->findWriterParameters(format))
+                .withParameters(appModule->ioParametersProvider()->findWriterParameters(format))
                 .withMessenger(&errorCollect)
                 .withTaskProgress(progress)
                 .execute();

@@ -14,6 +14,7 @@
 #include "../qtcommon/qstring_conv.h"
 
 #include "app_module.h"
+#include "app_module_properties.h"
 #include "commands_api.h"
 #include "commands_file.h"
 #include "commands_window.h"
