@@ -107,12 +107,13 @@ void TestApp::BRepMeshingUtils_compute_allQualityLevels_test()
 
 void TestApp::BRepMeshingUtils_compute_userDefined_test()
 {
-    const TopoDS_Shape shape = BRepPrimAPI_MakeSphere(20.);
+    const TopoDS_Shape shape = BRepPrimAPI_MakeSphere(20);
     BRepMeshingOptions options;
     options.quality = BRepMeshingOptions::Quality::UserDefined;
-    options.customChordalDeflection = 0.1 * Quantity_Millimeter;
-    options.customAngularDeflection = 5 * Quantity_Degree;
+    options.customChordalDeflection = 0.2 * Quantity_Millimeter;
+    options.customAngularDeflection = 10 * Quantity_Degree;
     BRepMeshingUtils::compute(shape, options);
+    qDebug() << "triCount=" << meshTriangleCount(shape);
     QVERIFY(meshTriangleCount(shape) > 0);
 }
 

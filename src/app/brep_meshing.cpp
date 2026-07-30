@@ -49,17 +49,16 @@ const BRepMeshingOptions::Coefficients& BRepMeshingOptions::coefficients(Quality
 
 QuantityLength BRepMeshingUtils::chordalDeflectionEstimate(const TopoDS_Shape& shape)
 {
+    constexpr QuantityLength defaultDeviation = 1 * Quantity_Millimeter;
     // Excerpted from Prs3d::GetDeflection(...)
-    constexpr QuantityLength baseDeviation = 1 * Quantity_Millimeter;
-
     Bnd_Box bndBox;
     BRepBndLib::Add(shape, bndBox, false/*!useTriangulation*/);
     if (bndBox.IsVoid())
-        return baseDeviation;
+        return defaultDeviation;
 
     if (BndUtils::isOpen(bndBox)) {
         if (!BndUtils::hasFinitePart(bndBox))
-            return baseDeviation;
+            return defaultDeviation;
 
         bndBox = BndUtils::finitePart(bndBox);
     }
@@ -67,7 +66,8 @@ QuantityLength BRepMeshingUtils::chordalDeflectionEstimate(const TopoDS_Shape& s
     const auto coords = BndBoxCoords::get(bndBox);
     const gp_XYZ diag = coords.maxVertex().XYZ() - coords.minVertex().XYZ();
     const double diagMaxComp = std::max({ diag.X(), diag.Y(), diag.Z() });
-    return 4 * diagMaxComp * baseDeviation;
+    constexpr double relativeDeviation = 0.001; // 0.1%
+    return (4 * diagMaxComp * relativeDeviation) * Quantity_Millimeter;
 }
 
 void BRepMeshingUtils::compute(
@@ -80,13 +80,13 @@ void BRepMeshingUtils::compute(
     params.AllowQualityDecrease = true;
 #endif
     if (options.quality == BRepMeshingOptions::Quality::UserDefined) {
-        params.Deflection = UnitSystem::meters(options.customChordalDeflection);
+        params.Deflection = UnitSystem::millimeters(options.customChordalDeflection);
         params.Angle = UnitSystem::radians(options.customAngularDeflection);
         params.Relative = options.customRelative;
     }
     else {
         const BRepMeshingOptions::Coefficients& coeffs = options.coefficients(options.quality);
-        params.Deflection = UnitSystem::meters(coeffs.chordalDeflection * chordalDeflectionEstimate(shape));
+        params.Deflection = UnitSystem::millimeters(coeffs.chordalDeflection * chordalDeflectionEstimate(shape));
         params.Angle = UnitSystem::radians(coeffs.angularDeflection * (20 * Quantity_Degree));
     }
 
