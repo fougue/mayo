@@ -27,11 +27,13 @@
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
 #include "app_module.h"
+#include "app_module_properties.h"
 #include "commands_help.h"
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
 #include "qtgui_utils.h"
 #include "qtopengl_utils.h"
+#include "recent_files.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_mesh.h"
@@ -322,7 +324,7 @@ static int runApp(QCoreApplication* qtApp)
     // Initialize AppModule
     auto appModule = AppModule::get();
     appModule->settings()->setStorage(std::make_unique<QSettingsStorage>());
-    appModule->setRecentFileThumbnailRecorder(&createGuiDocumentThumbnail);
+    appModule->properties()->recentFiles.setThumbnailGenerator(&createGuiDocumentThumbnail);
     appModule->addLibraryInfo(
         IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
     );
@@ -384,7 +386,9 @@ static int runApp(QCoreApplication* qtApp)
     }
 
     // Record recent files when documents are closed
-    guiApp->signalGuiDocumentErased.connectSlot(&AppModule::recordRecentFile, AppModule::get());
+    guiApp->signalGuiDocumentErased.connectSlot([=](GuiDocument* guiDoc) {
+        AppModule::get()->properties()->recentFiles.record(guiDoc);
+    });
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -426,7 +430,7 @@ static int runApp(QCoreApplication* qtApp)
     fnLoadAppSettings(appModule->settings());
     try {
         const int code = qtApp->exec();
-        appModule->recordRecentFiles(guiApp.get());
+        appModule->properties()->recentFiles.record(guiApp.get());
         appModule->settings()->save();
         return code;
     }

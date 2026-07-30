@@ -11,6 +11,7 @@
 #include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
+#include "app_module_properties.h"
 #include "qstring_utils.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"

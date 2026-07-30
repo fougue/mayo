@@ -23,9 +23,9 @@ class GuiDocument;
 //     - when a Base::Document is created, a corresponding GuiDocument object is automatically created
 //     - when a Base::Document is closed, the mapped GuiDocument is automatically destroyed
 //
-// Typically application code should not create/destroy GuiDocument(s), this is the
-// responsability of a central GuiApplication object. In some corner-case scenarios though, this
-// behavior can be switched off with GuiApplication::setAutomaticDocumentMapping(false)
+// Application code should not create/destroy GuiDocument(s), this is the responsability of a
+// central GuiApplication object. In some corner-case scenarios though, this behavior can be
+// switched off with GuiApplication::setAutomaticDocumentMapping(false)
 //
 // GuiApplication acts also as a container of GraphicsObjectDriver objects.
 // Those drivers are used by GuiDocument to automatically create 3D graphics representing the

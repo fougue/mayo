@@ -8,8 +8,10 @@
 #include "../base/settings.h"
 #include "../qtcommon/filepath_conv.h"
 #include "app_module.h"
+#include "app_module_properties.h"
 #include "qstring_utils.h"
 #include "qtgui_utils.h"
+#include "recent_files.h"
 #include "theme.h"
 
 #include <QtCore/QtDebug>
@@ -83,7 +85,7 @@ public:
             pixmap = fnPixmap(mayoTheme()->icon(Theme::Icon::OpenFiles), 128, 96);
         }
         else {
-            const RecentFile* recentFile = AppModule::get()->findRecentFile(filepathFrom(url));
+            auto recentFile = AppModule::get()->properties()->recentFiles.find(filepathFrom(url));
             if (recentFile)
                 pixmap = QtGuiUtils::toQPixmap(recentFile->thumbnail.imageData);
 
@@ -151,7 +153,8 @@ private:
                         "Size: %2\n\n"
                         "Created: %3\n"
                         "Modified: %4\n"
-                        "Read: %5\n")
+                        "Read: %5\n"
+                    )
                     .arg(QDir::toNativeSeparators(fi.absolutePath()))
                     .arg(QStringUtils::bytesText(fi.size(), appModule->qtLocale()))
                     .arg(fnToString(fi.birthTime()))
@@ -220,7 +223,7 @@ WidgetHomeFiles::WidgetHomeFiles(QWidget* parent)
 
     m_gridDelegate = new HomeFilesDelegate(this);
     m_gridDelegate->setItemSize(m_gridView->itemSize());
-    m_gridDelegate->setItemPixmapSize(appModule->recentFileThumbnailSize());
+    m_gridDelegate->setItemPixmapSize(appModule->properties()->recentFiles.thumbnailSize());
     m_gridView->setItemDelegate(m_gridDelegate);
 
     appModule->settings()->signalChanged.connectSlot([=](const Property* setting) {

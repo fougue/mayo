@@ -654,6 +654,7 @@ list(
     ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.h
     ${PROJECT_SOURCE_DIR}/src/app/app_module.h
     ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.h
+    ${PROJECT_SOURCE_DIR}/src/app/brep_meshing.h
     ${PROJECT_SOURCE_DIR}/src/app/library_info.h
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.h
 )
@@ -669,6 +670,7 @@ list(
     ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
     ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
     ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/brep_meshing.cpp
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
 )
 if(WIN32)
@@ -727,6 +729,7 @@ if(Mayo_BuildTests)
         ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
         ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
         ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/brep_meshing.cpp
         ${PROJECT_SOURCE_DIR}/src/app/document_files_watcher.cpp
         ${PROJECT_SOURCE_DIR}/src/app/qstring_utils.cpp
         ${PROJECT_SOURCE_DIR}/src/app/qtgui_utils.cpp

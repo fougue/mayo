@@ -14,6 +14,7 @@
 #include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
+#include "app_module_properties.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 

@@ -10,16 +10,20 @@
 
 #include "test_app.h"
 
-#include "../src/app/app_module.h"
+#include "../src/app/app_ui_state.h"
+#include "../src/app/brep_meshing.h"
 #include "../src/app/document_files_watcher.h"
 #include "../src/app/qstring_utils.h"
 #include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
 #include "../src/base/application.h"
+#include "../src/base/brep_utils.h"
 #include "../src/base/document.h"
 #include "../src/qtcommon/filepath_conv.h"
 #include "../src/qtcommon/qstring_conv.h"
 #include "../src/qtcommon/qtcore_utils.h"
+
+#include <BRepPrimAPI_MakeSphere.hxx>
 
 #include <QtCore/QtDebug>
 #include <QtCore/QDataStream>
@@ -63,7 +67,55 @@ RecentFile createRecentFile(const QPixmap& thumbnail)
     return rf;
 }
 
+int meshTriangleCount(const TopoDS_Shape& shape)
+{
+    int count = 0;
+    BRepUtils::forEachSubFace(shape, [&](const TopoDS_Face& face) {
+        TopLoc_Location loc;
+        auto tri = BRep_Tool::Triangulation(face, loc);
+        count += tri ? tri->NbTriangles() : 0;
+    });
+    return count;
+}
+
 } // namespace
+
+void TestApp::BRepMeshingUtils_compute_allQualityLevels_test()
+{
+    const BRepMeshingOptions::Quality qualities[] = {
+        BRepMeshingOptions::Quality::VeryCoarse,
+        BRepMeshingOptions::Quality::Coarse,
+        BRepMeshingOptions::Quality::Normal,
+        BRepMeshingOptions::Quality::Precise,
+        BRepMeshingOptions::Quality::VeryPrecise
+    };
+
+    int previousTriangleCount = 0;
+
+    for (auto quality : qualities) {
+        const TopoDS_Shape shape = BRepPrimAPI_MakeSphere(20.);
+        BRepMeshingUtils::compute(shape, {quality});
+
+        const int triangles = meshTriangleCount(shape);
+        QVERIFY(triangles > 0);
+        // Expected behavior: finer quality should not reduce mesh density
+        QVERIFY(triangles >= previousTriangleCount);
+
+        previousTriangleCount = triangles;
+    }
+}
+
+void TestApp::BRepMeshingUtils_compute_userDefined_test()
+{
+    const TopoDS_Shape shape = BRepPrimAPI_MakeSphere(20);
+    BRepMeshingOptions options;
+    options.quality = BRepMeshingOptions::Quality::UserDefined;
+    options.customChordalDeflection = 0.2 * Quantity_Millimeter;
+    options.customAngularDeflection = 10 * Quantity_Degree;
+    BRepMeshingUtils::compute(shape, options);
+    qDebug() << "triCount=" << meshTriangleCount(shape);
+    QVERIFY(meshTriangleCount(shape) > 0);
+}
 
 void TestApp::DocumentFilesWatcher_test()
 {
@@ -226,9 +278,9 @@ void TestApp::RecentFiles_test()
     {
         QByteArray data;
         QDataStream wstream(&data, QIODevice::WriteOnly);
-        AppModule::writeRecentFiles(wstream, recentFiles);
+        RecentFileIO::write(wstream, recentFiles);
         QDataStream rstream(&data, QIODevice::ReadOnly);
-        AppModule::readRecentFiles(rstream, &recentFiles_read);
+        RecentFileIO::read(rstream, &recentFiles_read);
     }
 
     QCOMPARE(recentFiles.size(), recentFiles_read.size());
@@ -266,7 +318,7 @@ void TestApp::RecentFiles_QPixmap_test()
         RecentFiles recentFiles;
         QDataStream stream(bytes);
         // Should not crash
-        AppModule::readRecentFiles(stream, &recentFiles);
+        RecentFileIO::read(stream, &recentFiles);
     }
 }
 

@@ -6,12 +6,15 @@
 #include "commands_file.h"
 
 #include "../base/application.h"
+#include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
 #include "../base/task_manager.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
+#include "app_module_properties.h"
+#include "brep_meshing.h"
 #include "recent_files.h"
 #include "theme.h"
 
@@ -187,9 +190,9 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, gsl::span<con
                     appModule->ioSystem()->importInDocument()
                         .targetDocument(app->findDocumentByIdentifier(newDocId))
                         .withFilepath(fp)
-                        .withParametersProvider(appModule)
-                        .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
-                            appModule->computeBRepMesh(labelEntity, progress);
+                        .withParametersProvider(appModule->ioParametersProvider())
+                        .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                            BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
                         })
                         .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                         .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
@@ -201,7 +204,7 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, gsl::span<con
             });
             context->taskMgr()->setTitle(taskId, fp.stem().u8string());
             context->taskMgr()->run(taskId);
-            appModule->prependRecentFile(fp);
+            appModule->properties()->recentFiles.prepend(fp);
         }
         else {
             if (listFilePath.size() == 1)
@@ -245,9 +248,9 @@ void FileCommandTools::importInDocument(
             appModule->ioSystem()->importInDocument()
                 .targetDocument(doc)
                 .withFilepaths(arrayFilePaths)
-                .withParametersProvider(appModule)
-                .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
-                    appModule->computeBRepMesh(labelEntity, progress);
+                .withParametersProvider(appModule->ioParametersProvider())
+                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                    BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
                 })
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                 .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
@@ -456,7 +459,7 @@ void CommandExportSelectedApplicationItems::execute()
                 .targetFile(filepathFrom(strFilepath))
                 .targetFormat(format)
                 .withItems(this->guiApp()->selectionModel()->selectedItems())
-                .withParameters(appModule->findWriterParameters(format))
+                .withParameters(appModule->ioParametersProvider()->findWriterParameters(format))
                 .withMessenger(appModule)
                 .withTaskProgress(progress)
             .execute();
