@@ -122,7 +122,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
     });
     settings->addResetFunction(groupId_meshing, [this]{
-        this->meshingQuality.setValue(BRepMeshQuality::Normal);
+        this->meshingQuality.setValue(BRepMeshingOptions::Quality::Normal);
         this->meshingChordalDeflection.setQuantity(1 * Quantity_Millimeter);
         this->meshingAngularDeflection.setQuantity(20 * Quantity_Degree);
         this->meshingRelative.setValue(false);
@@ -280,7 +280,7 @@ void AppModuleProperties::onPropertyChanged(Property* prop)
         GraphicsMeshObjectDriver::setDefaultValues(values);
     }
     else if (prop == &this->meshingQuality) {
-        const bool isUserDefined = this->meshingQuality.value() == BRepMeshQuality::UserDefined;
+        const bool isUserDefined = this->meshingQuality.value() == BRepMeshingOptions::Quality::UserDefined;
         this->meshingChordalDeflection.setEnabled(isUserDefined);
         this->meshingAngularDeflection.setEnabled(isUserDefined);
         this->meshingRelative.setEnabled(isUserDefined);
@@ -292,6 +292,19 @@ void AppModuleProperties::onPropertyChanged(Property* prop)
 Aspect_TypeOfTriedronPosition AppModuleProperties::graphicsViewCubeCornerValue() const
 {
     return static_cast<Aspect_TypeOfTriedronPosition>(this->viewCubeCorner.value());
+}
+
+BRepMeshingOptions AppModuleProperties::meshingOptions() const
+{
+    BRepMeshingOptions options;
+    options.quality = meshingQuality.value();
+    if (options.quality == BRepMeshingOptions::Quality::UserDefined) {
+        options.customChordalDeflection = meshingChordalDeflection.quantity();
+        options.customAngularDeflection = meshingAngularDeflection.quantity();
+        options.customRelative = meshingRelative.value();
+    }
+
+    return options;
 }
 
 } // namespace Mayo

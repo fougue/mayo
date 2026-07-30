@@ -280,6 +280,6 @@ void PropertyRecentFiles::record(GuiApplication* guiApp)
     this->setValue(newListRecentFile);
 }
 
-template<> const char PropertyRecentFiles::TypeName[] = "Mayo::PropertyRecentFiles";
+template<> const char GenericProperty<RecentFiles>::TypeName[] = "Mayo::PropertyRecentFiles";
 
 } // namespace Mayo

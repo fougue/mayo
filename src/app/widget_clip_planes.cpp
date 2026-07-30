@@ -152,8 +152,8 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     });
 
     QObject::connect(posSlider, &QSlider::valueChanged, this, [=](int pct) {
-        const double pos = ui.sliderValueToSpinValue(pct);
         [[maybe_unused]] QSignalBlocker sigBlock(posSpin);
+        const double pos = ui.sliderValueToSpinValue(pct);
         posSpin->setValue(pos);
         GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, pos);
         m_view.redraw();
@@ -217,8 +217,7 @@ void WidgetClipPlanes::setPlaneRange(ClipPlaneData* data, const Range& range)
     const double gap = (rmax - rmin) * 0.01;
     const double mid = rmin + (rmax - rmin) / 2.;
     const bool isCurrPlanePosValid = rmin <= currPlanePos && currPlanePos <= rmax;
-    const bool isEmptyPosSpinRange =
-        std::abs(posSpin->maximum() - posSpin->minimum()) < Precision::Confusion();
+    const bool isEmptyPosSpinRange = MathUtils::fuzzyEqual(posSpin->minimum(), posSpin->maximum());
     const bool useMidValue = isEmptyPosSpinRange || !isCurrPlanePosValid;
     const double newPlanePos = useMidValue ? mid : currPlanePos;
     posSpin->setRange(rmin - gap, rmax + gap);

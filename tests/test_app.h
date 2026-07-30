@@ -17,6 +17,9 @@ namespace Mayo {
 class TestApp : public QObject {
     Q_OBJECT
 private slots:
+    void BRepMeshingUtils_compute_allQualityLevels_test();
+    void BRepMeshingUtils_compute_userDefined_test();
+
     void DocumentFilesWatcher_test();
 
     void FilePathConv_test();

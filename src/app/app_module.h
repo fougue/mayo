@@ -11,19 +11,14 @@
 
 #include "../base/application.h"
 #include "../base/messenger.h"
-#include "../base/occ_brep_mesh_parameters.h"
 
 #include <locale>
-
-class TDF_Label;
-class TopoDS_Shape;
 
 namespace Mayo {
 
 class AppModuleProperties;
 class Enumeration;
 class Settings;
-class TaskProgress;
 
 namespace IO {
 class System;
@@ -76,11 +71,6 @@ public:
     gsl::span<const Messenger::Message> messageLog() const;
     Signal<const Messenger::Message&> signalMessage;
     Signal<> signalMessageLogCleared;
-
-    // Meshing of BRep shapes
-    OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;
-    void computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress = nullptr);
-    void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
     // Providers to query document tree node properties
     void addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr);

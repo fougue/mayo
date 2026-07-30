@@ -11,15 +11,19 @@
 #include "test_app.h"
 
 #include "../src/app/app_ui_state.h"
+#include "../src/app/brep_meshing.h"
 #include "../src/app/document_files_watcher.h"
 #include "../src/app/qstring_utils.h"
 #include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
 #include "../src/base/application.h"
+#include "../src/base/brep_utils.h"
 #include "../src/base/document.h"
 #include "../src/qtcommon/filepath_conv.h"
 #include "../src/qtcommon/qstring_conv.h"
 #include "../src/qtcommon/qtcore_utils.h"
+
+#include <BRepPrimAPI_MakeSphere.hxx>
 
 #include <QtCore/QtDebug>
 #include <QtCore/QDataStream>
@@ -63,7 +67,54 @@ RecentFile createRecentFile(const QPixmap& thumbnail)
     return rf;
 }
 
+int meshTriangleCount(const TopoDS_Shape& shape)
+{
+    int count = 0;
+    BRepUtils::forEachSubFace(shape, [&](const TopoDS_Face& face) {
+        TopLoc_Location loc;
+        auto tri = BRep_Tool::Triangulation(face, loc);
+        count += tri ? tri->NbTriangles() : 0;
+    });
+    return count;
+}
+
 } // namespace
+
+void TestApp::BRepMeshingUtils_compute_allQualityLevels_test()
+{
+    const BRepMeshingOptions::Quality qualities[] = {
+        BRepMeshingOptions::Quality::VeryCoarse,
+        BRepMeshingOptions::Quality::Coarse,
+        BRepMeshingOptions::Quality::Normal,
+        BRepMeshingOptions::Quality::Precise,
+        BRepMeshingOptions::Quality::VeryPrecise
+    };
+
+    int previousTriangleCount = 0;
+
+    for (auto quality : qualities) {
+        const TopoDS_Shape shape = BRepPrimAPI_MakeSphere(20.);
+        BRepMeshingUtils::compute(shape, {quality});
+
+        const int triangles = meshTriangleCount(shape);
+        QVERIFY(triangles > 0);
+        // Expected behavior: finer quality should not reduce mesh density
+        QVERIFY(triangles >= previousTriangleCount);
+
+        previousTriangleCount = triangles;
+    }
+}
+
+void TestApp::BRepMeshingUtils_compute_userDefined_test()
+{
+    const TopoDS_Shape shape = BRepPrimAPI_MakeSphere(20.);
+    BRepMeshingOptions options;
+    options.quality = BRepMeshingOptions::Quality::UserDefined;
+    options.customChordalDeflection = 0.1 * Quantity_Millimeter;
+    options.customAngularDeflection = 5 * Quantity_Degree;
+    BRepMeshingUtils::compute(shape, options);
+    QVERIFY(meshTriangleCount(shape) > 0);
+}
 
 void TestApp::DocumentFilesWatcher_test()
 {

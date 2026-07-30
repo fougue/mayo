@@ -15,6 +15,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/settings.h"
 #include "../base/unit_system.h"
+#include "brep_meshing.h"
 #include "view3d_navigation_style.h"
 
 #include <Aspect_TypeOfTriedronPosition.hxx>
@@ -51,6 +52,8 @@ public:
 
     Aspect_TypeOfTriedronPosition graphicsViewCubeCornerValue() const;
 
+    BRepMeshingOptions meshingOptions() const;
+
     // Settings groups
     const Settings::GroupIndex groupId_system;
     const Settings::GroupIndex groupId_application;
@@ -72,11 +75,10 @@ public:
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     PropertyAppUiState appUiState{ this, textId("appUiState") };
     // Meshing
-    enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
-    PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
-    PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
-    PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
-    PropertyBool meshingRelative{ this, textId("meshingRelative") };
+    PropertyEnum<BRepMeshingOptions::Quality> meshingQuality{ this, textId("meshingQuality") };
+    PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") }; // ⚠User-defined
+    PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };  // ⚠User-defined
+    PropertyBool meshingRelative{ this, textId("meshingRelative") };                     // ⚠User-defined
     // Graphics
     PropertyEnum<View3dNavigationStyle> navigationStyle{ this, textId("navigationStyle") };
     PropertyEnumeration viewCubeCorner; // Enum: Aspect_TypeOfTriedronPosition

@@ -7,6 +7,8 @@
 
 #include "console.h"
 #include "../app/app_module.h"
+#include "../app/app_module_properties.h"
+#include "../app/brep_meshing.h"
 #include "../base/application.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
@@ -109,7 +111,7 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
         .withFilepaths(args.filesToOpen)
         .withParametersProvider(appModule->ioParametersProvider())
         .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-            appModule->computeBRepMesh(labelEntity, progress);
+            BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
         })
         .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
         .withEntityPostProcessInfoProgress(20, CliExport::textIdTr("Mesh BRep shapes"))

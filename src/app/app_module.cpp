@@ -6,18 +6,14 @@
 #include "app_module.h"
 
 #include "app_module_properties.h"
-#include "../base/bnd_utils.h"
-#include "../base/brep_utils.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
-#include "../base/tkernel_utils.h"
 #include "../qtcommon/qtcore_utils.h"
 
-#include <BRepBndLib.hxx>
-
+#include <QtCore/QDataStream>
 #include <QtCore/QDir>
 #include <QtCore/QtDebug>
 
@@ -97,29 +93,6 @@ private:
     const std::unordered_map<IO::Format, PropertyGroup*>& m_mapFormatReaderParameters;
     const std::unordered_map<IO::Format, PropertyGroup*>& m_mapFormatWriterParameters;
 };
-
-QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
-{
-    // Excerpted from Prs3d::GetDeflection(...)
-    constexpr QuantityLength baseDeviation = 1 * Quantity_Millimeter;
-
-    Bnd_Box bndBox;
-    BRepBndLib::Add(shape, bndBox, false/*!useTriangulation*/);
-    if (bndBox.IsVoid())
-        return baseDeviation;
-
-    if (BndUtils::isOpen(bndBox)) {
-        if (!BndUtils::hasFinitePart(bndBox))
-            return baseDeviation;
-
-        bndBox = BndUtils::finitePart(bndBox);
-    }
-
-    const auto coords = BndBoxCoords::get(bndBox);
-    const gp_XYZ diag = coords.maxVertex().XYZ() - coords.minVertex().XYZ();
-    const double diagMaxComp = std::max({ diag.X(), diag.Y(), diag.Z() });
-    return 4 * diagMaxComp * baseDeviation;
-}
 
 } // namespace
 
@@ -305,62 +278,6 @@ void AppModule::clearMessageLog()
 gsl::span<const Messenger::Message> AppModule::messageLog() const
 {
     return d->m_messageLog;
-}
-
-OccBRepMeshParameters AppModule::brepMeshParameters(const TopoDS_Shape& shape) const
-{
-    using BRepMeshQuality = AppModuleProperties::BRepMeshQuality;
-
-    OccBRepMeshParameters params;
-    params.InParallel = true;
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    params.AllowQualityDecrease = true;
-#endif
-    if (this->properties()->meshingQuality == BRepMeshQuality::UserDefined) {
-        params.Deflection = UnitSystem::meters(this->properties()->meshingChordalDeflection.quantity());
-        params.Angle = UnitSystem::radians(this->properties()->meshingAngularDeflection.quantity());
-        params.Relative = this->properties()->meshingRelative;
-    }
-    else {
-        struct Coefficients {
-            double chordalDeflection;
-            double angularDeflection;
-        };
-        auto fnCoefficients = [](BRepMeshQuality meshQuality) -> Coefficients {
-            switch (meshQuality) {
-            case BRepMeshQuality::VeryCoarse: return { 8, 4 };
-            case BRepMeshQuality::Coarse: return { 4, 2 };
-            case BRepMeshQuality::Normal: return { 1, 1 };
-            case BRepMeshQuality::Precise: return { 1/4., 1/2. };
-            case BRepMeshQuality::VeryPrecise: return { 1/8., 1/4. };
-            case BRepMeshQuality::UserDefined: return { -1, -1 };
-            }
-            return { 1, 1 };
-        };
-        const Coefficients coeffs = fnCoefficients(this->properties()->meshingQuality);
-        params.Deflection = UnitSystem::meters(coeffs.chordalDeflection * shapeChordalDeflection(shape));
-        params.Angle = UnitSystem::radians(coeffs.angularDeflection * (20 * Quantity_Degree));
-    }
-
-    return params;
-}
-
-void AppModule::computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress)
-{
-    // NOTE BRepMesh_IncrementalMesh may go to infinite loop on degenerated cases(eg compound shape
-    //      containing one vertex) because of resulting deflection that would be very small and
-    //      not reachable regarding convergence
-    auto containsSubShape = [&](TopAbs_ShapeEnum shapeType) {
-      return BRepUtils::anySubShape(shape, shapeType, [](const TopoDS_Shape&) { return true; });
-    };
-    if (containsSubShape(TopAbs_EDGE) || containsSubShape(TopAbs_FACE))
-        BRepUtils::computeMesh(shape, this->brepMeshParameters(shape), progress);
-}
-
-void AppModule::computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress)
-{
-    if (XCaf::isShape(labelEntity))
-        this->computeBRepMesh(XCaf::shape(labelEntity), progress);
 }
 
 void AppModule::addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr)

@@ -14,6 +14,7 @@
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
 #include "app_module_properties.h"
+#include "brep_meshing.h"
 #include "recent_files.h"
 #include "theme.h"
 
@@ -190,8 +191,8 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, gsl::span<con
                         .targetDocument(app->findDocumentByIdentifier(newDocId))
                         .withFilepath(fp)
                         .withParametersProvider(appModule->ioParametersProvider())
-                        .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
-                            appModule->computeBRepMesh(labelEntity, progress);
+                        .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                            BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
                         })
                         .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                         .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
@@ -248,8 +249,8 @@ void FileCommandTools::importInDocument(
                 .targetDocument(doc)
                 .withFilepaths(arrayFilePaths)
                 .withParametersProvider(appModule->ioParametersProvider())
-                .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
-                    appModule->computeBRepMesh(labelEntity, progress);
+                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                    BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
                 })
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                 .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
