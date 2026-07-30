@@ -4,6 +4,7 @@
 ****************************************************************************/
 
 #include "qstring_utils.h"
+#include "../base/tkernel_utils.h"
 
 #include <gp_Trsf.hxx>
 #include <Precision.hxx>
@@ -86,10 +87,12 @@ QString QStringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
 
 QString QStringUtils::text(const Quantity_Color& color, const QString& format)
 {
-    const int red = color.Red() * 255;
-    const int green = color.Green() * 255;
-    const int blue = color.Blue() * 255;
-    return format.arg(red).arg(green).arg(blue);
+    NCollection_Vec3<double> rgb;
+    color.Values(rgb.r(), rgb.g(), rgb.b(), TKernelUtils::preferredRgbColorType());
+    rgb.r() = Round(rgb.r() * 255.);
+    rgb.g() = Round(rgb.g() * 255.);
+    rgb.b() = Round(rgb.b() * 255.);
+    return format.arg(int(rgb.r())).arg(int(rgb.g())).arg(int(rgb.b()));
 }
 
 QString QStringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)
