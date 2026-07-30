@@ -610,8 +610,13 @@ Format probeFormat_IGES(const System::FormatProbeInput& input)
 
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 {
-    const std::regex rx{ R"(^\s*DBRep_DrawableShape)" };
-    return matchRegExp_atStart(input.contentsBegin, rx) ? Format_OCCBREP : Format_Unknown;
+    const std::regex rxAscii{ R"(^\s*DBRep_DrawableShape)" };
+    if (matchRegExp_atStart(input.contentsBegin, rxAscii)) {
+        return Format_OCCBREP;
+    }
+
+    const std::regex rxBin{ R"(^\s*Open CASCADE Topology V)" };
+    return matchRegExp_atStart(input.contentsBegin, rxBin) ? Format_OCCBINBREP : Format_Unknown;
 }
 
 Format probeFormat_STL(const System::FormatProbeInput& input)

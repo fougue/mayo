@@ -24,6 +24,7 @@ enum Format {
     Format_IGES,
     Format_OBJ,
     Format_OCCBREP,
+    Format_OCCBINBREP,
     Format_OFF,
     Format_PLY,
     Format_STEP,
