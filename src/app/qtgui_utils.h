@@ -18,6 +18,7 @@
 #include <type_traits>
 
 class QMouseEvent;
+class QWheelEvent;
 class QScreen;
 
 // Provides a collection of tools for the QtGui module
@@ -68,6 +69,7 @@ QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* scre
 // This is a helper function to facilitates Qt5/Qt6 portability as Qt5 QMouseEvent::globalPos() has
 // been deprecated in Qt6
 QPoint globalPosition(const QMouseEvent* event);
+QPoint globalPosition(const QWheelEvent* event);
 
 // Fluent-like helper to change font properties
 class FontChange {

@@ -12,11 +12,21 @@
 
 #include <Graphic3d_Camera.hxx>
 #include <V3d_View.hxx>
+
+#if OCC_VERSION_HEX >= 0x070400
+#include <AIS_ViewController.hxx>
+#define MAYO_USE_AIS_VIEWCONTROLLER
+#endif
+
 #include <memory>
 
 namespace Mayo {
 
-class V3dViewController {
+class V3dViewController
+#ifdef MAYO_USE_AIS_VIEWCONTROLLER
+: protected AIS_ViewController
+#endif
+{
 public:
     enum class DynamicAction {
         None,
@@ -59,6 +69,8 @@ public:
 
 protected:
     struct Position { int x; int y; };
+
+    void zoomAt(const Position& currPos, const double delta);
 
     virtual void startDynamicAction(DynamicAction dynAction);
     virtual void stopDynamicAction();

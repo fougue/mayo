@@ -17,6 +17,25 @@ V3dViewController::V3dViewController(const OccHandle<V3d_View>& view)
 {
 }
 
+void V3dViewController::zoomAt(const Position& currPos, const double delta)
+{
+#ifdef MAYO_USE_AIS_VIEWCONTROLLER
+    Aspect_ScrollDelta scrollInfo(Graphic3d_Vec2i(currPos.x, currPos.y), delta * AIS_ViewController::myScrollZoomRatio);
+    AIS_ViewController::handleZoom(m_view, scrollInfo, nullptr);
+    // with AIS_InteractiveContext the tool will be able to pick 3D point to zoom at within perspective camera
+    //AIS_ViewController::UpdateMouseScroll(scrollInfo);
+    //AIS_ViewController::FlushViewEvents(m_aisCtx, m_view, true);
+    this->redrawView();
+    this->signalViewScaled.send();
+#else
+    (void)currPos;
+    if (delta > 0)
+        this->zoomIn();
+    else
+        this->zoomOut();
+#endif
+}
+
 void V3dViewController::zoomIn()
 {
     m_view->SetScale(m_view->Scale() * 1.1); // +10%

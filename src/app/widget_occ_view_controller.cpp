@@ -282,10 +282,10 @@ void WidgetOccViewController::handleMouseButtonRelease(const QMouseEvent* event)
 void WidgetOccViewController::handleMouseWheel(const QWheelEvent* event)
 {
     const QPoint delta = event->angleDelta();
-    if (delta.y() > 0 || (delta.y() == 0 && delta.x() > 0))
-        this->zoomIn();
-    else
-        this->zoomOut();
+
+    Position pos = toPosition(m_occView->widget()->mapFromGlobal(QtGuiUtils::globalPosition(event)));
+    double zoomDelta = delta.y() != 0 ? delta.y() : delta.x();
+    this->zoomAt(pos, double(zoomDelta) / 120.0); // Qt returns delta as a number of ticks out of 120
 }
 
 class WidgetOccViewController::Mayo_ActionMatcher : public ActionMatcher {
