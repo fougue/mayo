@@ -5,6 +5,7 @@
 
 #include "qtgui_utils.h"
 #include "../base/math_utils.h"
+#include "../base/tkernel_utils.h"
 
 #include <Standard_Version.hxx>
 
@@ -37,7 +38,12 @@ constexpr bool isInRange(double v, double start, double end)
 
 QColor toQColor(const Quantity_Color& c)
 {
-    return QColor(c.Red() * 255., c.Green() * 255., c.Blue() * 255.);
+    NCollection_Vec3<double> rgb;
+    c.Values(rgb.r(), rgb.g(), rgb.b(), TKernelUtils::preferredRgbColorType());
+    rgb.r() = Round(rgb.r() * 255.);
+    rgb.g() = Round(rgb.g() * 255.);
+    rgb.b() = Round(rgb.b() * 255.);
+    return QColor(int(rgb.r()), int(rgb.g()), int(rgb.b()));
 }
 
 QColor toQColor(const Quantity_ColorRGBA& c)
