@@ -9,6 +9,7 @@
 
 #include <Quantity_Color.hxx>
 #include <Standard_Version.hxx>
+#include <array>
 #include <string>
 #include <string_view>
 
@@ -42,6 +43,9 @@ public:
 
     static const char* errorMessage(const Standard_Failure& err);
     static const char* errorTypeName(const Standard_Failure& err);
+
+    // Converts a Quantity_Color to an 8‑bit RGB triplet
+    static std::array<uint8_t, 3> colorToRgb8(const Quantity_Color& color);
 
     // Encodes 'color' into hexadecimal representation with #RRGGBB format
     static std::string colorToHex(const Quantity_Color& color);

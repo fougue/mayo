@@ -38,12 +38,8 @@ constexpr bool isInRange(double v, double start, double end)
 
 QColor toQColor(const Quantity_Color& c)
 {
-    NCollection_Vec3<double> rgb;
-    c.Values(rgb.r(), rgb.g(), rgb.b(), TKernelUtils::preferredRgbColorType());
-    rgb.r() = Round(rgb.r() * 255.);
-    rgb.g() = Round(rgb.g() * 255.);
-    rgb.b() = Round(rgb.b() * 255.);
-    return QColor(int(rgb.r()), int(rgb.g()), int(rgb.b()));
+    auto rgb8 = TKernelUtils::colorToRgb8(c);
+    return QColor(rgb8[0], rgb8[1], rgb8[2]);
 }
 
 QColor toQColor(const Quantity_ColorRGBA& c)

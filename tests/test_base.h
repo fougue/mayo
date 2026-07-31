@@ -70,6 +70,8 @@ private slots:
 
     void Quantity_test();
 
+    void TKernelUtils_colorToRgb8_test();
+    void TKernelUtils_colorToRgb8_test_data();
     void TKernelUtils_colorToHex_test();
     void TKernelUtils_colorToHex_test_data();
     void TKernelUtils_colorFromHex_test();

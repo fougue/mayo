@@ -892,6 +892,44 @@ void TestBase::Quantity_test()
     QCOMPARE((Quantity_Millimeter / 5.).value(), 1/5.);
 }
 
+void TestBase::TKernelUtils_colorToRgb8_test()
+{
+    QFETCH(double, r);
+    QFETCH(double, g);
+    QFETCH(double, b);
+
+    QFETCH(int, er);
+    QFETCH(int, eg);
+    QFETCH(int, eb);
+
+    Quantity_Color c(r, g, b, TKernelUtils::preferredRgbColorType());
+    auto rgb = TKernelUtils::colorToRgb8(c);
+
+    QCOMPARE(int(rgb[0]), er);
+    QCOMPARE(int(rgb[1]), eg);
+    QCOMPARE(int(rgb[2]), eb);
+}
+
+void TestBase::TKernelUtils_colorToRgb8_test_data()
+{
+    QTest::addColumn<double>("r");
+    QTest::addColumn<double>("g");
+    QTest::addColumn<double>("b");
+
+    QTest::addColumn<int>("er");
+    QTest::addColumn<int>("eg");
+    QTest::addColumn<int>("eb");
+
+    QTest::newRow("black") << 0.0 << 0.0 << 0.0   << 0   << 0   << 0;
+    QTest::newRow("white") << 1.0 << 1.0 << 1.0   << 255 << 255 << 255;
+    QTest::newRow("red")   << 1.0 << 0.0 << 0.0   << 255 << 0   << 0;
+    QTest::newRow("green") << 0.0 << 1.0 << 0.0   << 0   << 255 << 0;
+    QTest::newRow("blue")  << 0.0 << 0.0 << 1.0   << 0   << 0   << 255;
+    QTest::newRow("intermediate") << 0.5 << 0.25 << 0.75  << 128 << 64 << 191;
+    QTest::newRow("round up")   << 0.501 << 0.0 << 0.0   << 128 << 0 << 0;
+    QTest::newRow("round down") << 0.499 << 0.0 << 0.0   << 127 << 0 << 0;
+}
+
 void TestBase::TKernelUtils_colorToHex_test()
 {
     QFETCH(int, red);

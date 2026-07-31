@@ -38,6 +38,17 @@ const char* TKernelUtils::errorTypeName(const Standard_Failure& err)
 #endif
 }
 
+std::array<uint8_t, 3> TKernelUtils::colorToRgb8(const Quantity_Color& color)
+{
+    std::array<double, 3> rgb;
+    color.Values(rgb[0], rgb[1], rgb[2], TKernelUtils::preferredRgbColorType());
+    return {
+        static_cast<uint8_t>(std::round(rgb[0] * 255.)),
+        static_cast<uint8_t>(std::round(rgb[1] * 255.)),
+        static_cast<uint8_t>(std::round(rgb[2] * 255.))
+    };
+}
+
 std::string TKernelUtils::colorToHex(const Quantity_Color& color)
 {
 //#if OCC_VERSION_HEX >= 0x070400
