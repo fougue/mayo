@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "../base/tkernel_utils.h"
+
 #include <Quantity_Color.hxx>
 #include <Quantity_ColorRGBA.hxx>
 #include <Quantity_NameOfColor.hxx>
@@ -28,10 +30,10 @@ QColor toQColor(const Quantity_Color& c);
 QColor toQColor(const Quantity_ColorRGBA& c);
 QColor toQColor(Quantity_NameOfColor c);
 
-template <typename OtherColorType>
+template<typename OtherColorType>
 OtherColorType toColor(const QColor& c);
 
-template <Quantity_TypeOfColor OtherColorType>
+template<Quantity_TypeOfColor OtherColorType>
 Quantity_Color toColor(const QColor& c);
 
 Quantity_Color toPreferredColorSpace(const QColor& c);
@@ -90,23 +92,23 @@ private:
 // -- Implementation
 // --
 
-template <typename OtherColorType>
+template<typename OtherColorType>
 OtherColorType toColor(const QColor& c) {
     if constexpr(std::is_same_v<OtherColorType, Quantity_Color>) {
-        return Quantity_Color(c.redF(), c.greenF(), c.blueF(), Quantity_TOC_RGB);
+        return Quantity_Color{c.redF(), c.greenF(), c.blueF(), TKernelUtils::preferredRgbColorType()};
     }
     if constexpr(std::is_same_v<OtherColorType, Quantity_ColorRGBA>) {
-        return Quantity_ColorRGBA(c.redF(), c.greenF(), c.blueF(), c.alphaF());
+        return Quantity_ColorRGBA{toColor<Quantity_Color>(c), static_cast<float>(c.alphaF())};
     }
     else if constexpr(std::is_same_v<OtherColorType, Quantity_NameOfColor>) {
         return QtGuiUtils::toColor<Quantity_Color>(c).Name();
     }
 }
 
-template <Quantity_TypeOfColor OtherColorType>
+template<Quantity_TypeOfColor OtherColorType>
 Quantity_Color toColor(const QColor& c)
 {
-    return Quantity_Color(c.redF(), c.greenF(), c.blueF(), OtherColorType);
+    return Quantity_Color{c.redF(), c.greenF(), c.blueF(), OtherColorType};
 }
 
 } // namespace Mayo::QtGuiUtils
