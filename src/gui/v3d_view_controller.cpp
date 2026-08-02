@@ -6,29 +6,68 @@
 #include "v3d_view_controller.h"
 #include "../base/unit_system.h"
 
+#include <Graphic3d_Camera.hxx>
 #include <V3d_View.hxx>
+#if OCC_VERSION_HEX >= 0x070400
+#  include <AIS_ViewController.hxx>
+#endif
+
 #include <algorithm>
 #include <cmath>
 
 namespace Mayo {
 
+namespace {
+
+#if OCC_VERSION_HEX >= 0x070400
+class AisViewControllerImpl : public AIS_ViewController {
+public:
+    void zoomAt(const OccHandle<V3d_View>& view, int xPos, int yPos, double delta)
+    {
+        const Aspect_ScrollDelta scrollInfo(
+            NCollection_Vec2<int>{xPos, yPos}, delta * this->myScrollZoomRatio
+        );
+        AIS_ViewController::handleZoom(view, scrollInfo, nullptr);
+        // with AIS_InteractiveContext the tool will be able to pick 3D point to zoom at within perspective camera
+        //AIS_ViewController::UpdateMouseScroll(scrollInfo);
+        //AIS_ViewController::FlushViewEvents(m_aisCtx, m_view, true);
+    }
+};
+#endif
+
+} // namespace
+
+class V3dViewController::Private {
+public:
+    OccHandle<V3d_View> m_view;
+    DynamicAction m_dynamicAction = DynamicAction::None;
+    std::unique_ptr<IRubberBand> m_rubberBand;
+    double m_instantZoomFactor = 5.;
+    OccHandle<Graphic3d_Camera> m_cameraBackup;
+    Position m_posRubberBandStart = {};
+#if OCC_VERSION_HEX >= 0x070400
+    AisViewControllerImpl m_aisViewCtrl;
+#endif
+};
+
 V3dViewController::V3dViewController(const OccHandle<V3d_View>& view)
-    : m_view(view)
+    : d(new Private)
 {
+    d->m_view = view;
 }
 
-void V3dViewController::zoomAt(const Position& currPos, const double delta)
+V3dViewController::~V3dViewController()
 {
-#ifdef MAYO_USE_AIS_VIEWCONTROLLER
-    Aspect_ScrollDelta scrollInfo(Graphic3d_Vec2i(currPos.x, currPos.y), delta * AIS_ViewController::myScrollZoomRatio);
-    AIS_ViewController::handleZoom(m_view, scrollInfo, nullptr);
-    // with AIS_InteractiveContext the tool will be able to pick 3D point to zoom at within perspective camera
-    //AIS_ViewController::UpdateMouseScroll(scrollInfo);
-    //AIS_ViewController::FlushViewEvents(m_aisCtx, m_view, true);
+    delete d;
+}
+
+void V3dViewController::zoomAt([[maybe_unused]]const Position& currPos, double delta)
+{
+#if OCC_VERSION_HEX >= 0x070400
+    d->m_aisViewCtrl.zoomAt(d->m_view, currPos.x, currPos.y, delta);
     this->redrawView();
     this->signalViewScaled.send();
 #else
-    (void)currPos;
     if (delta > 0)
         this->zoomIn();
     else
@@ -38,22 +77,32 @@ void V3dViewController::zoomAt(const Position& currPos, const double delta)
 
 void V3dViewController::zoomIn()
 {
-    m_view->SetScale(m_view->Scale() * 1.1); // +10%
+    d->m_view->SetScale(d->m_view->Scale() * 1.1); // +10%
     this->redrawView();
     this->signalViewScaled.send();
 }
 
 void V3dViewController::zoomOut()
 {
-    m_view->SetScale(m_view->Scale() / 1.1); // -10%
+    d->m_view->SetScale(d->m_view->Scale() / 1.1); // -10%
     this->redrawView();
     this->signalViewScaled.send();
 }
 
 void V3dViewController::turn(V3d_TypeOfAxe axis, QuantityAngle angle)
 {
-    m_view->Turn(axis, UnitSystem::radians(angle), true/*start*/);
+    d->m_view->Turn(axis, UnitSystem::radians(angle), true/*start*/);
     this->redrawView();
+}
+
+double V3dViewController::instantZoomFactor() const
+{
+    return d->m_instantZoomFactor;
+}
+
+void V3dViewController::setInstantZoomFactor(double factor)
+{
+    d->m_instantZoomFactor = factor;
 }
 
 void V3dViewController::startDynamicAction(DynamicAction dynAction)
@@ -61,39 +110,39 @@ void V3dViewController::startDynamicAction(DynamicAction dynAction)
     if (dynAction == DynamicAction::None)
         return;
 
-    if (m_dynamicAction != DynamicAction::None)
+    if (d->m_dynamicAction != DynamicAction::None)
         return;
 
-    m_dynamicAction = dynAction;
+    d->m_dynamicAction = dynAction;
     this->signalDynamicActionStarted.send(dynAction);
 }
 
 void V3dViewController::stopDynamicAction()
 {
-    if (m_dynamicAction != DynamicAction::None) {
-        this->signalDynamicActionEnded.send(m_dynamicAction);
-        m_dynamicAction = DynamicAction::None;
+    if (d->m_dynamicAction != DynamicAction::None) {
+        this->signalDynamicActionEnded.send(d->m_dynamicAction);
+        d->m_dynamicAction = DynamicAction::None;
     }
 }
 
 bool V3dViewController::isRotationStarted() const
 {
-    return m_dynamicAction == DynamicAction::Rotation;
+    return d->m_dynamicAction == DynamicAction::Rotation;
 }
 
 bool V3dViewController::isPanningStarted() const
 {
-    return m_dynamicAction == DynamicAction::Panning;
+    return d->m_dynamicAction == DynamicAction::Panning;
 }
 
 bool V3dViewController::isZoomStarted() const
 {
-    return m_dynamicAction == DynamicAction::Zoom;
+    return d->m_dynamicAction == DynamicAction::Zoom;
 }
 
 bool V3dViewController::isWindowZoomingStarted() const
 {
-    return m_dynamicAction == DynamicAction::WindowZoom;
+    return d->m_dynamicAction == DynamicAction::WindowZoom;
 }
 
 void V3dViewController::rotation(const Position& currPos)
@@ -103,10 +152,10 @@ void V3dViewController::rotation(const Position& currPos)
 
     if (!this->isRotationStarted()) {
         this->startDynamicAction(DynamicAction::Rotation);
-        m_view->StartRotation(currPos.x, currPos.y);
+        d->m_view->StartRotation(currPos.x, currPos.y);
     }
     else {
-        m_view->Rotation(currPos.x, currPos.y);
+        d->m_view->Rotation(currPos.x, currPos.y);
         this->redrawView();
     }
 }
@@ -119,7 +168,7 @@ void V3dViewController::pan(const Position& prevPos, const Position& currPos)
     if (!this->isPanningStarted())
         this->startDynamicAction(DynamicAction::Panning);
 
-    m_view->Pan(currPos.x - prevPos.x, prevPos.y - currPos.y);
+    d->m_view->Pan(currPos.x - prevPos.x, prevPos.y - currPos.y);
     this->redrawView();
 }
 
@@ -130,10 +179,10 @@ void V3dViewController::zoom(const Position& prevPos, const Position& currPos)
 
     if (!this->isZoomStarted()) {
         this->startDynamicAction(DynamicAction::Zoom);
-        m_view->StartZoomAtPoint(currPos.x, currPos.y);
+        d->m_view->StartZoomAtPoint(currPos.x, currPos.y);
     }
     else {
-        m_view->Zoom(-prevPos.y, 0, -currPos.y, 0); // Zoom by vertical movement
+        d->m_view->Zoom(-prevPos.y, 0, -currPos.y, 0); // Zoom by vertical movement
         this->redrawView();
     }
 }
@@ -141,22 +190,22 @@ void V3dViewController::zoom(const Position& prevPos, const Position& currPos)
 void V3dViewController::windowFitAll(const Position& posMin, const Position& posMax)
 {
     if (std::abs(posMin.x - posMax.x) > 1 || std::abs(posMin.y - posMax.y) > 1)
-        m_view->WindowFitAll(posMin.x, posMin.y, posMax.x, posMax.y);
+        d->m_view->WindowFitAll(posMin.x, posMin.y, posMax.x, posMax.y);
 }
 
 void V3dViewController::windowZoomRubberBand(const Position& currPos)
 {
     if (!this->isWindowZoomingStarted()) {
         this->startDynamicAction(DynamicAction::WindowZoom);
-        m_posRubberBandStart = currPos;
+        d->m_posRubberBandStart = currPos;
     }
 
-    this->drawRubberBand(m_posRubberBandStart, currPos);
+    this->drawRubberBand(d->m_posRubberBandStart, currPos);
 }
 
 void V3dViewController::windowZoom(const Position& currPos)
 {
-    this->windowFitAll(m_posRubberBandStart, currPos);
+    this->windowFitAll(d->m_posRubberBandStart, currPos);
     this->hideRubberBand();
 }
 
@@ -164,9 +213,9 @@ void V3dViewController::startInstantZoom(const Position& currPos)
 {
     this->startDynamicAction(DynamicAction::InstantZoom);
     this->backupCamera();
-    const int dX = std::lround(m_instantZoomFactor * 100);
-    m_view->StartZoomAtPoint(currPos.x, currPos.y);
-    m_view->ZoomAtPoint(currPos.x, currPos.y, currPos.x + dX, currPos.y);
+    const int dX = std::lround(d->m_instantZoomFactor * 100);
+    d->m_view->StartZoomAtPoint(currPos.x, currPos.y);
+    d->m_view->ZoomAtPoint(currPos.x, currPos.y, currPos.x + dX, currPos.y);
     this->redrawView();
 }
 
@@ -179,50 +228,50 @@ void V3dViewController::stopInstantZoom()
 
 void V3dViewController::drawRubberBand(const Position& posMin, const Position& posMax)
 {
-    if (!m_rubberBand)
-        m_rubberBand = this->createRubberBand();
+    if (!d->m_rubberBand)
+        d->m_rubberBand = this->createRubberBand();
 
     const int xRect = std::min(posMin.x, posMax.x);
     const int yRect = std::min(posMin.y, posMax.y);
     const int width = std::abs(posMax.x - posMin.x);
     const int height = std::abs(posMax.y - posMin.y);
-    m_rubberBand->updateGeometry(xRect, yRect, width, height);
-    m_rubberBand->setVisible(true);
+    d->m_rubberBand->updateGeometry(xRect, yRect, width, height);
+    d->m_rubberBand->setVisible(true);
 }
 
 void V3dViewController::hideRubberBand()
 {
-    if (m_rubberBand)
-        m_rubberBand->setVisible(false);
+    if (d->m_rubberBand)
+        d->m_rubberBand->setVisible(false);
 }
 
 void V3dViewController::backupCamera()
 {
-    if (!m_cameraBackup)
-        m_cameraBackup = new Graphic3d_Camera;
+    if (!d->m_cameraBackup)
+        d->m_cameraBackup = new Graphic3d_Camera;
 
-    m_cameraBackup->Copy(m_view->Camera());
+    d->m_cameraBackup->Copy(d->m_view->Camera());
 }
 
 void V3dViewController::restoreCamera()
 {
-    if (m_cameraBackup)
-        m_view->Camera()->Copy(m_cameraBackup);
+    if (d->m_cameraBackup)
+        d->m_view->Camera()->Copy(d->m_cameraBackup);
 }
 
 void V3dViewController::redrawView()
 {
-    m_view->Redraw();
+    d->m_view->Redraw();
 }
 
 V3dViewController::DynamicAction V3dViewController::currentDynamicAction() const
 {
-    return m_dynamicAction;
+    return d->m_dynamicAction;
 }
 
 bool V3dViewController::hasCurrentDynamicAction() const
 {
-    return m_dynamicAction != DynamicAction::None;
+    return d->m_dynamicAction != DynamicAction::None;
 }
 
 } // namespace Mayo

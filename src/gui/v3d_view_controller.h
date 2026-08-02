@@ -10,23 +10,12 @@
 #include "../base/signal.h"
 #include "gui_vkey_mouse.h"
 
-#include <Graphic3d_Camera.hxx>
 #include <V3d_View.hxx>
-
-#if OCC_VERSION_HEX >= 0x070400
-#include <AIS_ViewController.hxx>
-#define MAYO_USE_AIS_VIEWCONTROLLER
-#endif
-
 #include <memory>
 
 namespace Mayo {
 
-class V3dViewController
-#ifdef MAYO_USE_AIS_VIEWCONTROLLER
-: protected AIS_ViewController
-#endif
-{
+class V3dViewController {
 public:
     enum class DynamicAction {
         None,
@@ -43,8 +32,9 @@ public:
         virtual void setVisible(bool on) = 0;
     };
 
+    // TODO Pass GraphicsViewPtr so AIS_ViewController can use AIS context (see zoomAt())
     explicit V3dViewController(const OccHandle<V3d_View>& view);
-    virtual ~V3dViewController() = default;
+    virtual ~V3dViewController();
 
     DynamicAction currentDynamicAction() const;
     bool hasCurrentDynamicAction() const;
@@ -56,8 +46,8 @@ public:
     // eye of the projection
     void turn(V3d_TypeOfAxe axis, QuantityAngle angle);
 
-    double instantZoomFactor() const { return m_instantZoomFactor; }
-    void setInstantZoomFactor(double factor) { m_instantZoomFactor = factor; }
+    double instantZoomFactor() const;
+    void setInstantZoomFactor(double factor);
 
     // Signals
     Signal<DynamicAction> signalDynamicActionStarted;
@@ -70,8 +60,6 @@ public:
 protected:
     struct Position { int x; int y; };
 
-    void zoomAt(const Position& currPos, const double delta);
-
     virtual void startDynamicAction(DynamicAction dynAction);
     virtual void stopDynamicAction();
 
@@ -83,6 +71,7 @@ protected:
     void rotation(const Position& currPos);
     void pan(const Position& prevPos, const Position& currPos);
     void zoom(const Position& prevPos, const Position& currPos);
+    void zoomAt(const Position& currPos, double delta);
 
     void windowFitAll(const Position& posMin, const Position& posMax);
 
@@ -102,12 +91,8 @@ protected:
     virtual void redrawView();
 
 private:
-    OccHandle<V3d_View> m_view;
-    DynamicAction m_dynamicAction = DynamicAction::None;
-    std::unique_ptr<IRubberBand> m_rubberBand;
-    double m_instantZoomFactor = 5.;
-    OccHandle<Graphic3d_Camera> m_cameraBackup;
-    Position m_posRubberBandStart = {};
+    class Private;
+    Private* const d = nullptr;
 };
 
 } // namespace Mayo
