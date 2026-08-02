@@ -164,6 +164,15 @@ QPoint globalPosition(const QMouseEvent* event)
 #endif
 }
 
+QPoint globalPosition(const QWheelEvent* event)
+{
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    return event->globalPos();
+#else
+    return event->globalPosition().toPoint();
+#endif
+}
+
 FontChange::FontChange(const QFont& font)
     : m_font(font)
 {}
