@@ -93,6 +93,11 @@ if(MSVC)
     message(STATUS "Mayo_EnablePch=${Mayo_EnablePch}")
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    option(Mayo_EnableCoverage "Enable code coverage instrumentation" OFF)
+    message(STATUS "Mayo_EnableCoverage=${Mayo_EnableCoverage}")
+endif()
+
 # TODO
 # option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
 
@@ -184,6 +189,10 @@ if(Mayo_TargetArchBitSize STREQUAL "32")
     endif()
 endif()
 
+if(Mayo_EnableCoverage AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    list(APPEND Mayo_CompileOptions --coverage -fprofile-abs-path)
+endif()
+
 ##########
 # Linker config
 ##########
@@ -201,6 +210,10 @@ elseif(APPLE)
     list(APPEND MayoCore_LinkLibraries iconv)
 elseif(HAIKU)
     list(APPEND MayoCore_LinkLibraries iconv)
+endif()
+
+if(Mayo_EnableCoverage AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_link_options(--coverage)
 endif()
 
 ##########
