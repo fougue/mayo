@@ -619,6 +619,14 @@ Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
     return matchRegExp_atStart(input.contentsBegin, rxBin) ? Format_OCCBINBREP : Format_Unknown;
 }
 
+Format probeFormat_OCCXCAF(const System::FormatProbeInput& input)
+{
+    // binary XCAF starts with "BINFILE" which is too short for a reliable identification...
+
+    const std::regex rxXml{ R"(^\s*"<document format=\"XmlXCAF\"")" };
+    return matchRegExp_atStart(input.contentsBegin, rxXml) ? Format_OCCXmlXCAF : Format_Unknown;
+}
+
 Format probeFormat_STL(const System::FormatProbeInput& input)
 {
     std::string_view sample = input.contentsBegin;
@@ -676,6 +684,7 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_STEP);
     system->addFormatProbe(probeFormat_IGES);
     system->addFormatProbe(probeFormat_OCCBREP);
+    system->addFormatProbe(probeFormat_OCCXCAF);
     system->addFormatProbe(probeFormat_STL);
     system->addFormatProbe(probeFormat_OBJ);
     system->addFormatProbe(probeFormat_PLY);

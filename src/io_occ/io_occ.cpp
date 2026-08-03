@@ -12,6 +12,7 @@
 #include "io_occ_step.h"
 #include "io_occ_stl.h"
 #include "io_occ_vrml_writer.h"
+#include "io_occ_xcaf.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include "io_occ_gltf_reader.h"
@@ -44,6 +45,10 @@ gsl::span<const Format> OccFactoryReader::formats() const
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
         , Format_VRML
     #endif
+    // XCAF persistence exists for a long time in OCCT, but XCAFDoc_Editor::Extract() has been added in OCCT 7.6
+    #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        , Format_OCCBinXCAF, Format_OCCXmlXCAF
+    #endif
     };
     return arrayFormat;
 }
@@ -58,6 +63,8 @@ std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
         return std::make_unique<OccBRepReader>(false);
     if (format == Format_OCCBINBREP)
         return std::make_unique<OccBRepReader>(true);
+    if (format == Format_OCCBinXCAF || format == Format_OCCXmlXCAF)
+        return std::make_unique<OccXCafReader>();
     if (format == Format_STL)
         return std::make_unique<OccStlReader>();
 
@@ -101,7 +108,9 @@ PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup
 gsl::span<const Format> OccFactoryWriter::formats() const
 {
     static const Format arrayFormat[] = {
-        Format_STEP, Format_IGES, Format_OCCBREP, Format_OCCBINBREP, Format_STL, Format_VRML
+        Format_STEP, Format_IGES,
+        Format_OCCBREP, Format_OCCBINBREP,
+        Format_STL, Format_VRML
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
         , Format_GLTF
     #endif

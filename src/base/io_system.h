@@ -207,6 +207,7 @@ private:
 Format probeFormat_STEP(const System::FormatProbeInput& input);
 Format probeFormat_IGES(const System::FormatProbeInput& input);
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input);
+Format probeFormat_OCCXCAF(const System::FormatProbeInput& input);
 Format probeFormat_STL(const System::FormatProbeInput& input);
 Format probeFormat_OBJ(const System::FormatProbeInput& input);
 Format probeFormat_PLY(const System::FormatProbeInput& input);

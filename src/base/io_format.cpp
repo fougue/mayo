@@ -18,6 +18,8 @@ std::string_view formatIdentifier(Format format)
     case Format_IGES:  return "IGES";
     case Format_OCCBREP: return "OCCBREP";
     case Format_OCCBINBREP: return "OCCBINBREP";
+    case Format_OCCBinXCAF: return "OCCBinXCAF";
+    case Format_OCCXmlXCAF: return "OCCXmlXCAF";
     case Format_STL:   return "STL";
     case Format_OBJ:   return "OBJ";
     case Format_GLTF:  return "GLTF";
@@ -47,6 +49,8 @@ std::string_view formatName(Format format)
     case Format_IGES:  return "IGES(ASME Y14.26M)";
     case Format_OCCBREP: return "OpenCascade BREP";
     case Format_OCCBINBREP: return "OpenCascade Binary BREP";
+    case Format_OCCBinXCAF: return "OpenCascade BinXCAF";
+    case Format_OCCXmlXCAF: return "OpenCascade XmlXCAF";
     case Format_STL:   return "STL(STereo-Lithography)";
     case Format_OBJ:   return "Wavefront OBJ";
     case Format_GLTF:  return "glTF(GL Transmission Format)";
@@ -81,6 +85,8 @@ gsl::span<std::string_view> formatFileSuffixes(Format format)
     static std::string_view suffix_obj[]  = { "obj" };
     static std::string_view suffix_occ[]  = { "brep", "rle", "occ" };
     static std::string_view suffix_occbin[]  = { "binbrep", "bbrep" };
+    static std::string_view suffix_occxbf[]  = { "xbf" };
+    static std::string_view suffix_occxml[]  = { "xml" }; // alas, not very useful for identification...
     static std::string_view suffix_off[]  = { "off" };
     static std::string_view suffix_ply[]  = { "ply" };
     static std::string_view suffix_step[] = { "step", "stp" };
@@ -104,6 +110,8 @@ gsl::span<std::string_view> formatFileSuffixes(Format format)
     case Format_OBJ:   return suffix_obj;
     case Format_OCCBREP: return suffix_occ;
     case Format_OCCBINBREP: return suffix_occbin;
+    case Format_OCCBinXCAF: return suffix_occxbf;
+    case Format_OCCXmlXCAF: return suffix_occxml;
     case Format_OFF:   return suffix_off;
     case Format_PLY:   return suffix_ply;
     case Format_STEP:  return suffix_step;
@@ -119,7 +127,7 @@ gsl::span<std::string_view> formatFileSuffixes(Format format)
 
 bool formatProvidesBRep(Format format)
 {
-    static const Format brepFormats[] = { Format_STEP, Format_IGES, Format_OCCBREP, Format_OCCBINBREP, Format_DXF };
+    static const Format brepFormats[] = { Format_STEP, Format_IGES, Format_OCCBREP, Format_OCCBINBREP, Format_OCCBinXCAF, Format_OCCXmlXCAF, Format_DXF };
     return std::any_of(
                 std::cbegin(brepFormats),
                 std::cend(brepFormats),

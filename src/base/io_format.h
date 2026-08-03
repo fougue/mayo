@@ -25,6 +25,8 @@ enum Format {
     Format_OBJ,
     Format_OCCBREP,
     Format_OCCBINBREP,
+    Format_OCCBinXCAF,
+    Format_OCCXmlXCAF,
     Format_OFF,
     Format_PLY,
     Format_STEP,
