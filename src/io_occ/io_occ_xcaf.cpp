@@ -70,7 +70,7 @@ NCollection_Sequence<TDF_Label> OccXCafReader::transfer(DocumentPtr doc, TaskPro
 
     return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 #else
-    return false;
+    return {};
 #endif
 }
 

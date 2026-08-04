@@ -18,6 +18,7 @@
 #include <BinTools.hxx>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
+#include <Standard_Version.hxx>
 #include <TDataStd_Name.hxx>
 
 namespace Mayo::IO {
@@ -35,8 +36,11 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
     if (m_isBinary) {
         return BinTools::Read(
             m_shape,
-            filepath.u8string().c_str(),
-            TKernelUtils::start(indicator));
+            filepath.u8string().c_str()
+#if OCC_VERSION_HEX > 0x070500
+            , TKernelUtils::start(indicator)
+#endif
+        );
     }
 
     BRep_Builder brepBuilder;
@@ -97,7 +101,13 @@ bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     if (m_isBinary) {
-        return BinTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
+        return BinTools::Write(
+            m_shape,
+            filepath.u8string().c_str()
+#if OCC_VERSION_HEX > 0x070500
+            , TKernelUtils::start(indicator)
+#endif
+        );
     }
 
     return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
