@@ -15,18 +15,31 @@
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
+#include <BinTools.hxx>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 #include <TDataStd_Name.hxx>
 
 namespace Mayo::IO {
 
+OccBRepReader::OccBRepReader(bool binaryMode) : m_isBinary(binaryMode) {
+    //
+}
+
 bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_shape.Nullify();
     m_baseFilename = filepath.stem();
-    BRep_Builder brepBuilder;
+
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
+    if (m_isBinary) {
+        return BinTools::Read(
+            m_shape,
+            filepath.u8string().c_str(),
+            TKernelUtils::start(indicator));
+    }
+
+    BRep_Builder brepBuilder;
     return BRepTools::Read(
         m_shape,
         filepath.u8string().c_str(),
@@ -45,6 +58,10 @@ NCollection_Sequence<TDF_Label> OccBRepReader::transfer(DocumentPtr doc, TaskPro
     shapeTool->SetShape(labelShape, m_shape);
     TDataStd_Name::Set(labelShape, filepathTo<TCollection_ExtendedString>(m_baseFilename));
     return CafUtils::makeLabelSequence({ labelShape });
+}
+
+OccBRepWriter::OccBRepWriter(bool binaryMode) : m_isBinary(binaryMode) {
+    //
 }
 
 bool OccBRepWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
@@ -79,6 +96,10 @@ bool OccBRepWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProg
 bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
+    if (m_isBinary) {
+        return BinTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
+    }
+
     return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
 }
 
