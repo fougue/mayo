@@ -619,17 +619,15 @@ Format probeFormat_IGES(const System::FormatProbeInput& input)
 
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 {
-    if (isFormatAscii_OCCBREP(input) || isFormatBinary_OCCBREP(input))
-        return Format_OCCBREP;
-
-    return Format_Unknown;
+    const bool isFormatOCCBREP = isFormatAscii_OCCBREP(input) || isFormatBinary_OCCBREP(input);
+    return isFormatOCCBREP ? Format_OCCBREP : Format_Unknown;
 }
 
 Format probeFormat_OCCXCAF(const System::FormatProbeInput& input)
 {
     // Binary XCAF starts with "BINFILE" which is too short for a reliable identification...
     const std::regex rxXml{ R"(^\s*"<document format=\"XmlXCAF\"")" };
-    return matchRegExp_atStart(input.contentsBegin, rxXml) ? Format_OCCXmlXCAF : Format_Unknown;
+    return matchRegExp_atStart(input.contentsBegin, rxXml) ? Format_OCCXCAF : Format_Unknown;
 }
 
 Format probeFormat_STL(const System::FormatProbeInput& input)

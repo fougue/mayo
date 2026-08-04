@@ -388,6 +388,9 @@ if(OpenCASCADE_FOUND)
     if(OpenCASCADE_VERSION VERSION_LESS 7.6.0)
         list(REMOVE_ITEM MayoIO_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj_writer.cpp)
         message(STATUS "OBJ writer disabled because OpenCascade < v7.6")
+
+        list(REMOVE_ITEM MayoIO_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_xcaf.cpp)
+        message(STATUS "XCAF reader disabled because OpenCascade < v7.6")
     endif()
 
     # VRML support

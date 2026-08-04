@@ -56,12 +56,9 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
         );
     }
 
-    if (this->messenger()) {
-        this->messenger()->emitError(
-            OccBRepI18N::textIdTr("Failed to guess OpenCascade BREP ascii/binary format")
-        );
-    }
-
+    this->messenger()->emitError(
+        OccBRepI18N::textIdTr("Failed to guess OpenCascade BREP ascii/binary format")
+    );
     return false;
 }
 

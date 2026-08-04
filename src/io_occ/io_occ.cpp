@@ -12,7 +12,6 @@
 #include "io_occ_step.h"
 #include "io_occ_stl.h"
 #include "io_occ_vrml_writer.h"
-#include "io_occ_xcaf.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include "io_occ_gltf_reader.h"
@@ -25,6 +24,7 @@
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
 #  include "io_occ_obj_writer.h"
+#  include "io_occ_xcaf.h"
 #endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
@@ -42,13 +42,11 @@ gsl::span<const Format> OccFactoryReader::formats() const
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         , Format_GLTF, Format_OBJ
     #endif
+    #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        , Format_OCCXCAF
+    #endif
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
         , Format_VRML
-    #endif
-    #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
-        // XCAF persistence exists for a long time in OCCT, but XCAFDoc_Editor::Extract() has been
-        // added in OCCT 7.6
-        , Format_OCCBinXCAF, Format_OCCXmlXCAF
     #endif
     };
     return arrayFormat;
@@ -65,9 +63,6 @@ std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
     if (format == Format_OCCBREP)
         return std::make_unique<OccBRepReader>();
 
-    if (format == Format_OCCBinXCAF || format == Format_OCCXmlXCAF)
-        return std::make_unique<OccXCafReader>();
-
     if (format == Format_STL)
         return std::make_unique<OccStlReader>();
 
@@ -77,6 +72,11 @@ std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
 
     if (format == Format_OBJ)
         return std::make_unique<OccObjReader>();
+#endif
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    if (format == Format_OCCXCAF)
+        return std::make_unique<OccXCafReader>();
 #endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
