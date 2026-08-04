@@ -1,7 +1,7 @@
 #name: macOS x64/arm64
 name: macOS arm64
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build-macos:

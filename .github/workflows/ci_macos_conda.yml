@@ -1,6 +1,8 @@
 name: macOS-conda arm64
 
-on: [push]
+on:
+  push:
+    branches: [develop]
 
 jobs:
   build-macos-conda:

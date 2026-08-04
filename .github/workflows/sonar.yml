@@ -1,11 +1,8 @@
 name: SonarCloud
 
 on:
-  # Automatic trigger on 'develop' branch
   push:
-    branches:
-      - develop
-      - 'sonar/**'
+    branches: [develop, 'sonar/**']
 
   # Manual trigger
   workflow_dispatch:

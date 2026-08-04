@@ -1,6 +1,6 @@
 name: Linux Ubuntu x64/arm64
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build-ubuntu:
