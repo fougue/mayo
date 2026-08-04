@@ -5,6 +5,7 @@ double dummy = 0;
 #include "src/graphics/graphics_object_driver.h"
 #include "src/io_gmio/io_gmio_amf_writer.cpp"
 #include "src/io_image/io_image.cpp"
+#include "src/io_occ/io_occ_brep.cpp"
 #include "src/io_occ/io_occ_common.h"
 #include "src/io_occ/io_occ_stl.cpp"
 #include "src/io_occ/io_occ_gltf_writer.cpp"
@@ -55,6 +56,9 @@ static void messages() {
     Mayo::IO::OccCommon::textId("Inch");
     Mayo::IO::OccCommon::textId("Foot");
     Mayo::IO::OccCommon::textId("Mile");
+
+    Mayo::IO::OccBRepI18N::textId("Ascii");
+    Mayo::IO::OccBRepI18N::textId("Binary");
 
     Mayo::IO::OccStlWriterI18N::textId("Ascii");
     Mayo::IO::OccStlWriterI18N::textId("Binary");

@@ -36,14 +36,46 @@ class System {
 public:
     ~System() = default;
 
+    // Input data supplied to a format probe callback
+    // Contains contextual information about a file to help identify its format. The file contents
+    // is represented by an excerpt starting at the beginning of the file and may not contain the
+    // entire file
     struct FormatProbeInput {
+        // Path of the file being probed
         FilePath filepath;
-        std::string_view contentsBegin; // Excerpt of the file(from start)
-        uint64_t hintFullSize; // Full file size in bytes
+
+        // Excerpt of the file(from start)
+        std::string_view contentsBegin;
+
+        // Total file size in bytes, if known
+        uint64_t hintFullSize;
     };
+
+    // Callback used to identify a file format
+    // A format probe examine the supplied FormatProbeInput and return the detected format. If the
+    // format cannot be determined, it must return `Format_Unknown`.
     using FormatProbe = std::function<Format (const FormatProbeInput&)>;
+
+    // Registers a format probe callback
+    // Adds a callback used by probeFormat() to identify a file format from its contents
+    // NOTE: earlier registered probes have higher priority during format detection
     void addFormatProbe(const FormatProbe& probe);
+
+    // Tries to determine the format of `filepath`
+    // The function first probes the beginning of the file contents using all registered format
+    // probe callbacks. The first callback returning a format other than `Format_Unknown` determines
+    // the result
+    // If no probe recognizes the file, the function falls back to the file extension. The extension
+    // is compared case-insensitively against the registered reader formats first, then against the
+    // registered writer formats
     Format probeFormat(const FilePath& filepath) const;
+
+    // Returns a FormatProbeInput for the given file
+    // Reads up to `buff.size()` bytes from the beginning of the file into `buff`
+    // The returned FormatProbeInput contains a string view over the bytes stored in `buff`, so the
+    // buffer must remain valid for as long as the returned object is used
+    // If the file cannot be opened, the returned object contains only the file path
+    static FormatProbeInput getFormatProbeInput(const FilePath& filepath, gsl::span<char> buff);
 
     void addFactoryReader(std::unique_ptr<FactoryReader> ptr);
     void addFactoryWriter(std::unique_ptr<FactoryWriter> ptr);
@@ -213,6 +245,9 @@ Format probeFormat_OBJ(const System::FormatProbeInput& input);
 Format probeFormat_PLY(const System::FormatProbeInput& input);
 Format probeFormat_OFF(const System::FormatProbeInput& input);
 void addPredefinedFormatProbes(System* system);
+
+bool isFormatAscii_OCCBREP(const System::FormatProbeInput& input);
+bool isFormatBinary_OCCBREP(const System::FormatProbeInput& input);
 
 } // namespace IO
 } // namespace Mayo

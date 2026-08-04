@@ -19,7 +19,6 @@
 #include <gsl/util>
 
 #include <algorithm>
-#include <array>
 #include <fstream>
 #include <locale>
 #include <mutex>
@@ -58,18 +57,28 @@ void System::addFormatProbe(const FormatProbe& probe)
     m_vecFormatProbe.push_back(probe);
 }
 
-Format System::probeFormat(const FilePath& filepath) const
+System::FormatProbeInput System::getFormatProbeInput(const FilePath& filepath, gsl::span<char> buff)
 {
+    FormatProbeInput probeInput = {};
+    probeInput.filepath = filepath;
+
     std::ifstream file;
     file.open(filepath);
-    if (file.is_open()) {
-        std::array<char, 2048> buff;
-        buff.fill(0);
-        file.read(buff.data(), buff.size());
-        FormatProbeInput probeInput = {};
-        probeInput.filepath = filepath;
-        probeInput.contentsBegin = std::string_view(buff.data(), file.gcount());
-        probeInput.hintFullSize = filepathFileSize(filepath);
+    if (!file.is_open())
+        return probeInput;
+
+    file.read(buff.data(), buff.size());
+    probeInput.contentsBegin = std::string_view(buff.data(), file.gcount());
+    probeInput.hintFullSize = filepathFileSize(filepath);
+    return probeInput;
+}
+
+Format System::probeFormat(const FilePath& filepath) const
+{
+    // Try to guess from file contents
+    char buff[2048] = {};
+    auto probeInput = getFormatProbeInput(filepath, buff);
+    if (!probeInput.contentsBegin.empty()) {
         for (const FormatProbe& fnProbe : m_vecFormatProbe) {
             const Format format = fnProbe(probeInput);
             if (format != Format_Unknown)
@@ -610,19 +619,15 @@ Format probeFormat_IGES(const System::FormatProbeInput& input)
 
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 {
-    const std::regex rxAscii{ R"(^\s*DBRep_DrawableShape)" };
-    if (matchRegExp_atStart(input.contentsBegin, rxAscii)) {
+    if (isFormatAscii_OCCBREP(input) || isFormatBinary_OCCBREP(input))
         return Format_OCCBREP;
-    }
 
-    const std::regex rxBin{ R"(^\s*Open CASCADE Topology V)" };
-    return matchRegExp_atStart(input.contentsBegin, rxBin) ? Format_OCCBINBREP : Format_Unknown;
+    return Format_Unknown;
 }
 
 Format probeFormat_OCCXCAF(const System::FormatProbeInput& input)
 {
-    // binary XCAF starts with "BINFILE" which is too short for a reliable identification...
-
+    // Binary XCAF starts with "BINFILE" which is too short for a reliable identification...
     const std::regex rxXml{ R"(^\s*"<document format=\"XmlXCAF\"")" };
     return matchRegExp_atStart(input.contentsBegin, rxXml) ? Format_OCCXmlXCAF : Format_Unknown;
 }
@@ -689,6 +694,18 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_OBJ);
     system->addFormatProbe(probeFormat_PLY);
     system->addFormatProbe(probeFormat_OFF);
+}
+
+bool isFormatAscii_OCCBREP(const System::FormatProbeInput& input)
+{
+    const std::regex rxAscii{ R"(^\s*DBRep_DrawableShape)" };
+    return matchRegExp_atStart(input.contentsBegin, rxAscii);
+}
+
+bool isFormatBinary_OCCBREP(const System::FormatProbeInput& input)
+{
+    const std::regex rxBin{ R"(^\s*Open CASCADE Topology V[0-9])" };
+    return matchRegExp_atStart(input.contentsBegin, rxBin);
 }
 
 } // namespace Mayo::IO

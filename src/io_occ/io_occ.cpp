@@ -38,15 +38,16 @@ namespace { using PtrPropertyGroup = std::unique_ptr<PropertyGroup>; }
 gsl::span<const Format> OccFactoryReader::formats() const
 {
     static const Format arrayFormat[] = {
-        Format_STEP, Format_IGES, Format_OCCBREP, Format_OCCBINBREP, Format_STL
+        Format_STEP, Format_IGES, Format_OCCBREP, Format_STL
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         , Format_GLTF, Format_OBJ
     #endif
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
         , Format_VRML
     #endif
-    // XCAF persistence exists for a long time in OCCT, but XCAFDoc_Editor::Extract() has been added in OCCT 7.6
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        // XCAF persistence exists for a long time in OCCT, but XCAFDoc_Editor::Extract() has been
+        // added in OCCT 7.6
         , Format_OCCBinXCAF, Format_OCCXmlXCAF
     #endif
     };
@@ -57,20 +58,23 @@ std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
 {
     if (format == Format_STEP)
         return std::make_unique<OccStepReader>();
+
     if (format == Format_IGES)
         return std::make_unique<OccIgesReader>();
+
     if (format == Format_OCCBREP)
-        return std::make_unique<OccBRepReader>(false);
-    if (format == Format_OCCBINBREP)
-        return std::make_unique<OccBRepReader>(true);
+        return std::make_unique<OccBRepReader>();
+
     if (format == Format_OCCBinXCAF || format == Format_OCCXmlXCAF)
         return std::make_unique<OccXCafReader>();
+
     if (format == Format_STL)
         return std::make_unique<OccStlReader>();
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     if (format == Format_GLTF)
         return std::make_unique<OccGltfReader>();
+
     if (format == Format_OBJ)
         return std::make_unique<OccObjReader>();
 #endif
@@ -87,12 +91,14 @@ PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup
 {
     if (format == Format_STEP)
         return OccStepReader::createProperties(parentGroup);
+
     if (format == Format_IGES)
         return OccIgesReader::createProperties(parentGroup);
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     if (format == Format_GLTF)
         return OccGltfReader::createProperties(parentGroup);
+
     if (format == Format_OBJ)
         return OccObjReader::createProperties(parentGroup);
 #endif
@@ -108,9 +114,11 @@ PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup
 gsl::span<const Format> OccFactoryWriter::formats() const
 {
     static const Format arrayFormat[] = {
-        Format_STEP, Format_IGES,
-        Format_OCCBREP, Format_OCCBINBREP,
-        Format_STL, Format_VRML
+        Format_STEP,
+        Format_IGES,
+        Format_OCCBREP,
+        Format_STL,
+        Format_VRML
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
         , Format_GLTF
     #endif
@@ -125,14 +133,16 @@ std::unique_ptr<Writer> OccFactoryWriter::create(Format format) const
 {
     if (format == Format_STEP)
         return std::make_unique<OccStepWriter>();
+
     if (format == Format_IGES)
         return std::make_unique<OccIgesWriter>();
+
     if (format == Format_OCCBREP)
-        return std::make_unique<OccBRepWriter>(false);
-    if (format == Format_OCCBINBREP)
-        return std::make_unique<OccBRepWriter>(true);
+        return std::make_unique<OccBRepWriter>();
+
     if (format == Format_STL)
         return std::make_unique<OccStlWriter>();
+
     if (format == Format_VRML)
         return std::make_unique<OccVrmlWriter>();
 
@@ -153,10 +163,16 @@ PtrPropertyGroup OccFactoryWriter::createProperties(Format format, PropertyGroup
 {
     if (format == Format_STEP)
         return OccStepWriter::createProperties(parentGroup);
+
     if (format == Format_IGES)
         return OccIgesWriter::createProperties(parentGroup);
+
+    if (format == Format_OCCBREP)
+        return OccBRepWriter::createProperties(parentGroup);
+
     if (format == Format_STL)
         return OccStlWriter::createProperties(parentGroup);
+
     if (format == Format_VRML)
         return OccVrmlWriter::createProperties(parentGroup);
 
