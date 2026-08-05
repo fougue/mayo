@@ -115,14 +115,8 @@ bool OccStlWriter::writeFile(const FilePath& filepath, [[maybe_unused]]TaskProgr
             if (mesh.IsNull())
                 facesMeshed = false;
         });
-        if (!facesMeshed) {
-#if OCC_VERSION_HEX <= OCC_VERSION_CHECK(7, 3, 0)
-            this->messenger()->emitError(OccStlWriterI18N::textIdTr("Not all BRep faces are meshed"));
-            return false; // Continuing would crash
-#else
+        if (!facesMeshed)
             this->messenger()->emitWarning(OccStlWriterI18N::textIdTr("Not all BRep faces are meshed"));
-#endif
-        }
 
         StlAPI_Writer writer;
         writer.ASCIIMode() = m_params.format == Format::Ascii;

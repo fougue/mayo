@@ -125,7 +125,7 @@ public:
     enum class ViewTrihedronMode {
         None,
         V3dViewZBuffer,
-        AisViewCube // Requires OpenCascade >= v7.4.0
+        AisViewCube
     };
     ViewTrihedronMode viewTrihedronMode() const { return m_viewTrihedronMode; }
     void setViewTrihedronMode(ViewTrihedronMode mode);

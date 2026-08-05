@@ -21,6 +21,7 @@
 #include "ui_dialog_inspect_xde.h"
 
 #include <Image_AlienPixMap.hxx>
+#include <Image_Texture.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
 #include <TDataStd_Name.hxx>
@@ -44,10 +45,6 @@
 #include <XCAFDoc_MaterialTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_Volume.hxx>
-
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-#  include <Image_Texture.hxx>
-#endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include <XCAFDoc_VisMaterial.hxx>
@@ -297,8 +294,6 @@ static void loadLabelMaterialProperties(
     treeItem->addChildren(listItemProp);
 }
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-
 // Load pixmap from file
 static QPixmap loadPixmap(const FilePath& filePath)
 {
@@ -439,7 +434,6 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const OccHan
 
     return item;
 }
-#endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 static void loadLabelVisMaterialProperties(
@@ -518,7 +512,7 @@ static void loadLabelVisMaterialProperties(
 
     treeItem->addChildren(listItemProp);
 }
-#endif
+#endif // OCC_VERSION >= 7.5.0
 
 static void loadLabelColorProperties(
         const TDF_Label& label,

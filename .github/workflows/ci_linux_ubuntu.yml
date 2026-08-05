@@ -43,9 +43,7 @@ jobs:
         cmake .. \
           -DMayo_BuildTests=ON \
           -DMayo_BuildPluginAssimp=ON
-        cmake --build . \
-          --config Release \
-          --parallel `nproc`
+        cmake --build . --config Release --parallel
 
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build

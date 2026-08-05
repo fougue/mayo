@@ -35,11 +35,9 @@ OccOpenGlInfos getOccOpenGlInfos()
     infos["HasRayTracingAdaptiveSampling"] = occContext.HasRayTracingAdaptiveSampling();
     infos["UseVBO"] = occContext.ToUseVbo();
 
-#if OCC_VERSION_HEX >= 0x070400
     infos["MaxDumpSizeX"] = occContext.MaxDumpSizeX();
     infos["MaxDumpSizeY"] = occContext.MaxDumpSizeY();
     infos["HasRayTracingAdaptiveSamplingAtomic"] = occContext.HasRayTracingAdaptiveSamplingAtomic();
-#endif
 
 #if OCC_VERSION_HEX >= 0x070500
     infos["HasTextureBaseLevel"] = occContext.HasTextureBaseLevel();

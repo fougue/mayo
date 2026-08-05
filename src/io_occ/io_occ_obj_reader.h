@@ -11,7 +11,6 @@
 namespace Mayo::IO {
 
 // OpenCascade-based reader for Wavefront OBJ format
-// Requires OpenCascade >= v7.4.0
 class OccObjReader : public OccBaseMeshReader {
 public:
     OccObjReader();

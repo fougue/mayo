@@ -189,7 +189,7 @@ void setCapsFromSurfaceFormat(OpenGl_Caps& caps, const QSurfaceFormat& format)
     caps.contextDebug = format.testOption(QSurfaceFormat::DebugContext);
     caps.contextSyncDebug = caps.contextDebug;
     caps.contextCompatible = format.profile() != QSurfaceFormat::CoreProfile;
-#if (OCC_VERSION_HEX >= 0x070700)
+#if OCC_VERSION_HEX >= 0x070700
     caps.buffersDeepColor =
         format.redBufferSize() == 10
         && format.greenBufferSize() == 10

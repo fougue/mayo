@@ -182,7 +182,7 @@ void OpenGl_HaltonSampler::initRandom (Random_number_generator& theRand)
     }
     // ---- PATCH_BEGIN
     // std::random_shuffle() was removed from C++17
-    // initRandom() isn't called anywhere in OpenCascade 7.3 and 7.4 code source so it's safe to
+    // initRandom() isn't called anywhere in OpenCascade 7.4 code source so it's safe to
     // avoid call to std::random_shuffle() function
     //std::random_shuffle (aPerms[aBase].begin(), aPerms[aBase].end(), theRand);
     // ---- PATCH_END

@@ -50,7 +50,7 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
         return BinTools::Read(
             m_shape,
             filepath.u8string().c_str()
-#if OCC_VERSION_HEX > 0x070500
+#if OCC_VERSION_HEX >= 0x070600
             , TKernelUtils::start(indicator)
 #endif
         );

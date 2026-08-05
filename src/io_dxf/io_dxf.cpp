@@ -672,7 +672,6 @@ bool DxfReader::ReaderImpl::setSourceEncoding(std::string_view codepage)
 {
     std::optional<Resource_FormatType> encoding;
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     if (codepage == "UTF8")
         encoding = Resource_FormatType_UTF8;
     else if (codepage == "ANSI_932") // Japanese
@@ -681,7 +680,6 @@ bool DxfReader::ReaderImpl::setSourceEncoding(std::string_view codepage)
         encoding = Resource_FormatType_GB;
     else if (codepage == "ANSI_949") // Korean
         encoding = Resource_FormatType_EUC;
-#endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     if (encoding)
@@ -733,16 +731,12 @@ std::string DxfReader::ReaderImpl::toUtf8(const std::string& strSource) const
     if (m_srcEncoding == Resource_ANSI) // Resource_ANSI is a pass-through(OpenCascade)
         return strSource;
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     if (m_srcEncoding == Resource_FormatType_UTF8)
         return strSource;
 
     TCollection_ExtendedString extStr;
     Resource_Unicode::ConvertFormatToUnicode(m_srcEncoding, strSource.c_str(), extStr);
     return to_stdString(extStr);
-#else
-    return strSource;
-#endif
 }
 
 TopoDS_Shape DxfReader::ReaderImpl::createBlockShape(const Dxf_BLOCK& block)
