@@ -15,15 +15,6 @@ namespace Mayo {
 struct BndUtils {
     // Extends 'box' with bounding box 'other'
     static void add(Bnd_Box* box, const Bnd_Box& other);
-
-    // Same as Bnd_Box::IsOpen() but provided for OpenCascade < v7.4
-    static bool isOpen(const Bnd_Box& bndBox);
-
-    // Same as Bnd_Box::HasFinitePart() but provided for OpenCascade < v7.4
-    static bool hasFinitePart(const Bnd_Box& bndBox);
-
-    // Same as Bnd_Box::FinitePart() but provided for OpenCascade < v7.4
-    static Bnd_Box finitePart(const Bnd_Box& bndBox);
 };
 
 // Raw coordinates of a AA bounding box

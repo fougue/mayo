@@ -16,10 +16,8 @@
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-#  include <AIS_ViewCube.hxx>
-#endif
 #include <AIS_ConnectedInteractive.hxx>
+#include <AIS_ViewCube.hxx>
 #include <AIS_Trihedron.hxx>
 #include <Geom_Axis2Placement.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
@@ -101,13 +99,8 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
 {
     Expects(!doc.IsNull());
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     this->setViewTrihedronMode(ViewTrihedronMode::AisViewCube);
     this->setViewTrihedronCorner(Aspect_TOTP_LEFT_LOWER);
-#else
-    this->setViewTrihedronMode(ViewTrihedronMode::V3dViewZBuffer);
-    this->setViewTrihedronCorner(Aspect_TOTP_LEFT_LOWER);
-#endif
 
     //m_v3dView->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr);
     // 3D view - Configure stats
@@ -426,13 +419,11 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
     if (!gfxOwner)
         return false;
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     auto viewCubeOwner = OccHandle<AIS_ViewCubeOwner>::DownCast(gfxOwner);
     if (viewCubeOwner) {
         this->setViewCameraOrientation(viewCubeOwner->MainOrientation(), ViewOrientationFlag_All);
         return true;
     }
-#endif
 
     return false;
 }
@@ -487,8 +478,7 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
     }
     case ViewTrihedronMode::AisViewCube: {
         if (m_aisViewCube.IsNull()) {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-            auto aisViewCube = new AIS_ViewCube;
+            auto aisViewCube = makeOccHandle<AIS_ViewCube>();
             m_aisViewCube = aisViewCube;
             aisViewCube->SetBoxColor(Quantity_NOC_GRAY75);
             //aisViewCube->SetFixedAnimationLoop(false);
@@ -500,7 +490,6 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
             datumAspect->ShadingAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             datumAspect->ShadingAspect(Prs3d_DP_YAxis)->SetColor(Quantity_NOC_GREEN2);
             datumAspect->ShadingAspect(Prs3d_DP_ZAxis)->SetColor(Quantity_NOC_BLUE2);
-#endif
         }
 
         m_v3dView->TriedronErase();
@@ -543,7 +532,6 @@ int GuiDocument::aisViewCubeBoundingSize() const
     if (!m_aisViewCube)
         return 0;
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     auto hnd = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
     auto size =
         2 * (hnd->Size()
@@ -557,18 +545,11 @@ int GuiDocument::aisViewCubeBoundingSize() const
         + hnd->FontHeight()
     ;
     return std::lround(size);
-#else
-    return 0;
-#endif
 }
 
-bool GuiDocument::isAisViewCubeObject([[maybe_unused]] const GraphicsObjectPtr& gfxObject)
+bool GuiDocument::isAisViewCubeObject(const GraphicsObjectPtr& gfxObject)
 {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     return !OccHandle<AIS_ViewCube>::DownCast(gfxObject).IsNull();
-#else
-    return false;
-#endif
 }
 
 const GuiDocument::GradientBackground& GuiDocument::defaultGradientBackground()
@@ -771,21 +752,19 @@ void GuiDocument::configureViewCubeSizes()
     const int viewCubePxFontHeight = 12;
     const int viewCubePxOffsetXY = 90;
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     auto viewCube = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
     if (viewCube) {
         viewCube->SetSize(viewCubePxSize * m_devicePixelRatio, true/*adaptOtherParams*/);
         viewCube->SetFontHeight(viewCubePxFontHeight * m_devicePixelRatio);
         const int offsetXY = std::lround(viewCubePxOffsetXY * m_devicePixelRatio);
         viewCube->SetTransformPersistence(
-            new Graphic3d_TransformPers(
+            makeOccHandle<Graphic3d_TransformPers>(
                 Graphic3d_TMF_TriedronPers,
                 m_viewTrihedronCorner,
                 NCollection_Vec2<int>{offsetXY, offsetXY}
             )
         );
     }
-#endif
 }
 
 } // namespace Mayo

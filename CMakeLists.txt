@@ -317,6 +317,9 @@ endif()
 
 if(OpenCASCADE_FOUND)
     message(STATUS "OpenCascade version ${OpenCASCADE_VERSION}")
+    if(OpenCASCADE_VERSION VERSION_LESS 7.4.0)
+        message(FATAL_ERROR "OpenCascade >= 7.4.0 is required")
+    endif()
 
     # std::iterator class template(used as a base class to provide typedefs) is deprecated in C++17
     # OpenCascade < 7.7.0 uses std::iterator for NCollection_StlIterator and this is causing many
@@ -364,20 +367,9 @@ if(OpenCASCADE_FOUND)
     endif()
 
     # OBJ/glTF support
-    if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.4.0)
-        list(APPEND MayoIO_LinkLibraries TKRWMesh)
-        if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
-            list(APPEND MayoIO_LinkLibraries TKDEOBJ TKDEGLTF)
-        endif()
-    else()
-        list(
-            REMOVE_ITEM MayoIO_SourceFiles
-            ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_base_mesh.cpp
-            ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_reader.cpp
-            ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj_reader.cpp
-        )
-        message(STATUS "glTF reader disabled because OpenCascade < v7.4")
-        message(STATUS "OBJ reader disabled because OpenCascade < v7.4")
+    list(APPEND MayoIO_LinkLibraries TKRWMesh)
+    if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
+        list(APPEND MayoIO_LinkLibraries TKDEOBJ TKDEGLTF)
     endif()
 
     if(OpenCASCADE_VERSION VERSION_LESS 7.5.0)

@@ -242,13 +242,11 @@ void TestIO::IO_bugGitHub166_test_data()
     QTest::newRow("PLY->STL") << "tests/inputs/cube.ply" << "tests/outputs/cube.stl" << IO::Format_STL;
     QTest::newRow("STL->PLY") << "tests/inputs/cube.stla" << "tests/outputs/cube.ply" << IO::Format_PLY;
 
-#if OCC_VERSION_HEX >= 0x070400
     QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj" << "tests/outputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj" << "tests/outputs/cube.stl" << IO::Format_STL;
-#  ifdef OPENCASCADE_HAVE_RAPIDJSON
+#ifdef OPENCASCADE_HAVE_RAPIDJSON
     QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf" << "tests/outputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf" << "tests/outputs/cube.stl" << IO::Format_STL;
-#  endif
 #endif
 
 #if OCC_VERSION_HEX >= 0x070600

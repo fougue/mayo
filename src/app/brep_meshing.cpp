@@ -56,11 +56,11 @@ QuantityLength BRepMeshingUtils::chordalDeflectionEstimate(const TopoDS_Shape& s
     if (bndBox.IsVoid())
         return defaultDeviation;
 
-    if (BndUtils::isOpen(bndBox)) {
-        if (!BndUtils::hasFinitePart(bndBox))
+    if (bndBox.IsOpen()) {
+        if (!bndBox.HasFinitePart())
             return defaultDeviation;
 
-        bndBox = BndUtils::finitePart(bndBox);
+        bndBox = bndBox.FinitePart();
     }
 
     const auto coords = BndBoxCoords::get(bndBox);

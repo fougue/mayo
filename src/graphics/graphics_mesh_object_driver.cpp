@@ -105,7 +105,7 @@ void GraphicsMeshObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enumer
 {
     this->throwIf_differentDriver(object);
     this->throwIf_invalidDisplayMode(mode);
-    GraphicsUtils::AisObject_contextPtr(object)->SetDisplayMode(object, mode, false);
+    object->InteractiveContext()->SetDisplayMode(object, mode, false);
 }
 
 Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsObjectPtr& object) const

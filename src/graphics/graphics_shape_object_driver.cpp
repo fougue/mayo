@@ -70,7 +70,7 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
     if (mode == this->currentDisplayMode(object))
         return;
 
-    AIS_InteractiveContext* context = GraphicsUtils::AisObject_contextPtr(object);
+    AIS_InteractiveContext* context = object ? object->InteractiveContext() : nullptr;
     if (!context)
         return;
 
@@ -110,7 +110,7 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
 Enumeration::Value GraphicsShapeObjectDriver::currentDisplayMode(const GraphicsObjectPtr& object) const
 {
     this->throwIf_differentDriver(object);
-    if (GraphicsUtils::AisObject_contextPtr(object)->DrawHiddenLine())
+    if (object->InteractiveContext()->DrawHiddenLine())
         return DisplayMode_HiddenLineRemoval;
 
     const int displayMode = object->DisplayMode();
