@@ -5,12 +5,9 @@
 
 #pragma once
 
-#include "../base/property_enumeration.h"
-#include "../base/tkernel_utils.h"
+#include "../base/enumeration_fromenum.h"
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-#  include <RWMesh_CoordinateSystem.hxx>
-#endif
+#include <RWMesh_CoordinateSystem.hxx>
 
 namespace Mayo::IO {
 
@@ -42,11 +39,9 @@ template<> struct EnumNames<IO::OccCommon::LengthUnit> {
     inline static std::string_view junkPrefix = {};
 };
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 template<> struct EnumNames<RWMesh_CoordinateSystem> {
     inline static std::string_view trContext = IO::OccCommon::textIdContext();
     inline static std::string_view junkPrefix = "RWMesh_CoordinateSystem_";
 };
-#endif
 
 } // namespace Mayo

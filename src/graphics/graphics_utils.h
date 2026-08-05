@@ -55,7 +55,6 @@ struct GraphicsUtils {
         bool on
     );
 
-    static AIS_InteractiveContext* AisObject_contextPtr(const OccHandle<AIS_InteractiveObject>& object);
     static bool AisObject_isVisible(const OccHandle<AIS_InteractiveObject>& object);
     static void AisObject_setVisible(const OccHandle<AIS_InteractiveObject>& object, bool on);
     static Bnd_Box AisObject_boundingBox(const OccHandle<AIS_InteractiveObject>& object);

@@ -11,7 +11,6 @@
 namespace Mayo::IO {
 
 // OpenCascade-based reader for glTF format
-// Requires OpenCascade >= v7.4.0
 class OccGltfReader : public OccBaseMeshReader {
 public:
     OccGltfReader();

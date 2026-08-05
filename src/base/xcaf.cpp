@@ -345,11 +345,8 @@ OccHandle<TDataStd_NamedData> XCaf::shapeUserDefinedAttributes(const TDF_Label& 
     if (lbl.IsNull())
         return {};
 
-#if OCC_VERSION_HEX >= 0x070400
     return this->shapeTool()->GetNamedProperties(lbl, false/*!create*/);
-#else
-    return {};
-#endif
+
 }
 
 TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& label)

@@ -52,11 +52,7 @@ bool OccVrmlWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskP
     int iCount = 0;
     System::visitUniqueItems(spanAppItem, [&](const ApplicationItem& appItem) {
         if (appItem.isDocument()) {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
             converter.ConvertDocument(appItem.document());
-#else
-    // TODO Call VrmlData_ShapeConvert::AddShape() on each child entity of "shape" type
-#endif
         }
         else if (appItem.isDocumentTreeNode()) {
             const TDF_Label label = appItem.documentTreeNode().label();

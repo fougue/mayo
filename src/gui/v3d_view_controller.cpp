@@ -6,11 +6,9 @@
 #include "v3d_view_controller.h"
 #include "../base/unit_system.h"
 
+#include <AIS_ViewController.hxx>
 #include <Graphic3d_Camera.hxx>
 #include <V3d_View.hxx>
-#if OCC_VERSION_HEX >= 0x070400
-#  include <AIS_ViewController.hxx>
-#endif
 
 #include <algorithm>
 #include <cmath>
@@ -19,7 +17,6 @@ namespace Mayo {
 
 namespace {
 
-#if OCC_VERSION_HEX >= 0x070400
 class AisViewControllerImpl : public AIS_ViewController {
 public:
     void zoomAt(const OccHandle<V3d_View>& view, int xPos, int yPos, double delta)
@@ -33,7 +30,6 @@ public:
         //AIS_ViewController::FlushViewEvents(m_aisCtx, m_view, true);
     }
 };
-#endif
 
 } // namespace
 
@@ -45,9 +41,7 @@ public:
     double m_instantZoomFactor = 5.;
     OccHandle<Graphic3d_Camera> m_cameraBackup;
     Position m_posRubberBandStart = {};
-#if OCC_VERSION_HEX >= 0x070400
     AisViewControllerImpl m_aisViewCtrl;
-#endif
 };
 
 V3dViewController::V3dViewController(const OccHandle<V3d_View>& view)
@@ -63,16 +57,9 @@ V3dViewController::~V3dViewController()
 
 void V3dViewController::zoomAt([[maybe_unused]]const Position& currPos, double delta)
 {
-#if OCC_VERSION_HEX >= 0x070400
     d->m_aisViewCtrl.zoomAt(d->m_view, currPos.x, currPos.y, delta);
     this->redrawView();
     this->signalViewScaled.send();
-#else
-    if (delta > 0)
-        this->zoomIn();
-    else
-        this->zoomOut();
-#endif
 }
 
 void V3dViewController::zoomIn()

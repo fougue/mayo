@@ -154,27 +154,16 @@ void GraphicsUtils::AisContext_setObjectVisible(
     Internal::AisContext_setObjectVisible(context.get(), object, on);
 }
 
-AIS_InteractiveContext* GraphicsUtils::AisObject_contextPtr(const OccHandle<AIS_InteractiveObject>& object)
-{
-    if (!object)
-        return nullptr;
-
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    return object->InteractiveContext();
-#else
-    return object->GetContext().get();
-#endif
-}
-
 bool GraphicsUtils::AisObject_isVisible(const OccHandle<AIS_InteractiveObject>& object)
 {
-    const AIS_InteractiveContext* ptrContext = AisObject_contextPtr(object);
+    const AIS_InteractiveContext* ptrContext = object ? object->InteractiveContext() : nullptr;
     return ptrContext ? ptrContext->IsDisplayed(object) : false;
 }
 
 void GraphicsUtils::AisObject_setVisible(const OccHandle<AIS_InteractiveObject>& object, bool on)
 {
-    Internal::AisContext_setObjectVisible(AisObject_contextPtr(object), object, on);
+    AIS_InteractiveContext* ptrContext = object ? object->InteractiveContext() : nullptr;
+    Internal::AisContext_setObjectVisible(ptrContext, object, on);
 }
 
 Bnd_Box GraphicsUtils::AisObject_boundingBox(const OccHandle<AIS_InteractiveObject>& object)
@@ -184,20 +173,10 @@ Bnd_Box GraphicsUtils::AisObject_boundingBox(const OccHandle<AIS_InteractiveObje
         return box;
 
     // Ensure bounding box is calculated
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    for (OccHandle<PrsMgr_Presentation> prs : object->Presentations()) {
+    for (const OccHandle<PrsMgr_Presentation>& prs : object->Presentations()) {
         if (prs->Mode() == object->DisplayMode() && !prs->CStructure()->BoundingBox().IsValid())
             prs->CalculateBoundBox();
     }
-#else
-    for (PrsMgr_ModedPresentation& pres : object->Presentations()) {
-        if (pres.Mode() == object->DisplayMode()) {
-            const OccHandle<Prs3d_Presentation>& pres3d = pres.Presentation()->Presentation();
-            if (!pres3d->CStructure()->BoundingBox().IsValid())
-                pres3d->CalculateBoundBox();
-        }
-    }
-#endif
 
     object->BoundingBox(box);
     return box;

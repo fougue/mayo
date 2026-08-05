@@ -11,7 +11,7 @@
 #include "../base/tkernel_utils.h"
 
 #include <Standard_Version.hxx>
-#if OCC_VERSION_HEX <= 0x070400
+#if OCC_VERSION_HEX == 0x070400
 #  include <NCollection_Vector.hxx> // Needed by STEPCAFControl_Writer.hxx
 #endif
 #include <STEPCAFControl_Reader.hxx>

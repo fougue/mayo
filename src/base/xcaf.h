@@ -19,9 +19,6 @@
 #if OCC_VERSION_HEX >= 0x070500
 #  include <XCAFDoc_VisMaterialTool.hxx>
 #endif
-#if OCC_VERSION_HEX < 0x070400
-#  include <TDataStd_NamedData.hxx>
-#endif
 
 namespace Mayo {
 
