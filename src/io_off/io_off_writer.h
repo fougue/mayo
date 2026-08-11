@@ -18,9 +18,6 @@ class OffWriter : public Writer {
 public:
     bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
-    void applyProperties(const PropertyGroup* group) override;
-
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup*)  { return {}; }
 
 private:
     std::vector<DocumentTreeNode> m_vecTreeNode;

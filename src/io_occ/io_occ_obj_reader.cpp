@@ -8,43 +8,23 @@
 
 namespace Mayo::IO {
 
-class OccObjReader::Properties : public OccBaseMeshReaderProperties {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader::Properties)
-public:
-    explicit Properties(PropertyGroup* parentGroup)
-        : OccBaseMeshReaderProperties(parentGroup)
-    {
-        this->singlePrecisionVertexCoords.setDescription(
-            textId("Single precision flag for reading vertex data(coordinates)").tr()
-        );
-    }
+OccObjReader::Parameters::Parameters()
+{
+    this->restoreDefaults();
+    this->singlePrecisionVertexCoords.setDescription(
+        textId("Single precision flag for reading vertex data(coordinates)").tr()
+    );
+}
 
-    void restoreDefaults() override
-    {
-        OccBaseMeshReaderProperties::restoreDefaults();
-        this->singlePrecisionVertexCoords.setValue(false);
-    }
-
-    PropertyBool singlePrecisionVertexCoords{ this, textId("singlePrecisionVertexCoords") };
-};
+void OccObjReader::Parameters::restoreDefaults()
+{
+    OccBaseMeshReader::BaseParameters::restoreDefaults();
+    this->singlePrecisionVertexCoords.setValue(false);
+}
 
 OccObjReader::OccObjReader()
-    : OccBaseMeshReader(m_reader)
+    : OccBaseMeshReader(m_reader, m_params)
 {
-}
-
-std::unique_ptr<PropertyGroup> OccObjReader::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void OccObjReader::applyProperties(const PropertyGroup* params)
-{
-    OccBaseMeshReader::applyProperties(params);
-    auto ptr = dynamic_cast<const Properties*>(params);
-    if (ptr) {
-        m_params.singlePrecisionVertexCoords = ptr->singlePrecisionVertexCoords;
-    }
 }
 
 void OccObjReader::applyParameters()

@@ -8,6 +8,7 @@
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/occ_handle.h"
+#include "../base/property_enumeration.h"
 #include <Poly_Triangulation.hxx>
 #include <TopoDS_Shape.hxx>
 
@@ -18,7 +19,6 @@ class OccStlReader : public Reader {
 public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
-    void applyProperties(const PropertyGroup*) override {}
 
 private:
     OccHandle<Poly_Triangulation> m_mesh;
@@ -31,20 +31,19 @@ public:
     bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
-
     // Parameters
     enum class Format { Ascii, Binary };
 
-    struct Parameters {
-        Format format = Format::Binary;
+    struct Parameters : public PropertyGroup{
+        PropertyEnum<Format> format{this, textId("format")};
+        Parameters();
+        void restoreDefaults() override;
     };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
-    class Properties;
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStlWriter)
     Parameters m_params;
     TopoDS_Shape m_shape;
 };

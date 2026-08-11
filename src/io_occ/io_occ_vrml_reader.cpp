@@ -8,7 +8,7 @@
 namespace Mayo::IO {
 
 OccVrmlReader::OccVrmlReader()
-    : OccBaseMeshReader(m_reader)
+    : OccBaseMeshReader(m_reader, m_params)
 {
     // Fixes weird "mirroring" of the loaded model
     m_reader.SetFileLengthUnit(1.);
@@ -18,11 +18,6 @@ OccVrmlReader::OccVrmlReader()
         scaleFactor = UnitsMethods::GetCasCadeLengthUnit();
     m_reader.SetSystemLengthUnit(scaleFactor);
 #endif
-}
-
-std::unique_ptr<PropertyGroup> OccVrmlReader::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<OccBaseMeshReaderProperties>(parentGroup);
 }
 
 } // namespace Mayo::IO

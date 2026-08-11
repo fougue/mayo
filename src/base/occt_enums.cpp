@@ -5,6 +5,10 @@
 
 #include "occt_enums.h"
 
+#include "string_conv.h"
+
+#include <Font_FontMgr.hxx>
+
 namespace Mayo {
 
 namespace {
@@ -57,6 +61,21 @@ const Enumeration& OcctEnums::Aspect_HatchStyle()
         { Aspect_HS_GRID_DIAGONAL_WIDE, OccHatchStyle::textId("GridDiagonalSparse") }
     };
     return enumeration;
+}
+
+const Enumeration& OcctEnums::systemFontNames()
+{
+    static Enumeration fontNames;
+    static NCollection_Sequence<OccHandle<TCollection_HAsciiString>> seqFontName;
+    if (fontNames.empty()) {
+        OccHandle<Font_FontMgr> fontMgr = Font_FontMgr::GetInstance();
+        fontMgr->GetAvailableFontsNames(seqFontName);
+        int i = 0;
+        for (const OccHandle<TCollection_HAsciiString>& fontName : seqFontName)
+            fontNames.addItem(i++, { {}, to_stdStringView(fontName->String()) });
+    }
+
+    return fontNames;
 }
 
 } // namespace Mayo

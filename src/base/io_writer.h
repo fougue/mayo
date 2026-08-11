@@ -35,8 +35,11 @@ public:
     // Returns 'true' on success
     virtual bool writeFile(const FilePath& fp, TaskProgress* progress) = 0;
 
-    // Apply properties contain in 'group' to the writer's parameter values(known in writer sub-class)
-    virtual void applyProperties(const PropertyGroup* group) = 0;
+    // Returns the mutable parameters used to configure this writer, empty by default
+    virtual PropertyGroup& parameters();
+
+    // Returns the read-only parameters of this writer, empty by default
+    virtual const PropertyGroup& constParameters() const;
 };
 
 // Abstract base class for all writer factories
@@ -50,9 +53,9 @@ public:
     // Creates and returns a Writer object that matches the given format, or nullptr if no matching writer is found
     virtual std::unique_ptr<Writer> create(Format format) const = 0;
 
-    // Creates and returns properties that match the given format. Those properties is a generic
-    // way to change parameter values of a Writer object corresponding to format(see also Writer::applyProperties())
-    virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
+    // Creates and returns parameters that match the given format. Those parameters is a generic
+    // way to change parameter values of a Writer object corresponding to format(see also Writer::applyParameters())
+    virtual std::unique_ptr<PropertyGroup> createParameters(Format format) const = 0;
 };
 
 } // namespace IO

@@ -8,7 +8,8 @@
 #include "../base/io_writer.h"
 #include "../base/application_item.h"
 #include "../base/caf_utils.h"
-#include "../base/tkernel_utils.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
 #include "../graphics/graphics_object_driver.h"
 
 #include <gp_Dir.hxx>
@@ -41,11 +42,6 @@ public:
     bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(
-        PropertyGroup* parentGroup, const GuiApplication* guiApp = nullptr
-    );
-    void applyProperties(const PropertyGroup* params) override;
-
     // Parameters
     enum class CameraProjection {
         Perspective, Orthographic
@@ -67,25 +63,29 @@ public:
         Radial
     };
 
-    struct Parameters {
-        int width = 128;
-        int height = 128;
-        Quantity_Color backgroundColorStart = Quantity_NOC_BLACK;
-        Quantity_Color backgroundColorEnd = Quantity_NOC_BLACK;
-        GradientFill backgroundGradientFill = GradientFill::None;
-        gp_Vec cameraOrientation = gp_Vec{1, -1, 1}; // X+ Y- Z+
-        CameraProjection cameraProjection = CameraProjection::Orthographic;
+    struct Parameters : public PropertyGroup {
+        PropertyInt width{ this, textId("width") };
+        PropertyInt height{ this, textId("height") };
+        PropertyOccColor backgroundColorStart{ this, textId("backgroundColorStart") };
+        PropertyOccColor backgroundColorEnd{ this, textId("backgroundColorEnd") };
+        PropertyEnum<GradientFill> backgroundGradientFill{ this, textId("backgroundGradientFill") };
+        PropertyOccVec cameraOrientation{ this, textId("cameraOrientation") };
+        PropertyEnum<CameraProjection> cameraProjection{ this, textId("cameraProjection") };
 
         std::optional<Enumeration::Value> displayMode(const GraphicsObjectDriverPtr& driver) const;
         void setDisplayMode(const GraphicsObjectDriverPtr& driver, Enumeration::Value enumValue);
 
+        Parameters(const GuiApplication* guiApp);
+        void restoreDefaults() override;
+
     private:
-        std::map<GraphicsObjectDriverPtr, Enumeration::Value> m_driverDisplayModes;
+        std::map<GraphicsObjectDriverPtr, std::unique_ptr<PropertyEnumeration>> m_mapDriverDisplayMode;
+        std::vector<std::string> m_textIdStringStorage;
         friend class ImageWriter;
     };
 
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
     // Helper
     static OccHandle<Image_AlienPixMap> createImage(GuiDocument* guiDoc, const Parameters& params);
@@ -93,7 +93,8 @@ public:
     static OccHandle<V3d_View> createV3dView(GraphicsScene* gfxScene, const Parameters& params);
 
 private:
-    class Properties;
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::ImageWriter)
+
     GuiApplication* m_guiApp = nullptr;
     Parameters m_params;
     std::vector<ApplicationItem> m_vecAppItem;
@@ -104,7 +105,7 @@ public:
     explicit ImageFactoryWriter(GuiApplication* guiApp);
     gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
+    std::unique_ptr<PropertyGroup> createParameters(Format format) const override;
 
 private:
     GuiApplication* m_guiApp = nullptr;

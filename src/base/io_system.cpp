@@ -11,6 +11,7 @@
 #include "io_reader.h"
 #include "io_writer.h"
 #include "messenger.h"
+#include "property_value_conversion.h"
 #include "task_manager.h"
 #include "task_progress.h"
 #include "tkernel_utils.h"
@@ -48,6 +49,70 @@ void dispatchWarnings(std::string_view headerMsg, const MessageCollecter& msgCol
     const std::string strWarnings = msgCollect.asString("\n    ", MessageType::Warning);
     if (!strWarnings.empty())
         target->warning() << fmt::format("{}\n    {}", headerMsg, strWarnings);
+}
+
+// TODO Add tests
+bool copyValues(
+        PropertyGroup* destPropGroup,
+        const PropertyGroup* srcPropGroup,
+        const PropertyValueConversion& conv,
+        Messenger* messenger
+    )
+{
+    messenger = !messenger ? &Messenger::null() : messenger;
+
+    if (!destPropGroup || !srcPropGroup)
+        return false;
+
+    auto srcPropSpan = srcPropGroup->properties();
+    auto destPropSpan = destPropGroup->properties();
+
+    if (destPropSpan.size() < srcPropSpan.size()) {
+        messenger->emitError(fmt::format(
+            "Failed to copy property, size mismatch [ srcSize={}, destSize={} ]",
+            srcPropSpan.size(), destPropSpan.size()
+        ));
+        return false;
+    }
+
+    for (size_t i = 0; i < srcPropSpan.size(); ++i) {
+        const Property* srcProp = srcPropSpan[i];
+        Property* destProp = destPropSpan[i];
+        if (destProp->name().key != srcProp->name().key) {
+            // Try to find destination Property by name
+            auto itFound = std::find_if(destPropSpan.begin(), destPropSpan.end(), [=](const Property* prop) {
+                return prop->name().key == srcProp->name().key;
+            });
+            destProp = itFound != destPropSpan.end() ? *itFound : destProp;
+        }
+
+        if (destProp->name().key != srcProp->name().key) {
+            messenger->emitError(fmt::format(
+                "Failed to copy property value, name mismatch [ srcName={}, destName={} ]",
+                srcProp->name().key, destProp->name().key
+            ));
+            return false;
+        }
+
+        if (destProp->dynTypeName() != srcProp->dynTypeName()) {
+            messenger->emitError(fmt::format(
+                "Failed to copy property value, type mismatch [ name={}, srcType={}, dstType={} ]",
+                srcProp->name().key, srcProp->dynTypeName(), destProp->dynTypeName()
+            ));
+            return false;
+        }
+
+        const bool okConv = conv.fromVariant(destProp, conv.toVariant(*srcProp));
+        if (!okConv) {
+            messenger->emitError(fmt::format(
+                "Failed to copy property value, with PropertyValueConversion tool [ name={}, type={} ]",
+                srcProp->name().key, srcProp->dynTypeName()
+            ));
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace
@@ -199,6 +264,7 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
     const auto listFilepath = args.filepaths;
     TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
     Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
+    const PropertyValueConversion propValueConverter;
 
     bool ok = true;
 
@@ -247,8 +313,12 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
 
         taskData.reader->setMessenger(&taskData.messenger);
         if (args.parametersProvider) {
-            taskData.reader->applyProperties(
-                args.parametersProvider->findReaderParameters(taskData.fileFormat)
+
+            copyValues(
+                &taskData.reader->parameters(),
+                args.parametersProvider->findReaderParameters(taskData.fileFormat),
+                propValueConverter,
+                messenger
             );
         }
 
@@ -374,6 +444,7 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
         msgCollect.error() << errorMsg;
         return false;
     };
+    const PropertyValueConversion propValueConverter;
 
     auto _ = gsl::finally([&]{
         Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
@@ -387,7 +458,8 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
         return fnError(textIdTr("No supporting writer"));
 
     writer->setMessenger(&msgCollect);
-    writer->applyProperties(args.parameters);
+    copyValues(&writer->parameters(), args.parameters, propValueConverter, &msgCollect);
+
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
         const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);

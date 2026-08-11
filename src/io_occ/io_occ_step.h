@@ -8,6 +8,8 @@
 #include "io_occ_common.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
 #include "../base/tkernel_utils.h"
 
 #include <Standard_Version.hxx>
@@ -85,24 +87,25 @@ public:
 #endif
     };
 
-    struct Parameters {
-        ProductContext productContext = ProductContext::Both;
-        AssemblyLevel assemblyLevel = AssemblyLevel::All;
-        ShapeRepresentation preferredShapeRepresentation = ShapeRepresentation::All;
-        bool readShapeAspect = true;
-        bool readSubShapesNames = false;
-        Encoding encoding = Encoding::UTF8;
-    };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    struct Parameters : public PropertyGroup {
+        PropertyEnum<ProductContext> productContext{ this, textId("productContext") };
+        PropertyEnum<AssemblyLevel> assemblyLevel{ this, textId("assemblyLevel") };
+        PropertyEnum<ShapeRepresentation> preferredShapeRepresentation{ this, textId("preferredShapeRepresentation") };
+        PropertyBool readShapeAspect{ this, textId("readShapeAspect") };
+        PropertyBool readSubShapesNames{ this, textId("readSubShapesNames") };
+        PropertyEnum<Encoding> encoding{ this, textId("encoding") };
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
+        Parameters();
+        void restoreDefaults() override;
+    };
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader)
+
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
-    class Properties;
     STEPCAFControl_Reader* m_reader = nullptr;
     std::aligned_storage_t<sizeof(STEPCAFControl_Reader)> m_readerStorage;
     Parameters m_params;
@@ -138,28 +141,30 @@ public:
     };
 
     using LengthUnit = OccCommon::LengthUnit;
-    struct Parameters {
-        Schema schema = Schema::AP214_IS;
-        LengthUnit lengthUnit = LengthUnit::Millimeter;
-        AssemblyMode assemblyMode = AssemblyMode::Auto;
-        FreeVertexMode freeVertexMode = FreeVertexMode::Compound;
-        bool writeParametricCurves = true;
-        bool writeSubShapesNames = false;
-        std::string headerAuthor;            // utf8
-        std::string headerOrganization;      // utf8
-        std::string headerOriginatingSystem; // utf8
-        std::string headerDescription;       // utf8
-    };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
+    struct Parameters : public PropertyGroup {
+        PropertyEnum<Schema> schema{ this, textId("schema") };
+        PropertyEnum<LengthUnit> lengthUnit{ this, textId("lengthUnit") };
+        PropertyEnum<AssemblyMode> assemblyMode{ this, textId("assemblyMode") };
+        PropertyEnum<FreeVertexMode> freeVertexMode{ this, textId("freeVertexMode") };
+        PropertyBool writePCurves{ this, textId("writeParametericCurves") };
+        PropertyBool writeSubShapesNames{ this, textId("writeSubShapesNames") };
+        PropertyString headerAuthor{ this, textId("headerAuthor") };
+        PropertyString headerOrganization{ this, textId("headerOrganization") };
+        PropertyString headerOriginatingSystem{ this, textId("headerOriginatingSystem") };
+        PropertyString headerDescription{ this, textId("headerDescription") };
+
+        Parameters();
+        void restoreDefaults() override;
+    };
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter)
+
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
-    class Properties;
     STEPCAFControl_Writer* m_writer = nullptr;
     std::aligned_storage_t<sizeof(STEPCAFControl_Writer)> m_writerStorage;
     Parameters m_params;

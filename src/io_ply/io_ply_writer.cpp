@@ -13,8 +13,6 @@
 #include "../base/math_utils.h"
 #include "../base/mesh_access.h"
 #include "../base/messenger.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -54,32 +52,19 @@ Endianness hostEndianness()
 
 } // namespace
 
-struct PlyWriterI18N {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::PlyWriterI18N)
-};
+PlyWriter::Parameters::Parameters()
+{
+    this->restoreDefaults();
+    this->comment.setDescription(textIdTr("Line that will appear in header"));
+}
 
-class PlyWriter::Properties : public PropertyGroup {
-public:
-    explicit Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-        this->targetFormat.mutableEnumeration().changeTrContext(PlyWriterI18N::textIdContext());
-        this->comment.setDescription(PlyWriterI18N::textIdTr("Line that will appear in header"));
-    }
-
-    void restoreDefaults() override {
-        const PlyWriter::Parameters defaultParams;
-        this->targetFormat.setValue(defaultParams.format);
-        this->writeColors.setValue(defaultParams.writeColors);
-        this->defaultColor.setValue(defaultParams.defaultColor.GetRGB());
-        this->comment.setValue(defaultParams.comment);
-    }
-
-    PropertyEnum<PlyWriter::Format> targetFormat{ this, PlyWriterI18N::textId("targetFormat") };
-    PropertyBool writeColors{ this, PlyWriterI18N::textId("writeColors") };
-    PropertyOccColor defaultColor{ this, PlyWriterI18N::textId("defaultColor") };
-    PropertyString comment{ this, PlyWriterI18N::textId("comment") };
-};
+void PlyWriter::Parameters::restoreDefaults()
+{
+    this->format.setValue(Format::Binary);
+    this->writeColors.setValue(true);
+    this->defaultColor.setValue(Quantity_NOC_GRAY);
+    this->comment.setValue({});
+}
 
 bool PlyWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
@@ -136,7 +121,7 @@ bool PlyWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     std::ofstream fstr(filepath, mode);
     if (!fstr.is_open()) {
-        this->messenger()->emitError(PlyWriterI18N::textIdTr("Failed to open file"));
+        this->messenger()->emitError(textIdTr("Failed to open file"));
         return false;
     }
 
@@ -149,7 +134,7 @@ bool PlyWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         else if (endian == Endianness::Big)
             strPlyFormat = "binary_big_endian";
         else
-            this->messenger()->emitError(PlyWriterI18N::textIdTr("Unknown host endianness"));
+            this->messenger()->emitError(textIdTr("Unknown host endianness"));
     }
     else {
         strPlyFormat = "ascii";
@@ -163,11 +148,11 @@ bool PlyWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     fstr << "ply\n"
          << "format " << strPlyFormat << " 1.0\n";
 
-    if (!m_params.comment.empty()) {
+    if (!m_params.comment.value().empty()) {
         std::string strComment = m_params.comment;
         std::replace(strComment.begin(), strComment.end(), '\n', ' ');
         std::replace(strComment.begin(), strComment.end(), '\r', ' ');
-        fstr << "comment " << m_params.comment << "\n";
+        fstr << "comment " << m_params.comment.value() << "\n";
     }
 
     fstr << "element vertex " << m_vecNode.size() << "\n"
@@ -241,22 +226,6 @@ bool PlyWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     return true;
 }
 
-std::unique_ptr<PropertyGroup> PlyWriter::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void PlyWriter::applyProperties(const PropertyGroup* params)
-{
-    auto ptr = dynamic_cast<const Properties*>(params);
-    if (ptr) {
-        m_params.format = ptr->targetFormat;
-        m_params.writeColors = ptr->writeColors;
-        m_params.defaultColor = Quantity_ColorRGBA(ptr->defaultColor);
-        m_params.comment = ptr->comment;
-    }
-}
-
 void PlyWriter::addMesh(const IMeshAccess& mesh)
 {
     const OccHandle<Poly_Triangulation>& triangulation = mesh.triangulation();
@@ -278,7 +247,7 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
     if (m_params.writeColors) {
         for (int i = 0; i < triangulation->NbNodes(); ++i) {
             const std::optional<Quantity_Color> nodeColor = mesh.nodeColor(i);
-            const Quantity_Color& defaultNodeColor = m_params.defaultColor.GetRGB();
+            const Quantity_Color& defaultNodeColor = m_params.defaultColor.value();
             m_vecNodeColor.push_back(PlyWriter::toColor(nodeColor.value_or(defaultNodeColor)));
         }
     }
@@ -296,7 +265,7 @@ void PlyWriter::addPointCloud(const PointCloudDataPtr& pntCloud)
     if (m_params.writeColors) {
         const bool hasColors = points->HasVertexColors();
         for (int i = 1; i <= pntCount; ++i) {
-            const Quantity_Color pntColor = hasColors ? points->VertexColor(i) : m_params.defaultColor.GetRGB();
+            const Quantity_Color pntColor = hasColors ? points->VertexColor(i) : m_params.defaultColor.value();
             m_vecNodeColor.push_back(PlyWriter::toColor(pntColor));
         }
     }
@@ -304,13 +273,21 @@ void PlyWriter::addPointCloud(const PointCloudDataPtr& pntCloud)
 
 PlyWriter::Vertex PlyWriter::toVertex(const gp_Pnt& pnt)
 {
-    return Vertex{ float(pnt.X()), float(pnt.Y()), float(pnt.Z()) };
+    return Vertex{
+        static_cast<float>(pnt.X()),
+        static_cast<float>(pnt.Y()),
+        static_cast<float>(pnt.Z())
+    };
 }
 
 PlyWriter::Color PlyWriter::toColor(const Quantity_Color& c)
 {
     const Quantity_Color cc = TKernelUtils::toLinearRgbColor(c);
-    return { uint8_t(cc.Red() * 255), uint8_t(cc.Green() * 255), uint8_t(cc.Blue() * 255) };
+    return {
+        static_cast<uint8_t>(cc.Red() * 255),
+        static_cast<uint8_t>(cc.Green() * 255),
+        static_cast<uint8_t>(cc.Blue() * 255)
+    };
 }
 
 } // namespace Mayo::IO

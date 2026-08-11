@@ -84,23 +84,23 @@ std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
     return {};
 }
 
-PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
+PtrPropertyGroup OccFactoryReader::createParameters(Format format) const
 {
     if (format == Format_STEP)
-        return OccStepReader::createProperties(parentGroup);
+        return std::make_unique<OccStepReader::Parameters>();
 
     if (format == Format_IGES)
-        return OccIgesReader::createProperties(parentGroup);
+        return std::make_unique<OccIgesReader::Parameters>();
 
     if (format == Format_GLTF)
-        return OccGltfReader::createProperties(parentGroup);
+        return std::make_unique<OccGltfReader::Parameters>();
 
     if (format == Format_OBJ)
-        return OccObjReader::createProperties(parentGroup);
+        return std::make_unique<OccObjReader::Parameters>();
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
     if (format == Format_VRML)
-        return OccVrmlReader::createProperties(parentGroup);
+        return std::make_unique<OccVrmlReader::Parameters>();
 #endif
 
     return {};
@@ -154,31 +154,31 @@ std::unique_ptr<Writer> OccFactoryWriter::create(Format format) const
     return {};
 }
 
-PtrPropertyGroup OccFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
+PtrPropertyGroup OccFactoryWriter::createParameters(Format format) const
 {
     if (format == Format_STEP)
-        return OccStepWriter::createProperties(parentGroup);
+        return std::make_unique<OccStepWriter::Parameters>();
 
     if (format == Format_IGES)
-        return OccIgesWriter::createProperties(parentGroup);
+        return std::make_unique<OccIgesWriter::Parameters>();
 
     if (format == Format_OCCBREP)
-        return OccBRepWriter::createProperties(parentGroup);
+        return std::make_unique<OccBRepWriter::Parameters>();
 
     if (format == Format_STL)
-        return OccStlWriter::createProperties(parentGroup);
+        return std::make_unique<OccStlWriter::Parameters>();
 
     if (format == Format_VRML)
-        return OccVrmlWriter::createProperties(parentGroup);
+        return std::make_unique<OccVrmlWriter::Parameters>();
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     if (format == Format_GLTF)
-        return OccGltfWriter::createProperties(parentGroup);
+        return std::make_unique<OccGltfWriter::Parameters>();
 #endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
     if (format == Format_OBJ)
-        return OccObjWriter::createProperties(parentGroup);
+        return std::make_unique<OccObjWriter::Parameters>();
 #endif
 
     return {};

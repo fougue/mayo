@@ -16,7 +16,7 @@ class AssimpFactoryReader : public FactoryReader {
 public:
     gsl::span<const Format> formats() const override;
     std::unique_ptr<Reader> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
+    std::unique_ptr<PropertyGroup> createParameters(Format format) const override;
 
     static std::unique_ptr<FactoryReader> create() {
 #ifdef MAYO_HAVE_ASSIMP

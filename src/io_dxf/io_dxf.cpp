@@ -16,8 +16,6 @@
 #include "../base/messenger.h"
 #include "../base/occ_handle.h"
 #include "../base/occt_ncollection_harray1_of_gppnt.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
 #include "../base/string_conv.h"
 #include "../base/tkernel_utils.h"
@@ -36,7 +34,6 @@
 #include <BSplCLib.hxx>
 #include <ElCLib.hxx>
 #include <Font_BRepTextBuilder.hxx>
-#include <Font_FontMgr.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <GeomAPI_Interpolate.hxx>
 #include <Geom_BSplineCurve.hxx>
@@ -143,22 +140,6 @@ std::array<char, 4> toUtf8(char16_t code)
     }
 
     return u8Code;
-}
-
-// Returns enumeration of all font names on the system
-const Enumeration& systemFontNames()
-{
-    static Enumeration fontNames;
-    static NCollection_Sequence<OccHandle<TCollection_HAsciiString>> seqFontName;
-    if (fontNames.empty()) {
-        OccHandle<Font_FontMgr> fontMgr = Font_FontMgr::GetInstance();
-        fontMgr->GetAvailableFontsNames(seqFontName);
-        int i = 0;
-        for (const OccHandle<TCollection_HAsciiString>& fontName : seqFontName)
-            fontNames.addItem(i++, { {}, to_stdStringView(fontName->String()) });
-    }
-
-    return fontNames;
 }
 
 // Returns graphical width of string `str` using input BREP font
@@ -498,11 +479,10 @@ private:
 
 class DxfReader::ReaderImpl : public DxfParser {
 public:
-    ReaderImpl();
+    ReaderImpl(const DxfReader::Parameters& params);
 
     bool read(const FilePath& filepath, TaskProgress* progress = nullptr);
     void setMessenger(Messenger* messenger) { m_messenger = messenger; }
-    void setParameters(const DxfReader::Parameters& params) { m_params = params; }
 
     TopoDS_Shape createEntityShape(const Dxf_EntityVariant& entityVar);
     TopoDS_Shape createBlockShape(const Dxf_BLOCK& block);
@@ -569,7 +549,7 @@ private:
 
     unsigned m_lineCounter = 0;
     Messenger* m_messenger = nullptr;
-    DxfReader::Parameters m_params;
+    const DxfReader::Parameters& m_params;
     TaskProgress* m_progress = nullptr;
     std::uintmax_t m_fileSize = 0;
     std::uintmax_t m_fileReadSize = 0;
@@ -577,31 +557,27 @@ private:
     std::unordered_map<DxfStringRef, OccBlock> m_mapOccBlock;
 };
 
-class DxfReader::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::DxfReader::Properties)
-public:
-    explicit Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-        this->importAnnotations.setDescription(
-            textIdTr("Import text/dimension objects"));
-        this->groupLayers.setDescription(
-            textIdTr("Group all objects within a layer into a single compound shape"));
-        this->fontNameForTextObjects.setDescription(
-            textIdTr("Name of the font to be used when creating shape for text objects"));
-    }
+DxfReader::Parameters::Parameters()
+{
+    this->restoreDefaults();
 
-    void restoreDefaults() override {
-        const DxfReader::Parameters params;
-        this->importAnnotations.setValue(params.importAnnotations);
-        this->groupLayers.setValue(params.groupLayers);
-        this->fontNameForTextObjects.setValue(0);
-    }
+    this->importAnnotations.setDescription(
+        textIdTr("Import text/dimension objects")
+    );
+    this->groupLayers.setDescription(
+        textIdTr("Group all objects within a layer into a single compound shape")
+    );
+    this->fontNameForTextObjects.setDescription(
+        textIdTr("Name of the font to be used when creating shape for text objects")
+    );
+}
 
-    PropertyBool importAnnotations{ this, textId("importAnnotations") };
-    PropertyBool groupLayers{ this, textId("groupLayers") };
-    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), &systemFontNames() };
-};
+void DxfReader::Parameters::restoreDefaults()
+{
+    this->importAnnotations.setValue(true);
+    this->groupLayers.setValue(true);
+    this->fontNameForTextObjects.setValue(0);
+}
 
 DxfReader::DxfReader() = default;
 
@@ -609,8 +585,7 @@ DxfReader::~DxfReader() = default;
 
 bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
-    m_impl = std::make_unique<DxfReader::ReaderImpl>();
-    m_impl->setParameters(m_params);
+    m_impl = std::make_unique<DxfReader::ReaderImpl>(m_params);
     m_impl->setMessenger(this->messenger() ? this->messenger() : &Messenger::null());
     return m_impl->read(filepath, progress);
 }
@@ -626,22 +601,8 @@ NCollection_Sequence<TDF_Label> DxfReader::transfer(DocumentPtr doc, TaskProgres
         return this->transferBySingleEntities(doc, progress);
 }
 
-std::unique_ptr<PropertyGroup> DxfReader::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void DxfReader::applyProperties(const PropertyGroup* group)
-{
-    auto ptr = dynamic_cast<const Properties*>(group);
-    if (ptr) {
-        m_params.importAnnotations = ptr->importAnnotations;
-        m_params.groupLayers = ptr->groupLayers;
-        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.valueName();
-    }
-}
-
-DxfReader::ReaderImpl::ReaderImpl()
+DxfReader::ReaderImpl::ReaderImpl(const DxfReader::Parameters& params)
+    : m_params(params)
 {
     this->setGetLinePostCallback([=](size_t getLineSize) {
         ++m_lineCounter;
@@ -720,7 +681,7 @@ bool DxfReader::ReaderImpl::setSourceEncoding(std::string_view codepage)
     }
     else {
         m_srcEncoding = Resource_ANSI;
-        m_messenger->emitWarning(fmt::format(Properties::textIdTr("Codepage '{}' not supported"), codepage));
+        m_messenger->emitWarning(fmt::format(textIdTr("Codepage '{}' not supported"), codepage));
     }
 
     return true;
@@ -1284,7 +1245,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_MTEXT& mtext)
     const gp_Dir extrusionDir = toOccDir(mtext.extrusionDirection);
     const Frame frame = Frame::makeOcs(extrusionDir);
     const gp_Pnt pt = ocsPointToWcs(mtext.insertionPoint, frame);
-    const std::string& fontName = m_params.fontNameForTextObjects;
+    const std::string fontName = std::string{m_params.fontNameForTextObjects.valueName()};
     const double lineHeight = 1.4 * mtext.height;
     Font_BRepFont brepFont;
     if (!brepFont.Init(fontName.c_str(), Font_FA_Regular, lineHeight)) {
@@ -1853,7 +1814,11 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_TEXT& text)
         return {};
 
     const Dxf_STYLE* ptrStyle = this->findStyle(text.styleName);
-    std::string fontName = ptrStyle ? std::string{ptrStyle->name} : m_params.fontNameForTextObjects;
+    std::string fontName =
+        ptrStyle
+            ? std::string{ptrStyle->name}
+            : std::string{m_params.fontNameForTextObjects.valueName()}
+        ;
     // "ARIAL_NARROW" -> "ARIAL NARROW"
     if (toLowerCase_C(fontName) == "arial_narrow")
         fontName.replace(5, 1, " ");

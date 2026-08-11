@@ -295,23 +295,6 @@ bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     return gmio_no_error(error);
 }
 
-std::unique_ptr<PropertyGroup> GmioAmfWriter::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void GmioAmfWriter::applyProperties(const PropertyGroup* group)
-{
-    auto ptr = dynamic_cast<const Properties*>(group);
-    if (ptr) {
-        m_params.float64Format = ptr->float64Format;
-        m_params.float64Precision = ptr->float64Precision;
-        m_params.createZipArchive = ptr->createZipArchive;
-        m_params.zipEntryFilename = ptr->zipEntryFilename;
-        m_params.useZip64 = ptr->useZip64;
-    }
-}
-
 int GmioAmfWriter::createObject(const TDF_Label& labelShape)
 {
     // Object meshes

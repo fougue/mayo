@@ -13,8 +13,6 @@
 #include "../base/occ_progress_indicator.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -25,10 +23,6 @@
 #include <TDataStd_Name.hxx>
 
 namespace Mayo::IO {
-
-struct OccBRepI18N {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBRepI18N)
-};
 
 bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
@@ -56,9 +50,7 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
         );
     }
 
-    this->messenger()->emitError(
-        OccBRepI18N::textIdTr("Failed to guess OpenCascade BREP ascii/binary format")
-    );
+    this->messenger()->emitError(textIdTr("Failed to guess OpenCascade BREP ascii/binary format"));
     return false;
 }
 
@@ -74,33 +66,25 @@ NCollection_Sequence<TDF_Label> OccBRepReader::transfer(DocumentPtr doc, TaskPro
     return CafUtils::makeLabelSequence({ labelShape });
 }
 
-class OccBRepWriter::Properties : public PropertyGroup {
-public:
-    explicit Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-        this->targetFormat.mutableEnumeration().changeTrContext(OccBRepI18N::textIdContext());
-        this->saveShapeTriangulation.setDescription(OccBRepI18N::textIdTr(
-            "Specifies whether to save shape with or without triangles.\n"
-            "Has no effect on triangulation-only geometry"
-        ));
-        this->saveShapeTriangulationNormals.setDescription(OccBRepI18N::textIdTr(
-            "Specifies whether to save triangulation with or without normals.\n"
-            "Has no effect on triangulation-only geometry"
-        ));
-    }
+OccBRepWriter::Parameters::Parameters()
+{
+    this->restoreDefaults();
+    this->saveShapeTriangulation.setDescription(textIdTr(
+        "Specifies whether to save shape with or without triangles.\n"
+        "Has no effect on triangulation-only geometry"
+    ));
+    this->saveShapeTriangulationNormals.setDescription(textIdTr(
+        "Specifies whether to save triangulation with or without normals.\n"
+        "Has no effect on triangulation-only geometry"
+    ));
+}
 
-    void restoreDefaults() override {
-        const OccBRepWriter::Parameters defaultParams;
-        this->targetFormat.setValue(defaultParams.format);
-        this->saveShapeTriangulation.setValue(defaultParams.saveShapeTriangulation);
-        this->saveShapeTriangulationNormals.setValue(defaultParams.saveShapeTriangulationNormals);
-    }
-
-    PropertyEnum<OccBRepWriter::Format> targetFormat{ this, OccBRepI18N::textId("targetFormat") };
-    PropertyBool saveShapeTriangulation{ this, OccBRepI18N::textId("saveShapeTriangulation") };
-    PropertyBool saveShapeTriangulationNormals{ this, OccBRepI18N::textId("saveShapeTriangulationNormals") };
-};
+void OccBRepWriter::Parameters::restoreDefaults()
+{
+    this->format.setValue(Format::Ascii);
+    this->saveShapeTriangulation.setValue(true);
+    this->saveShapeTriangulationNormals.setValue(false);
+}
 
 bool OccBRepWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
@@ -159,21 +143,6 @@ bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
             , TKernelUtils::start(indicator)
 #endif
         );
-    }
-}
-
-std::unique_ptr<PropertyGroup> OccBRepWriter::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void OccBRepWriter::applyProperties(const PropertyGroup* params)
-{
-    auto ptr = dynamic_cast<const Properties*>(params);
-    if (ptr) {
-        m_params.format = ptr->targetFormat;
-        m_params.saveShapeTriangulation = ptr->saveShapeTriangulation;
-        m_params.saveShapeTriangulationNormals = ptr->saveShapeTriangulationNormals;
     }
 }
 

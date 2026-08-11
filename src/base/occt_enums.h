@@ -15,6 +15,7 @@ class OcctEnums {
 public:
     static const Enumeration& Graphic3d_NameOfMaterial();
     static const Enumeration& Aspect_HatchStyle();
+    static const Enumeration& systemFontNames();
 };
 
 } // namespace Mayo

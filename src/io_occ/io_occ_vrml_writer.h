@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../base/io_writer.h"
+#include "../base/property_enumeration.h"
 #include <VrmlAPI_RepresentationOfShape.hxx>
 #include <VrmlData_Scene.hxx>
 #include <memory>
@@ -18,22 +19,19 @@ public:
     bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
-
     // Parameters
-
-    struct Parameters {
-        VrmlAPI_RepresentationOfShape shapeRepresentation = VrmlAPI_BothRepresentation;
+    struct Parameters : public PropertyGroup {
+        PropertyEnum<VrmlAPI_RepresentationOfShape> shapeRepresentation{this, textId("shapeRepresentation")};
+        Parameters();
+        void restoreDefaults() override;
     };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
-    class Properties;
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccVrmlWriter)
     Parameters m_params;
     std::unique_ptr<VrmlData_Scene> m_scene;
-    VrmlAPI_RepresentationOfShape m_shapeRepresentation = VrmlAPI_BothRepresentation;
 };
 
 } // namespace Mayo::IO

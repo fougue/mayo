@@ -111,8 +111,4 @@ bool OffWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     return true;
 }
 
-void OffWriter::applyProperties(const PropertyGroup*)
-{
-}
-
 } // namespace Mayo::IO

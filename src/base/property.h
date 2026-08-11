@@ -32,6 +32,7 @@ public:
     gsl::span<Property* const> properties() const;
 
     PropertyGroup* parentGroup() const { return m_parentGroup; }
+    void setParentGroup(PropertyGroup* group) { m_parentGroup = group; }
 
     // Reinitialize properties to their default values
     virtual void restoreDefaults();

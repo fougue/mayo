@@ -16,14 +16,11 @@ class OccVrmlReader : public OccBaseMeshReader {
 public:
     OccVrmlReader();
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-
-    OccBaseMeshReader::Parameters& parameters() override { return m_params; }
-    const OccBaseMeshReader::Parameters& constParameters() const override { return m_params; }
+    using Parameters = OccBaseMeshReader::BaseParameters;
 
 private:
     VrmlAPI_CafReader m_reader;
-    OccBaseMeshReader::Parameters m_params;
+    BaseParameters m_params;
 };
 
 } // namespace Mayo::IO

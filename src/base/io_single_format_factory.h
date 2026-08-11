@@ -15,7 +15,7 @@ class SingleFormatFactoryReader : public FactoryReader {
 public:
     gsl::span<const Format> formats() const override;
     std::unique_ptr<Reader> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
+    std::unique_ptr<PropertyGroup> createParameters(Format format) const override;
 };
 
 template<Format Fmt, typename FormatWriter>
@@ -23,12 +23,25 @@ class SingleFormatFactoryWriter : public FactoryWriter {
 public:
     gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
+    std::unique_ptr<PropertyGroup> createParameters(Format format) const override;
 };
 
 // --
 // -- Implementation
 // --
+
+namespace Internal {
+
+template<typename T, typename = void>
+struct HasReaderOrWriterParameters : std::false_type {};
+
+template<typename T>
+struct HasReaderOrWriterParameters<T, std::void_t<typename T::Parameters>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool HasReaderOrWriterParameters_v = HasReaderOrWriterParameters<T>::value;
+
+} // namespace Internal
 
 template<Format Fmt, typename FormatReader>
 gsl::span<const Format> SingleFormatFactoryReader<Fmt, FormatReader>::formats() const
@@ -48,12 +61,14 @@ std::unique_ptr<Reader> SingleFormatFactoryReader<Fmt, FormatReader>::create(For
 
 template<Format Fmt, typename FormatReader>
 std::unique_ptr<PropertyGroup>
-SingleFormatFactoryReader<Fmt, FormatReader>::createProperties(Format format, PropertyGroup* parentGroup) const
+SingleFormatFactoryReader<Fmt, FormatReader>::createParameters(Format format) const
 {
-    if (format == Fmt)
-        return FormatReader::createProperties(parentGroup);
-    else
-        return {};
+    if (format == Fmt) {
+        if constexpr (Internal::HasReaderOrWriterParameters_v<FormatReader>)
+            return std::make_unique<typename FormatReader::Parameters>();
+    }
+
+    return {};
 }
 
 template<Format Fmt, typename FormatWriter>
@@ -74,12 +89,14 @@ std::unique_ptr<Writer> SingleFormatFactoryWriter<Fmt, FormatWriter>::create(For
 
 template<Format Fmt, typename FormatWriter>
 std::unique_ptr<PropertyGroup>
-SingleFormatFactoryWriter<Fmt, FormatWriter>::createProperties(Format format, PropertyGroup* parentGroup) const
+SingleFormatFactoryWriter<Fmt, FormatWriter>::createParameters(Format format) const
 {
-    if (format == Fmt)
-        return FormatWriter::createProperties(parentGroup);
-    else
-        return {};
+    if (format == Fmt) {
+        if constexpr (Internal::HasReaderOrWriterParameters_v<FormatWriter>)
+            return std::make_unique<typename FormatWriter::Parameters>();
+    }
+
+    return {};
 }
 
 } // namespace Mayo::IO

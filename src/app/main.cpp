@@ -234,11 +234,13 @@ Thumbnail createGuiDocumentThumbnail(GuiDocument* guiDoc, QSize size)
 {
     Thumbnail thumbnail;
 
-    IO::ImageWriter::Parameters params;
-    params.width = size.width();
-    params.height = size.height();
-    params.backgroundColorStart = QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window));
-    params.backgroundColorEnd = params.backgroundColorStart;
+    IO::ImageWriter::Parameters params(guiDoc->guiApplication());
+    params.width.setValue(size.width());
+    params.height.setValue(size.height());
+    params.backgroundColorStart.setValue(
+        QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window))
+    );
+    params.backgroundColorEnd.setValue(params.backgroundColorStart);
     OccHandle<Image_AlienPixMap> pixmap = IO::ImageWriter::createImage(guiDoc, params);
     if (!pixmap) {
         qDebug() << "Empty pixmap returned by IO::ImageWriter::createImage()";

@@ -298,11 +298,6 @@ private:
 // -- AssimpReader
 // --
 
-class AssimpReader::Properties : public PropertyGroup {
-public:
-    using PropertyGroup::PropertyGroup; // Inherit PropertyGroup constructors
-};
-
 bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_vecTriangulation.clear();
@@ -434,18 +429,6 @@ NCollection_Sequence<TDF_Label> AssimpReader::transfer(DocumentPtr doc, TaskProg
     //doc->xcaf().shapeTool()->ComputeShapes(labelEntity);
     doc->xcaf().shapeTool()->UpdateAssemblies();
     return CafUtils::makeLabelSequence({ labelEntity });
-}
-
-std::unique_ptr<PropertyGroup> AssimpReader::createProperties(PropertyGroup* /*parentGroup*/)
-{
-    return {};
-}
-
-void AssimpReader::applyProperties(const PropertyGroup* group)
-{
-    auto ptr = dynamic_cast<const Properties*>(group);
-    if (ptr) {
-    }
 }
 
 OccHandle<Image_Texture> AssimpReader::findOccTexture(

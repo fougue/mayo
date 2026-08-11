@@ -31,9 +31,6 @@ public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
-
 private:
     // Create OpenCascade texture object
     // Parameter 'strFilepath' is the filepath to the texture as specified by the assimp material
@@ -55,7 +52,6 @@ private:
         aiMatrix4x4 aiAbsoluteTrsf;
     };
 
-    class Properties;
     Assimp::Importer m_importer;
     const aiScene* m_scene = nullptr;
 

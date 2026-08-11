@@ -14,7 +14,6 @@
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
-#include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -49,25 +48,6 @@ TopoDS_Shape asShape(const DocumentPtr& doc)
 
 } // namespace
 
-struct OccStlWriterI18N {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStlWriterI18N)
-};
-
-class OccStlWriter::Properties : public PropertyGroup {
-public:
-    explicit Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-        this->targetFormat.mutableEnumeration().changeTrContext(OccStlWriterI18N::textIdContext());
-    }
-
-    void restoreDefaults() override {
-        this->targetFormat.setValue(Format::Binary);
-    }
-
-    PropertyEnum<OccStlWriter::Format> targetFormat{ this, OccStlWriterI18N::textId("targetFormat") };
-};
-
 bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
@@ -86,6 +66,17 @@ NCollection_Sequence<TDF_Label> OccStlReader::transfer(DocumentPtr doc, TaskProg
     TriangulationAnnexData::Set(entityLabel); // IMPORTANT: pure mesh part marker!
     TDataStd_Name::Set(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));
     return CafUtils::makeLabelSequence({ entityLabel });
+}
+
+
+OccStlWriter::Parameters::Parameters()
+{
+    this->restoreDefaults();
+}
+
+void OccStlWriter::Parameters::restoreDefaults()
+{
+    this->format.setValue(Format::Binary);
 }
 
 bool OccStlWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
@@ -116,7 +107,7 @@ bool OccStlWriter::writeFile(const FilePath& filepath, [[maybe_unused]]TaskProgr
                 facesMeshed = false;
         });
         if (!facesMeshed)
-            this->messenger()->emitWarning(OccStlWriterI18N::textIdTr("Not all BRep faces are meshed"));
+            this->messenger()->emitWarning(textIdTr("Not all BRep faces are meshed"));
 
         StlAPI_Writer writer;
         writer.ASCIIMode() = m_params.format == Format::Ascii;
@@ -130,18 +121,6 @@ bool OccStlWriter::writeFile(const FilePath& filepath, [[maybe_unused]]TaskProgr
     }
 
     return false;
-}
-
-std::unique_ptr<PropertyGroup> OccStlWriter::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void OccStlWriter::applyProperties(const PropertyGroup* params)
-{
-    auto ptr = dynamic_cast<const Properties*>(params);
-    if (ptr)
-        m_params.format = ptr->targetFormat;
 }
 
 } // namespace Mayo::IO

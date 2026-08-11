@@ -21,25 +21,16 @@
 
 namespace Mayo::IO {
 
-class OccVrmlWriter::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccVrmlWriter::Properties)
-public:
-    explicit Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-        this->shapeRepresentation.mutableEnumeration().chopPrefix("VrmlAPI_");
-    }
+OccVrmlWriter::Parameters::Parameters()
+{
+    this->restoreDefaults();
+    this->shapeRepresentation.mutableEnumeration().chopPrefix("VrmlAPI_");
+}
 
-    void restoreDefaults() override {
-        const OccVrmlWriter::Parameters params;
-        this->shapeRepresentation.setValue(params.shapeRepresentation);
-    }
-
-//    PropertyBool m_meshDeflectionFromShapeRelativeSize;
-//    PropertyDouble m_meshDeflection;
-//    PropertyDouble scale;
-    PropertyEnum<VrmlAPI_RepresentationOfShape> shapeRepresentation{ this, textId("shapeRepresentation") };
-};
+void OccVrmlWriter::Parameters::restoreDefaults()
+{
+    this->shapeRepresentation.setValue(VrmlAPI_BothRepresentation);
+}
 
 bool OccVrmlWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress)
 {
@@ -63,10 +54,10 @@ bool OccVrmlWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskP
         progress->setValue(MathUtils::toPercent(++iCount, 0, count));
     });
 
-    const auto rep = m_shapeRepresentation;
+    const auto rep = m_params.shapeRepresentation.value();
     converter.Convert(
-                rep == VrmlAPI_ShadedRepresentation || rep == VrmlAPI_BothRepresentation,
-                rep == VrmlAPI_WireFrameRepresentation || rep == VrmlAPI_BothRepresentation
+        rep == VrmlAPI_ShadedRepresentation || rep == VrmlAPI_BothRepresentation,
+        rep == VrmlAPI_WireFrameRepresentation || rep == VrmlAPI_BothRepresentation
     );
     return true;
 }
@@ -85,19 +76,6 @@ bool OccVrmlWriter::writeFile(const FilePath& filepath, TaskProgress*)
     }
 
     return false;
-}
-
-std::unique_ptr<PropertyGroup> OccVrmlWriter::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void OccVrmlWriter::applyProperties(const PropertyGroup* params)
-{
-    auto ptr = dynamic_cast<const Properties*>(params);
-    if (ptr) {
-        m_params.shapeRepresentation = static_cast<VrmlAPI_RepresentationOfShape>(ptr->shapeRepresentation);
-    }
 }
 
 } // namespace Mayo::IO

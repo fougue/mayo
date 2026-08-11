@@ -8,6 +8,9 @@
 #include "io_occ_common.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
+
 #include <IGESCAFControl_Reader.hxx>
 #include <IGESCAFControl_Writer.hxx>
 
@@ -42,22 +45,23 @@ public:
         Force3D = -3
     };
 
-    struct Parameters {
-        BSplineContinuity bsplineContinuity = BSplineContinuity::BreakIntoC1Pieces;
-        SurfaceCurveMode surfaceCurveMode = SurfaceCurveMode::Default;
-        bool readFaultyEntities = false;
-        bool readOnlyVisibleEntities = false;
-    };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    struct Parameters : public PropertyGroup {
+        PropertyEnum<BSplineContinuity> bsplineContinuity{ this, textId("bsplineContinuity") };
+        PropertyEnum<SurfaceCurveMode> surfaceCurveMode{ this, textId("surfaceCurveMode") };
+        PropertyBool readFaultyEntities{ this, textId("readFaultyEntities") };
+        PropertyBool readOnlyVisibleEntities{ this, textId("readOnlyVisibleEntities") };
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* group) override;
+        Parameters();
+        void restoreDefaults() override;
+    };
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesReader)
+
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
-    class Properties;
     IGESCAFControl_Reader* m_reader = nullptr;
     std::aligned_storage_t<sizeof(IGESCAFControl_Reader)> m_readerStorage;
     Parameters m_params;
@@ -85,25 +89,28 @@ public:
     };
 
     using LengthUnit = OccCommon::LengthUnit;
-    struct Parameters {
-        BRepMode brepMode = BRepMode::Faces;
-        PlaneMode planeMode = PlaneMode::Plane;
-        LengthUnit lengthUnit = LengthUnit::Millimeter;
+
+    struct Parameters : public PropertyGroup {
+        PropertyEnum<BRepMode> brepMode{ this, textId("brepMode") };
+        PropertyEnum<PlaneMode> planeMode{ this, textId("planeMode") };
+        PropertyEnum<OccCommon::LengthUnit> lengthUnit{ this, textId("lengthUnit") };
+
+        Parameters();
+        void restoreDefaults() override;
+
         // TODO Support "write.iges.offset.mode"
         // Summary: Writing offset-based surfaces of revolution to IGES
         // New parameter "write.iges.offset.mode" added in class
         // GeomToIGES_GeomCurve allows writing offset curves in form of b-splines.
     };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
-
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* group) override;
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesWriter)
+
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
-    class Properties;
     IGESCAFControl_Writer* m_writer = nullptr;
     std::aligned_storage_t<sizeof(IGESCAFControl_Writer)> m_writerStorage;
     Parameters m_params;

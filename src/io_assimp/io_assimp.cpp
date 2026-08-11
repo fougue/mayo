@@ -34,12 +34,8 @@ std::unique_ptr<Reader> AssimpFactoryReader::create(Format format) const
     return {};
 }
 
-std::unique_ptr<PropertyGroup> AssimpFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
+std::unique_ptr<PropertyGroup> AssimpFactoryReader::createParameters(Format /*format*/) const
 {
-    auto itFound = std::find(this->formats().begin(), this->formats().end(), format);
-    if (itFound != this->formats().end())
-        return AssimpReader::createProperties(parentGroup);
-
     return {};
 }
 

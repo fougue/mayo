@@ -25,18 +25,14 @@ public:
     bool transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* group) override;
-
     // Parameters
-
     enum class FloatTextFormat {
         Decimal, // -> GMIO_FLOAT_TEXT_FORMAT_DECIMAL_UPPERCASE
         Scientific, // -> GMIO_FLOAT_TEXT_FORMAT_SCIENTIFIC_UPPERCASE
         Shortest // -> GMIO_FLOAT_TEXT_FORMAT_SHORTEST_UPPERCASE
     };
 
-    struct Parameters {
+    struct Parameters : public PropertyGroup {
         // TODO gmio_amf_unit
         FloatTextFormat float64Format = FloatTextFormat::Decimal;
         uint8_t float64Precision = 16;
@@ -44,8 +40,8 @@ public:
         bool useZip64 = true;
         std::string zipEntryFilename; // UTF8
     };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
     int createObject(const TDF_Label& labelShape);
@@ -115,7 +111,6 @@ private:
         int materialId = -1;
     };
 
-    class Properties;
     Parameters m_params;
     std::vector<Material> m_vecMaterial;
     std::vector<Mesh> m_vecMesh;

@@ -26,10 +26,10 @@ std::unique_ptr<Writer> GmioFactoryWriter::create(Format format) const
 }
 
 std::unique_ptr<PropertyGroup>
-GmioFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
+GmioFactoryWriter::createParameters(Format format) const
 {
     if (format == Format_AMF)
-        return GmioAmfWriter::createProperties(parentGroup);
+        return std::make_unique<GmioAmfWriter::Parameters>();
 
     return {};
 }

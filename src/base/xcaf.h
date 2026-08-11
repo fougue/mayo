@@ -11,6 +11,7 @@
 
 #include <Quantity_Color.hxx>
 #include <Standard_Version.hxx>
+#include <TDataStd_NamedData.hxx>
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_LayerTool.hxx>

@@ -36,8 +36,11 @@ public:
     // Returns the list of entities added to document 'doc'
     virtual NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) = 0;
 
-    // Apply properties contain in 'group' to the reader's parameter values(known in reader sub-class)
-    virtual void applyProperties(const PropertyGroup* group) = 0;
+    // Returns the mutable parameters used to configure this reader, empty by default
+    virtual PropertyGroup& parameters();
+
+    // Returns the read-only parameters of this reader, empty by default
+    virtual const PropertyGroup& constParameters() const;
 };
 
 // Abstract base class for all reader factories
@@ -51,9 +54,9 @@ public:
     // Creates and returns a Reader object that matches the given format, or nullptr if no matching reader is found
     virtual std::unique_ptr<Reader> create(Format format) const = 0;
 
-    // Creates and returns properties that match the given format. Those properties is a generic
-    // way to change parameter values of a Reader object corresponding to format(see also Reader::applyProperties())
-    virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
+    // Creates and returns parameters that match the given format. Those parameters is a generic
+    // way to change parameter values of a Reader object corresponding to format(see also Reader::applyParameters())
+    virtual std::unique_ptr<PropertyGroup> createParameters(Format format) const = 0;
 };
 
 } // namespace IO

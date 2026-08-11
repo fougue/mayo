@@ -88,6 +88,7 @@ PropertyEnum<EnumType>::PropertyEnum(PropertyGroup* grp, const TextId& name)
       m_enum(Enumeration::fromType<EnumType>())
 {
     this->setEnumeration(&m_enum);
+    m_enum.changeTrContext(name.trContext);
 }
 
 template<typename EnumType>

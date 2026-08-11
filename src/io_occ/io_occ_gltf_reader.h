@@ -15,23 +15,23 @@ class OccGltfReader : public OccBaseMeshReader {
 public:
     OccGltfReader();
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
-
     // Parameters
+    struct Parameters : public OccBaseMeshReader::BaseParameters {
+        PropertyBool skipEmptyNodes{ this, textId("skipEmptyNodes") };
+        PropertyBool useMeshNameAsFallback{ this, textId("useMeshNameAsFallback") };
 
-    struct Parameters : public OccBaseMeshReader::Parameters {
-        bool skipEmptyNodes = true;
-        bool useMeshNameAsFallback = true;
+        Parameters();
+        void restoreDefaults() override;
     };
-    OccGltfReader::Parameters& parameters() override { return m_params; }
-    const OccGltfReader::Parameters& constParameters() const override { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 protected:
     void applyParameters() override;
 
 private:
-    class Properties;
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader)
+
     Parameters m_params;
     RWGltf_CafReader m_reader;
 };

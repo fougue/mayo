@@ -346,7 +346,6 @@ OccHandle<TDataStd_NamedData> XCaf::shapeUserDefinedAttributes(const TDF_Label& 
         return {};
 
     return this->shapeTool()->GetNamedProperties(lbl, false/*!create*/);
-
 }
 
 TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& label)

@@ -6,44 +6,28 @@
 #include "io_occ_obj_writer.h"
 
 #include "../base/application_item.h"
-#include "../base/enumeration_fromenum.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/occt_ncollection_indexed_datamap_of_stringstring.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
-#include "../base/text_id.h"
 #include "io_occ_common.h"
 
 #include <RWObj_CafWriter.hxx>
 
 namespace Mayo::IO {
 
-struct OccObjWriterI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjWriterI18N) };
+OccObjWriter::Parameters::Parameters()
+{
+    this->restoreDefaults();
+    this->inputCoordinateSystem.setDescription(textIdTr("Source coordinate system transformation"));
+    this->outputCoordinateSystem.setDescription(textIdTr("Target coordinate system transformation"));
+}
 
-class OccObjWriter::Properties : public PropertyGroup {
-public:
-    explicit Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-        this->inputCoordinateSystem.setDescription(
-            OccObjWriterI18N::textIdTr("Source coordinate system transformation")
-        );
-        this->outputCoordinateSystem.setDescription(
-            OccObjWriterI18N::textIdTr("Target coordinate system transformation")
-        );
-    }
-
-    void restoreDefaults() override {
-        const Parameters defaults;
-        this->inputCoordinateSystem.setValue(defaults.inputCoordinateSystem);
-        this->outputCoordinateSystem.setValue(defaults.outputCoordinateSystem);
-    }
-
-    PropertyEnum<RWMesh_CoordinateSystem> inputCoordinateSystem{ this, OccObjWriterI18N::textId("inputCoordinateSystem") };
-    PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, OccObjWriterI18N::textId("outputCoordinateSystem") };
-};
+void OccObjWriter::Parameters::restoreDefaults()
+{
+    this->inputCoordinateSystem.setValue(RWMesh_CoordinateSystem_Undefined);
+    this->outputCoordinateSystem.setValue(RWMesh_CoordinateSystem_glTF);
+}
 
 bool OccObjWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress*)
 {
@@ -89,20 +73,6 @@ bool OccObjWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     }
 
     return false;
-}
-
-std::unique_ptr<PropertyGroup> OccObjWriter::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void OccObjWriter::applyProperties(const PropertyGroup* params)
-{
-    auto ptr = dynamic_cast<const Properties*>(params);
-    if (ptr) {
-        m_params.inputCoordinateSystem = ptr->inputCoordinateSystem;
-        m_params.outputCoordinateSystem = ptr->outputCoordinateSystem;
-    }
 }
 
 } // namespace Mayo::IO

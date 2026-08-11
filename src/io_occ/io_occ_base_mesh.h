@@ -21,41 +21,32 @@ public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
 
-    void applyProperties(const PropertyGroup* params) override;
-
     using LengthUnit = OccCommon::LengthUnit;
-    struct Parameters {
-        std::string rootPrefix;
-        LengthUnit systemLengthUnit = LengthUnit::Undefined;
-        RWMesh_CoordinateSystem systemCoordinatesConverter = RWMesh_CoordinateSystem_Undefined;
+    static double lengthUnitFactor(LengthUnit lenUnit);
+    static LengthUnit lengthUnit(double factor);
+
+    struct BaseParameters : public PropertyGroup {
+        PropertyString rootPrefix{ this, textId("rootPrefix") };
+        PropertyEnum<RWMesh_CoordinateSystem> systemCoordinatesConverter{ this, textId("systemCoordinatesConverter") };
+        PropertyEnum<LengthUnit> systemLengthUnit{ this, textId("systemLengthUnit") };
+
+        BaseParameters();
+        void restoreDefaults() override;
+
+        MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderParameters)
     };
-    virtual Parameters& parameters() = 0;
-    virtual const Parameters& constParameters() const = 0;
+
+    BaseParameters& parameters() override { return m_params; }
+    const BaseParameters& constParameters() const override { return m_params; }
 
 protected:
-    explicit OccBaseMeshReader(RWMesh_CafReader& reader);
+    OccBaseMeshReader(RWMesh_CafReader& reader, BaseParameters& params);
     virtual void applyParameters();
 
 private:
     FilePath m_filepath;
     RWMesh_CafReader& m_reader;
-};
-
-// Common properties for OccBaseMeshReader
-class OccBaseMeshReaderProperties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
-public:
-    explicit OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
-
-    void restoreDefaults() override;
-
-    using LengthUnit = OccBaseMeshReader::LengthUnit;
-    static double lengthUnitFactor(LengthUnit lenUnit);
-    static LengthUnit lengthUnit(double factor);
-
-    PropertyString rootPrefix;
-    PropertyEnum<RWMesh_CoordinateSystem> systemCoordinatesConverter;
-    PropertyEnum<LengthUnit> systemLengthUnit;
+    BaseParameters& m_params;
 };
 
 } // namespace Mayo::IO

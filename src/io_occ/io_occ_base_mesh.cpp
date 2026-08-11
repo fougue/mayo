@@ -22,25 +22,21 @@
 
 namespace Mayo::IO {
 
-OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGroup)
-    : PropertyGroup(parentGroup),
-      rootPrefix(this, textId("rootPrefix")),
-      systemCoordinatesConverter(this, textId("systemCoordinatesConverter")),
-      systemLengthUnit(this, textId("systemLengthUnit"))
+OccBaseMeshReader::BaseParameters::BaseParameters()
 {
+    this->restoreDefaults();
     this->rootPrefix.setDescription(textIdTr("Prefix for generating root labels name"));
     this->systemLengthUnit.setDescription(textIdTr("System length units to convert into while reading files"));
 }
 
-void OccBaseMeshReaderProperties::restoreDefaults()
+void OccBaseMeshReader::BaseParameters::restoreDefaults()
 {
-    const OccBaseMeshReader::Parameters defaults;
-    this->rootPrefix.setValue(defaults.rootPrefix);
-    this->systemCoordinatesConverter.setValue(defaults.systemCoordinatesConverter);
-    this->systemLengthUnit.setValue(defaults.systemLengthUnit);
+    this->rootPrefix.setValue({});
+    this->systemLengthUnit.setValue(LengthUnit::Undefined);
+    this->systemCoordinatesConverter.setValue(RWMesh_CoordinateSystem_Undefined);
 }
 
-double OccBaseMeshReaderProperties::lengthUnitFactor(LengthUnit lenUnit)
+double OccBaseMeshReader::lengthUnitFactor(LengthUnit lenUnit)
 {
     switch (lenUnit) {
     case LengthUnit::Undefined: return -1;
@@ -57,13 +53,13 @@ double OccBaseMeshReaderProperties::lengthUnitFactor(LengthUnit lenUnit)
     return -1;
 }
 
-OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(double factor)
+OccBaseMeshReader::LengthUnit OccBaseMeshReader::lengthUnit(double factor)
 {
     if (factor < 0)
         return LengthUnit::Undefined;
 
-    for (const LengthUnit lenUnit : MetaEnum::values<OccCommon::LengthUnit>()) {
-        const double lenUnitFactor = OccBaseMeshReaderProperties::lengthUnitFactor(lenUnit);
+    for (LengthUnit lenUnit : MetaEnum::values<OccCommon::LengthUnit>()) {
+        const double lenUnitFactor = OccBaseMeshReader::lengthUnitFactor(lenUnit);
         if (factor == lenUnitFactor)
             return lenUnit;
     }
@@ -121,26 +117,17 @@ NCollection_Sequence<TDF_Label> OccBaseMeshReader::transfer(DocumentPtr doc, Tas
     return seqShapeLabel;
 }
 
-void OccBaseMeshReader::applyProperties(const PropertyGroup* params)
-{
-    auto ptr = dynamic_cast<const OccBaseMeshReaderProperties*>(params);
-    if (ptr) {
-        this->parameters().systemCoordinatesConverter = ptr->systemCoordinatesConverter;
-        this->parameters().systemLengthUnit = ptr->systemLengthUnit;
-        this->parameters().rootPrefix = ptr->rootPrefix;
-    }
-}
-
-OccBaseMeshReader::OccBaseMeshReader(RWMesh_CafReader& reader)
-    : m_reader(reader)
+OccBaseMeshReader::OccBaseMeshReader(RWMesh_CafReader& reader, BaseParameters& params)
+    : m_reader(reader),
+      m_params(params)
 {
 }
 
 void OccBaseMeshReader::applyParameters()
 {
-    m_reader.SetRootPrefix(string_conv<TCollection_AsciiString>(this->constParameters().rootPrefix));
-    m_reader.SetSystemLengthUnit(OccBaseMeshReaderProperties::lengthUnitFactor(this->constParameters().systemLengthUnit));
-    m_reader.SetSystemCoordinateSystem(this->constParameters().systemCoordinatesConverter);
+    m_reader.SetRootPrefix(string_conv<TCollection_AsciiString>(m_params.rootPrefix.value()));
+    m_reader.SetSystemLengthUnit(OccBaseMeshReader::lengthUnitFactor(m_params.systemLengthUnit));
+    m_reader.SetSystemCoordinateSystem(m_params.systemCoordinatesConverter);
 }
 
 } // namespace Mayo::IO

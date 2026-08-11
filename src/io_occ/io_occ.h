@@ -16,7 +16,7 @@ class OccFactoryReader : public FactoryReader {
 public:
     gsl::span<const Format> formats() const override;
     std::unique_ptr<Reader> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
+    std::unique_ptr<PropertyGroup> createParameters(Format format) const override;
 };
 
 // Provides factory for OpenCascade-based Writer objects
@@ -24,7 +24,7 @@ class OccFactoryWriter : public FactoryWriter {
 public:
     gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
+    std::unique_ptr<PropertyGroup> createParameters(Format format) const override;
 };
 
 } // namespace Mayo::IO

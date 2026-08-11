@@ -15,22 +15,22 @@ class OccObjReader : public OccBaseMeshReader {
 public:
     OccObjReader();
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
-
     // Parameters
+    struct Parameters : public OccBaseMeshReader::BaseParameters {
+        PropertyBool singlePrecisionVertexCoords{ this, textId("singlePrecisionVertexCoords") };
 
-    struct Parameters : public OccBaseMeshReader::Parameters {
-        bool singlePrecisionVertexCoords = false;
+        Parameters();
+        void restoreDefaults() override;
     };
-    OccObjReader::Parameters& parameters() override { return m_params; }
-    const OccObjReader::Parameters& constParameters() const override { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 protected:
     void applyParameters() override;
 
 private:
-    class Properties;
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader)
+
     Parameters m_params;
     RWObj_CafReader m_reader;
 };

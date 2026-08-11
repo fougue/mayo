@@ -17,9 +17,6 @@ class PlyReader : public Reader {
 public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
-    void applyProperties(const PropertyGroup*) override {}
-
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup*)  { return {}; }
 
 private:
     TDF_Label transferMesh(DocumentPtr doc, TaskProgress* progress);

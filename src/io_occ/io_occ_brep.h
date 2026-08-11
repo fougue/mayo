@@ -7,6 +7,8 @@
 
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
 #include <TopoDS_Shape.hxx>
 
 namespace Mayo::IO {
@@ -16,9 +18,9 @@ class OccBRepReader : public Reader {
 public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
-    void applyProperties(const PropertyGroup*) override {}
 
 private:
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBRepReader)
     TopoDS_Shape m_shape;
     FilePath m_baseFilename;
 };
@@ -29,22 +31,22 @@ public:
     bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
-
     // Parameters
     enum class Format { Ascii, Binary };
 
-    struct Parameters {
-        Format format = Format::Ascii;
-        bool saveShapeTriangulation = true;
-        bool saveShapeTriangulationNormals = false;
+    struct Parameters : public PropertyGroup {
+        PropertyEnum<Format> format{ this, textId("format") };
+        PropertyBool saveShapeTriangulation{ this, textId("saveShapeTriangulation") };
+        PropertyBool saveShapeTriangulationNormals{ this, textId("saveShapeTriangulationNormals") };
+
+        Parameters();
+        void restoreDefaults() override;
     };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
-    class Properties;
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBRepWriter)
     Parameters m_params;
     TopoDS_Shape m_shape;
 };

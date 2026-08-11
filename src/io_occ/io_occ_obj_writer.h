@@ -7,6 +7,7 @@
 
 #include "../base/document_ptr.h"
 #include "../base/io_writer.h"
+#include "../base/property_enumeration.h"
 
 #include <RWMesh_CoordinateSystemConverter.hxx>
 
@@ -19,20 +20,19 @@ public:
     bool transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
-    void applyProperties(const PropertyGroup* params) override;
-
     // Parameters
-
-    struct Parameters {
-        RWMesh_CoordinateSystem inputCoordinateSystem = RWMesh_CoordinateSystem_Undefined;
-        RWMesh_CoordinateSystem outputCoordinateSystem = RWMesh_CoordinateSystem_glTF;
+    struct Parameters : public PropertyGroup {
+        PropertyEnum<RWMesh_CoordinateSystem> inputCoordinateSystem{ this, textId("inputCoordinateSystem") };
+        PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, textId("outputCoordinateSystem") };
+        Parameters();
+        void restoreDefaults() override;
     };
-    Parameters& parameters() { return m_params; }
-    const Parameters& constParameters() const { return m_params; }
+    Parameters& parameters() override { return m_params; }
+    const Parameters& constParameters() const override { return m_params; }
 
 private:
-    class Properties;
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjWriter)
+
     Parameters m_params;
     DocumentPtr m_document;
     NCollection_Sequence<TDF_Label> m_seqRootLabel;
