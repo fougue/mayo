@@ -6,6 +6,8 @@
 <br>
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
 [![Version](https://img.shields.io/badge/version-v0.10.0-blue.svg?style=flat)](https://github.com/fougue/mayo/releases)
+<br>
+[![Sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/fougue)
   
 </div>
 
