@@ -80,7 +80,6 @@ public:
 
     private:
         std::map<GraphicsObjectDriverPtr, std::unique_ptr<PropertyEnumeration>> m_mapDriverDisplayMode;
-        std::vector<std::string> m_textIdStringStorage;
         friend class ImageWriter;
     };
 

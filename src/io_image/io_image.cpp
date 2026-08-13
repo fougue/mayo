@@ -76,19 +76,18 @@ ImageWriter::Parameters::Parameters(const GuiApplication* guiApp)
         // Create a PropertyEnumeration object for each graphics driver registered in the given
         // GuiApplication object
         // This PropertyEnumeration is mapped to the display modes specific to the driver
-        m_textIdStringStorage.reserve(guiApp->graphicsObjectDrivers().size());
         for (const GraphicsObjectDriverPtr& driver : guiApp->graphicsObjectDrivers()) {
             if (driver->displayModes().empty())
                 continue; // Skip
 
             const std::string driverTypeName = driver->DynamicType()->Name();
-            const std::string trDriverTypeName{GraphicsObjectDriverI18N::textIdTr(driverTypeName)};
-            m_textIdStringStorage.push_back(fmt::format("{}_displayMode", driverTypeName));
+            std::string_view trDriverTypeName{GraphicsObjectDriverI18N::textIdTr(driverTypeName)};
+            std::string_view paramName = TextId::cache(driverTypeName + "_displayMode");
             auto propDisplayMode = std::make_unique<PropertyEnumeration>(
-                this, textId(m_textIdStringStorage.back()), &driver->displayModes()
+                this, textId(paramName), &driver->displayModes()
             );
             auto msgDescription = textIdTr("Graphics display mode for the objects of type `{}`");
-            propDisplayMode->setDescription(fmt::format(msgDescription, trDriverTypeName));
+            propDisplayMode->setDescription(TextId::cache(fmt::format(msgDescription, trDriverTypeName)));
             this->m_mapDriverDisplayMode.insert({ driver, std::move(propDisplayMode) });
         }
     }
