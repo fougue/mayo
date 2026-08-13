@@ -31,6 +31,8 @@ public:
     bool setValue(const T& val);
     operator Cpp::ValueOrConstRefType<T>() const { return this->value(); }
 
+    bool copyValue(const Property& other) override;
+
     const char* dynTypeName() const override { return TypeName; }
     static const char TypeName[];
 
@@ -112,6 +114,8 @@ public:
     QuantityType quantity() const { return m_quantity; }
     bool setQuantity(QuantityType qty);
 
+    bool copyValue(const Property& other) override;
+
 private:
     QuantityType m_quantity = {};
 };
@@ -147,9 +151,19 @@ GenericProperty<T>::GenericProperty(PropertyGroup* grp, const TextId& name)
     : Property(grp, name)
 { }
 
-template<typename T> bool GenericProperty<T>::setValue(const T& val)
+template<typename T>
+bool GenericProperty<T>::setValue(const T& val)
 {
     return Property::setValueHelper(this, &m_value, val);
+}
+
+template<typename T>
+bool GenericProperty<T>::copyValue(const Property& other)
+{
+    if (this->dynTypeName() == other.dynTypeName())
+        return this->setValue(static_cast<const GenericProperty<T>&>(other).value());
+
+    return false;
 }
 
 // PropertyScalarConstraints<>
@@ -195,13 +209,22 @@ GenericPropertyQuantity<U>::GenericPropertyQuantity(PropertyGroup* grp, const Te
 template<Unit U>
 bool GenericPropertyQuantity<U>::setQuantityValue(double v)
 {
-    return this->setQuantity(QuantityType(v));
+    return this->setQuantity(QuantityType{v});
 }
 
 template<Unit U>
 bool GenericPropertyQuantity<U>::setQuantity(Quantity<U> qty)
 {
     return Property::setValueHelper(this, &m_quantity, qty);
+}
+
+template<Unit U>
+bool GenericPropertyQuantity<U>::copyValue(const Property& other)
+{
+    if (this->dynTypeName() == other.dynTypeName())
+        return this->setQuantity(static_cast<const GenericPropertyQuantity<U>&>(other).quantity());
+
+    return false;
 }
 
 } // namespace Mayo

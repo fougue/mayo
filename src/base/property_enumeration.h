@@ -38,6 +38,8 @@ public:
     bool setValue(Enumeration::Value value);
     bool setValueByName(std::string_view name);
 
+    bool copyValue(const Property& other) override;
+
     const char* dynTypeName() const override;
     static const char TypeName[];
 
@@ -51,7 +53,7 @@ protected:
 private:
     struct Description {
         Enumeration::Value value;
-        std::string text;
+        std::string_view text;
     };
 
     const Enumeration* m_enumeration = nullptr;
@@ -92,22 +94,27 @@ PropertyEnum<EnumType>::PropertyEnum(PropertyGroup* grp, const TextId& name)
 }
 
 template<typename EnumType>
-EnumType PropertyEnum<EnumType>::value() const {
+EnumType PropertyEnum<EnumType>::value() const
+{
     return static_cast<EnumType>(PropertyEnumeration::value());
 }
 
 template<typename EnumType>
-bool PropertyEnum<EnumType>::setValue(EnumType value) {
+bool PropertyEnum<EnumType>::setValue(EnumType value)
+{
     return PropertyEnumeration::setValue(static_cast<Enumeration::Value>(value));
 }
 
 template<typename EnumType>
-void PropertyEnum<EnumType>::addDescription(EnumType value, std::string_view descr) {
+void PropertyEnum<EnumType>::addDescription(EnumType value, std::string_view descr)
+{
     PropertyEnumeration::addDescription(static_cast<Enumeration::Value>(value), descr);
 }
 
 template<typename EnumType>
-void PropertyEnum<EnumType>::setDescriptions(std::initializer_list<std::pair<EnumType, std::string_view>> initList)
+void PropertyEnum<EnumType>::setDescriptions(
+        std::initializer_list<std::pair<EnumType, std::string_view>> initList
+    )
 {
     this->clearDescriptions();
     for (const auto& [val, descr] : initList)

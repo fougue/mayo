@@ -95,7 +95,9 @@ public:
     const TextId& name() const;
     std::string_view label() const;
 
-    const std::string& description() const { return m_description; }
+    // ⚠ Memory constraint: the description is non-owning to avoid dynamic allocation
+    // The referenced text must remain valid for as long as this Property object is used
+    std::string_view description() const { return m_description; }
     void setDescription(std::string_view text) { m_description = text; }
 
     bool isUserReadOnly() const { return m_isUserReadOnly; }
@@ -111,6 +113,8 @@ public:
     uint64_t userData() const;
     void setUserData(uint64_t d);
     void clearUserData();
+
+    virtual bool copyValue(const Property& /*other*/) { return false; }
 
     virtual const char* dynTypeName() const = 0;
 
@@ -129,7 +133,7 @@ protected:
 private:
     PropertyGroup* const m_group = nullptr;
     const TextId m_name;
-    std::string m_description;
+    std::string_view m_description;
     bool m_isUserReadOnly = false;
     bool m_isUserVisible = true;
     bool m_isEnabled = true;

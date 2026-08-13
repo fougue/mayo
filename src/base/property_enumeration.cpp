@@ -39,15 +39,16 @@ void PropertyEnumeration::setEnumeration(const Enumeration* enumeration)
 
 void PropertyEnumeration::addDescription(Enumeration::Value value, std::string_view descr)
 {
-    m_vecDescription.push_back({ value, std::string(descr) });
+    m_vecDescription.push_back({ value, descr });
 }
 
 std::string_view PropertyEnumeration::findDescription(Enumeration::Value value) const
 {
     auto itFound = std::find_if(
-                m_vecDescription.cbegin(), m_vecDescription.cend(), [=](const Description& descr) {
-       return descr.value == value;
-    });
+        m_vecDescription.cbegin(),
+        m_vecDescription.cend(),
+        [=](const Description& descr) { return descr.value == value; }
+    );
     return itFound != m_vecDescription.cend() ? itFound->text : std::string_view{};
 }
 
@@ -78,6 +79,17 @@ bool PropertyEnumeration::setValueByName(std::string_view name)
         return false;
 
     return Property::setValueHelper(this, &m_value, m_enumeration->findValueByName(name));
+}
+
+bool PropertyEnumeration::copyValue(const Property& other)
+{
+    if (this->dynTypeName() == other.dynTypeName()) {
+        const auto& otherPropEnum = static_cast<const PropertyEnumeration&>(other);
+        if (m_enumeration == &otherPropEnum.enumeration())
+            return this->setValue(otherPropEnum.value());
+    }
+
+    return false;
 }
 
 const char* PropertyEnumeration::dynTypeName() const
