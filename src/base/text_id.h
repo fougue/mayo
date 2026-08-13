@@ -46,6 +46,10 @@ struct TextId {
     using TranslatorFunctionPtr = TranslatorFunction*;
     static void addTranslatorFunction(TranslatorFunctionPtr fn);
     static std::string_view translate(const TextId& textId, int n = -1);
+
+    // Stores a copy of `text` in a thread-local cache and returns a view to the cached text
+    // The returned string_view remains valid until the thread terminates
+    static std::string_view cache(std::string_view text);
 };
 
 } // namespace Mayo

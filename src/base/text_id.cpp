@@ -5,6 +5,8 @@
 
 #include "text_id.h"
 
+#include "string_cache.h"
+
 #include <vector>
 
 namespace Mayo {
@@ -47,5 +49,10 @@ std::string_view TextId::translate(const TextId& textId, int n)
     return textId.key;
 }
 
+std::string_view TextId::cache(std::string_view text)
+{
+    static StringCache strCache;
+    return strCache.add(text);
+}
 
 } // namespace Mayo
