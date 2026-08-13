@@ -56,27 +56,25 @@ OccGltfWriter::Parameters::Parameters()
 
     this->nodeNameFormat.setDescription(textIdTr("Name format for exporting nodes"));
     this->meshNameFormat.setDescription(textIdTr("Name format for exporting meshes"));
-    this->embedTextures.setDescription(
-        fmt::format(
-            textIdTr("Write image textures into target file.\n\n"
-                     "If set to `false` then texture images will be written as separate files.\n\n"
-                     "Applicable only if option `{0}` is set to `{1}`"),
-            this->format.label(),
-            MetaEnum::name<Format>(Format::Binary)
-        )
-    );
-    this->mergeFaces.setDescription(
-        textIdTr("Merge faces within a single part.\n\n"
-                 "May reduce JSON size thanks to smaller number of primitive arrays")
-    );
-    this->keepIndices16b.setDescription(
-        fmt::format(
-            textIdTr("Prefer keeping 16-bit indexes while merging face.\n\n"
-                     "May reduce binary data size thanks to smaller triangle indexes.\n\n"
-                     "Applicable only if option `{}` is on"),
-            this->mergeFaces.label()
-        )
-    );
+    this->embedTextures.setDescription(TextId::cache(fmt::format(textIdTr(
+            "Write image textures into target file.\n\n"
+            "If set to `false` then texture images will be written as separate files.\n\n"
+            "Applicable only if option `{0}` is set to `{1}`"
+        ),
+        this->format.label(),
+        MetaEnum::name<Format>(Format::Binary)
+    )));
+    this->mergeFaces.setDescription(textIdTr(
+        "Merge faces within a single part.\n\n"
+        "May reduce JSON size thanks to smaller number of primitive arrays"
+    ));
+    this->keepIndices16b.setDescription(TextId::cache(fmt::format(textIdTr(
+            "Prefer keeping 16-bit indexes while merging face.\n\n"
+            "May reduce binary data size thanks to smaller triangle indexes.\n\n"
+            "Applicable only if option `{}` is on"
+        ),
+        this->mergeFaces.label()
+    )));
 }
 
 void OccGltfWriter::Parameters::restoreDefaults()

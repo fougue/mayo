@@ -1341,7 +1341,6 @@ void TestBase::StringCache_clearThenReAddReturnsNewViewAndNotCached_test()
     }
 }
 
-
 void TestBase::StringCache_viewRemainsValidAfterSubsequentAddsWithinCapacity_test()
 {
     StringCache cache;
@@ -1363,7 +1362,6 @@ void TestBase::StringCache_viewRemainsValidAfterSubsequentAddsWithinCapacity_tes
     QCOMPARE(v0, str);
 }
 
-
 void TestBase::StringCache_longStringLargerThanPoolWorksAndNextInsertsOK_test()
 {
     StringCache cache;
@@ -1383,7 +1381,6 @@ void TestBase::StringCache_longStringLargerThanPoolWorksAndNextInsertsOK_test()
     auto v2 = cache.add("ok");
     QCOMPARE(v2, "ok");
 }
-
 
 void TestBase::StringCache_stressFuzzRandomStringsDedupAndClear_test()
 {

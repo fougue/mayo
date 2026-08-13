@@ -187,81 +187,81 @@ void AppModuleProperties::retranslate()
     this->unitSystemSchema.mutableEnumeration().changeTrContext(AppModuleProperties::textIdContext());
 
     // Application
-    this->language.setDescription(
-        textIdTr("Language used for the application. Change will take effect after application restart")
-    );
-    const auto& enumActionOnDocumentFileChange = this->actionOnDocumentFileChange.enumeration();
-    this->actionOnDocumentFileChange.setDescription(
-        fmt::format(textIdTr("Action to be done after some opened document file is changed(modified) externally\n\n"
-                             "Select options `{0}` or `{1}` so the application monitors changes made to opened files\n\n"
-                             "When such a change is detected then the application proposes to reload(open again) the document\n\n"
-                             "Select `{1}` to automatically reload documents without any user interaction"
-                             ),
-                    enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadIfUserConfirm)->name.tr(),
-                    enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadSilently)->name.tr()
+    this->language.setDescription(textIdTr(
+        "Language used for the application. Change will take effect after application restart"
     ));
-    this->linkWithDocumentSelector.setDescription(
-        textIdTr("In case where multiple documents are opened, make sure the document displayed in "
-                 "the 3D view corresponds to what is selected in the model tree")
-    );
-    this->forceOpenGlFallbackWidget.setDescription(
-        textIdTr("Force usage of the fallback Qt widget to display OpenGL graphics.\n\n"
-                 "When `OFF` the application will try to use OpenGL framebuffer for rendering, "
-                 "this allows to display overlay widgets(eg measure tools panel) with translucid "
-                 "background. "
-                 "However using OpenGL framebuffer might cause troubles for some users(eg empty "
-                 "3D window) especially on macOS.\n\n"
-                 "When `ON` the application will use a regular Qt widget for rendering which "
-                 "proved to be more supported.\n\n"
-                 "This option is applicable when OpenCascade ≥ 7.6 version. "
-                 "Change will take effect after application restart")
-    );
+    const auto& enumActionOnDocumentFileChange = this->actionOnDocumentFileChange.enumeration();
+    this->actionOnDocumentFileChange.setDescription(TextId::cache(fmt::format(
+        textIdTr("Action to be done after some opened document file is changed(modified) externally\n\n"
+                 "Select options `{0}` or `{1}` so the application monitors changes made to opened files\n\n"
+                 "When such a change is detected then the application proposes to reload(open again) the document\n\n"
+                 "Select `{1}` to automatically reload documents without any user interaction"
+                ),
+        enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadIfUserConfirm)->name.tr(),
+        enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadSilently)->name.tr()
+    )));
+    this->linkWithDocumentSelector.setDescription(textIdTr(
+        "In case where multiple documents are opened, make sure the document displayed in "
+        "the 3D view corresponds to what is selected in the model tree"
+    ));
+    this->forceOpenGlFallbackWidget.setDescription(textIdTr(
+        "Force usage of the fallback Qt widget to display OpenGL graphics.\n\n"
+        "When `OFF` the application will try to use OpenGL framebuffer for rendering, "
+        "this allows to display overlay widgets(eg measure tools panel) with translucid "
+        "background. "
+        "However using OpenGL framebuffer might cause troubles for some users(eg empty "
+        "3D window) especially on macOS.\n\n"
+        "When `ON` the application will use a regular Qt widget for rendering which "
+        "proved to be more supported.\n\n"
+        "This option is applicable when OpenCascade ≥ 7.6 version. "
+        "Change will take effect after application restart"
+    ));
 
     // Meshing
-    this->meshingQuality.setDescription(
-        textIdTr("Controls precision of the mesh to be computed from the BRep shape")
-    );
-    this->meshingChordalDeflection.setDescription(
-        textIdTr("For the tessellation of faces the chordal deflection limits the distance between "
-                 "a curve and its tessellation")
-    );
-    this->meshingAngularDeflection.setDescription(
-        textIdTr("For the tessellation of faces the angular deflection limits the angle between "
-                 "subsequent segments in a polyline")
-    );
-    this->meshingRelative.setDescription(
-        textIdTr("Relative computation of edge tolerance\n\n"
-                 "If activated, deflection used for the polygonalisation of each edge will be "
-                 "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
-                 "the maximum deflection of their edges.")
-    );
+    this->meshingQuality.setDescription(textIdTr(
+        "Controls precision of the mesh to be computed from the BRep shape"
+    ));
+    this->meshingChordalDeflection.setDescription(textIdTr(
+        "For the tessellation of faces the chordal deflection limits the distance between "
+        "a curve and its tessellation"
+    ));
+    this->meshingAngularDeflection.setDescription(textIdTr(
+        "For the tessellation of faces the angular deflection limits the angle between "
+        "subsequent segments in a polyline"
+    ));
+    this->meshingRelative.setDescription(textIdTr(
+        "Relative computation of edge tolerance\n\n"
+        "If activated, deflection used for the polygonalisation of each edge will be "
+        "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
+        "the maximum deflection of their edges."
+    ));
 
     // Graphics
-    this->navigationStyle.setDescription(
-        textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications")
-    );
-    this->turnViewAngleIncrement.setDescription(
-        textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)")
-    );
+    this->navigationStyle.setDescription(textIdTr(
+        "3D view manipulation shortcuts configuration to mimic other common CAD applications"
+    ));
+    this->turnViewAngleIncrement.setDescription(textIdTr(
+        "Angle increment used to turn(rotate) the 3D view around the normal of the view "
+        "plane(Z axis frame reference)"
+    ));
     this->viewCubeCorner.setDescription(textIdTr("Corner where 3D view cube is located"));
 
     // -- Graphics/ClipPlanes
-    this->defaultShowOriginTrihedron.setDescription(
-        textIdTr("Show or hide by default the trihedron centered at world origin. "
-                 "This doesn't affect 3D view of currently opened documents")
-    );
-    this->clipPlanesCappingOn.setDescription(
-        textIdTr("Enable capping of currently clipped graphics")
-    );
-    this->clipPlanesCappingHatchOn.setDescription(
-        textIdTr("Enable capping hatch texture of currently clipped graphics")
-    );
+    this->defaultShowOriginTrihedron.setDescription(textIdTr(
+        "Show or hide by default the trihedron centered at world origin. "
+        "This doesn't affect 3D view of currently opened documents"
+    ));
+    this->clipPlanesCappingOn.setDescription(textIdTr(
+        "Enable capping of currently clipped graphics"
+    ));
+    this->clipPlanesCappingHatchOn.setDescription(textIdTr(
+        "Enable capping hatch texture of currently clipped graphics"
+    ));
 
     // Import
-    this->autoExpandCompoundToAssembly.setDescription(
-        textIdTr("Automatically expand compound shapes to assemblies. For some input models this "
-                 "allows 3D exploding")
-    );
+    this->autoExpandCompoundToAssembly.setDescription(textIdTr(
+        "Automatically expand compound shapes to assemblies. For some input models this allows 3D exploding"
+    ));
 }
 
 void AppModuleProperties::onPropertyChanged(Property* prop)

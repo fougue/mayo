@@ -27,9 +27,10 @@ Enumeration Enumeration::fromType()
     Enumeration enumObject;
     for (const EnumType value : MetaEnum::values<EnumType>()) {
         std::string_view key =
-                hasJunkPrefix ?
-                    MetaEnum::nameWithoutPrefix<EnumType>(value, EnumNames<EnumType>::junkPrefix) :
-                    MetaEnum::name<EnumType>(value);
+            hasJunkPrefix
+                ? MetaEnum::nameWithoutPrefix<EnumType>(value, EnumNames<EnumType>::junkPrefix)
+                : MetaEnum::name<EnumType>(value)
+            ;
         const TextId keyTextId = { EnumNames<EnumType>::trContext, key };
         enumObject.addItem(int(value), keyTextId);
     }

@@ -41,7 +41,7 @@ public:
     Enumeration& changeTrContext(std::string_view context);
 
     // Count of enumeration items
-    int size() const { return int(m_vecItem.size()); }
+    int size() const { return static_cast<int>(m_vecItem.size()); }
     bool empty() const { return m_vecItem.empty(); }
 
     // Finds index of the item corresponding to an enumerated value. Returns -1 if not found

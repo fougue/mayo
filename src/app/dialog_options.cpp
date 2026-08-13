@@ -106,10 +106,7 @@ public:
     }
 
     int styleHint(
-            StyleHint hint,
-            const QStyleOption* option,
-            const QWidget* widget,
-            QStyleHintReturn* returnData
+            StyleHint hint, const QStyleOption* option, const QWidget* widget, QStyleHintReturn* returnData
         ) const override
     {
         if (hint == QStyle::SH_ComboBox_AllowWheelScrolling)
@@ -143,9 +140,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         auto treeViewBtns = new ItemViewButtons(m_ui->treeView_GroupSections, this);
         constexpr int idBtnRestore = 1;
         treeViewBtns->addButton(
-                    idBtnRestore,
-                    mayoTheme()->icon(Theme::Icon::Reload),
-                    tr("Restore default values")
+            idBtnRestore, mayoTheme()->icon(Theme::Icon::Reload), tr("Restore default values")
         );
         treeViewBtns->setButtonDetection(idBtnRestore, -1, {});
         treeViewBtns->setButtonDisplayColumn(idBtnRestore, 0);
@@ -231,12 +226,14 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         const QVariant variantNodeId = listItem ? listItem->data(ItemSettingNodeId_Role) : QVariant();
         const Qt::MatchFlags matchFlags = Qt::MatchRecursive | Qt::MatchExactly;
         const QModelIndex indexFirst = treeModel->index(0, 0);
-        const QModelIndexList indexList = treeModel->match(indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, matchFlags);
+        const QModelIndexList indexList = treeModel->match(
+            indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, matchFlags
+        );
         if (!indexList.isEmpty()) {
             m_ui->treeView_GroupSections->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);
             QSignalBlocker _(m_ui->treeView_GroupSections);
             m_ui->treeView_GroupSections->selectionModel()->select(
-                        indexList.front(), QItemSelectionModel::SelectCurrent
+                indexList.front(), QItemSelectionModel::SelectCurrent
             );
         }
     });
@@ -250,7 +247,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         const QVariant variantNodeId = current.data(ItemSettingNodeId_Role);
         const QModelIndex indexFirst = settingsModel->index(0, 0);
         const QModelIndexList indexList = settingsModel->match(
-                    indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, Qt::MatchExactly
+            indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, Qt::MatchExactly
         );
         if (!indexList.isEmpty())
             m_ui->listWidget_Settings->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);

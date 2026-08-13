@@ -60,9 +60,9 @@ bool Enumeration::contains(std::string_view name) const
 const Enumeration::Item* Enumeration::findItemByName(std::string_view name) const
 {
     auto itFound = std::find_if(
-                m_vecItem.cbegin(),
-                m_vecItem.cend(),
-                [&](const Enumeration::Item& enumItem) { return name == enumItem.name.key; });
+        m_vecItem.cbegin(), m_vecItem.cend(),
+        [&](const Enumeration::Item& enumItem) { return name == enumItem.name.key; }
+    );
     return itFound != m_vecItem.cend() ? &(*itFound) : nullptr;
 }
 

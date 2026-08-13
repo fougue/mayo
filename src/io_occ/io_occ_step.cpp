@@ -29,47 +29,49 @@ OccStepReader::Parameters::Parameters()
 {
     this->restoreDefaults();
 
-    this->productContext.setDescription(
-        textIdTr("When reading AP 209 STEP files, allows selecting either only `design` "
-                 "or `analysis`, or both types of products for translation\n"
-                 "Note that in AP 203 and AP214 files all products should be marked as "
-                 "`design`, so if this mode is set to `analysis`, nothing will be read")
-    );
+    this->productContext.setDescription(textIdTr(
+        "When reading AP 209 STEP files, allows selecting either only `design` or `analysis`, or "
+        "both types of products for translation\n"
+        "Note that in AP 203 and AP214 files all products should be marked as `design`, so if this "
+        "mode is set to `analysis`, nothing will be read"
+    ));
 
-    this->assemblyLevel.setDescription(
-        textIdTr("Specifies which data should be read for the products found in the STEP file")
-    );
+    this->assemblyLevel.setDescription(textIdTr(
+        "Specifies which data should be read for the products found in the STEP file"
+    ));
 
-    this->preferredShapeRepresentation.setDescription(
-        textIdTr("Specifies preferred type of representation of the shape of the product, in "
-                 "case if a STEP file contains more than one representation (i.e. multiple "
-                 "`PRODUCT_DEFINITION_SHAPE` entities) for a single product")
-    );
+    this->preferredShapeRepresentation.setDescription(textIdTr(
+        "Specifies preferred type of representation of the shape of the product, in case if a STEP "
+        "file contains more than one representation (i.e. multiple `PRODUCT_DEFINITION_SHAPE` "
+        "entities) for a single product"
+    ));
 
-    this->readShapeAspect.setDescription(
-        textIdTr("Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity "
-                 "of the product via `SHAPE_ASPECT` should be translated.\n"
-                 "This kind of association was used for the representation of hybrid models (i.e. models "
-                 "whose shape is composed of different types of representations) in AP 203 files "
-                 "before 1998, but it is also used to associate auxiliary information with the "
-                 "sub-shapes of the part. Though STEP translator tries to recognize such cases "
-                 "correctly, this parameter may be useful to avoid unconditionally translation "
-                 "of shapes associated via `SHAPE_ASPECT` entities.")
-    );
+    this->readShapeAspect.setDescription(textIdTr(
+        "Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity of the "
+        "product via `SHAPE_ASPECT` should be translated.\n"
+        "This kind of association was used for the representation of hybrid models (i.e. models "
+        "whose shape is composed of different types of representations) in AP 203 files before 1998, "
+        "but it is also used to associate auxiliary information with the sub-shapes of the part. "
+        "Though STEP translator tries to recognize such cases correctly, this parameter may be "
+        "useful to avoid unconditionally translation of shapes associated via `SHAPE_ASPECT` entities."
+    ));
 
-    this->readSubShapesNames.setDescription(
-        textIdTr("Indicates whether to read sub-shape names from 'Name' attributes of "
-                 "STEP Representation Items")
-    );
+    this->readSubShapesNames.setDescription(textIdTr(
+        "Indicates whether to read sub-shape names from 'Name' attributes of STEP Representation Items"
+    ));
 
     this->productContext.setDescriptions({
         {
-            ProductContext::Design,
-            textIdTr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `design`")
+            ProductContext::Design, textIdTr(
+                "Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
+                "`life_cycle_stage` set to `design`"
+            )
         },
         {
-            ProductContext::Analysis,
-            textIdTr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `analysis`")
+            ProductContext::Analysis, textIdTr(
+                "Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
+                "`life_cycle_stage` set to `analysis`"
+            )
         },
         {
             ProductContext::Both, textIdTr("Translates all products")
@@ -78,23 +80,31 @@ OccStepReader::Parameters::Parameters()
 
     this->assemblyLevel.setDescriptions({
         {
-            AssemblyLevel::Assembly,
-            textIdTr("Translate the assembly structure and shapes associated with parts only(not with sub-assemblies)")
+            AssemblyLevel::Assembly, textIdTr(
+                "Translate the assembly structure and shapes associated with parts only (not with "
+                "sub-assemblies)"
+            )
         },
         {
-            AssemblyLevel::Structure,
-            textIdTr("Translate only the assembly structure without shapes(a structure of empty compounds). "
-                     "This mode can be useful as an intermediate step in applications requiring specialized processing of assembly parts")
+            AssemblyLevel::Structure, textIdTr(
+                "Translate only the assembly structure without shapes(a structure of empty compounds). "
+                "This mode can be useful as an intermediate step in applications requiring "
+                "specialized processing of assembly parts"
+            )
         },
         {
-            AssemblyLevel::Shape,
-            textIdTr("Translate only shapes associated with the product, ignoring the assembly structure (if any). "
-                     "This can be useful to translate only a shape associated with specific product, as a complement to assembly mode")
+            AssemblyLevel::Shape, textIdTr(
+                "Translate only shapes associated with the product, ignoring the assembly "
+                "structure (if any). This can be useful to translate only a shape associated with "
+                "specific product, as a complement to assembly mode"
+            )
         },
         {
-            AssemblyLevel::All,
-            textIdTr("Translate both the assembly structure and all associated shapes. "
-                     "If both shape and sub-assemblies are associated with the same product, all of them are read and put in a single compound")
+            AssemblyLevel::All, textIdTr(
+                "Translate both the assembly structure and all associated shapes. If both shape "
+                "and sub-assemblies are associated with the same product, all of them are read and "
+                "put in a single compound"
+            )
         }
     });
 
@@ -211,40 +221,39 @@ OccStepWriter::Parameters::Parameters()
 
     this->schema.setDescription(textIdTr("Version of schema used for the output STEP file"));
 
-    this->lengthUnit.setDescription(
-        textIdTr("Defines a unit in which the STEP file should be written. If set to "
-                 "unit other than millimeter, the model is converted to these units "
-                 "during the translation")
-    );
+    this->lengthUnit.setDescription(textIdTr(
+        "Defines a unit in which the STEP file should be written. If set to unit other than "
+        "millimeter, the model is converted to these units during the translation"
+    ));
 
-    this->freeVertexMode.setDescription(
-        textIdTr("Parameter to write all free vertices in one SDR (name and style of "
-                 "vertex are lost) or each vertex in its own SDR (name and style of "
-                 "vertex are exported)")
-        );
+    this->freeVertexMode.setDescription(textIdTr(
+        "Parameter to write all free vertices in one SDR (name and style of vertex are lost) or "
+        "each vertex in its own SDR (name and style of vertex are exported)"
+    ));
     this->freeVertexMode.setDescriptions({
         {
-            FreeVertexMode::Compound,
-            textIdTr("All free vertices are united into one compound and exported in one shape definition "
-                     "representation (vertex name and style are lost)")
+            FreeVertexMode::Compound, textIdTr(
+                "All free vertices are united into one compound and exported in one shape definition "
+                "representation (vertex name and style are lost)"
+            )
         },
         {
-            FreeVertexMode::Single,
-            textIdTr("Each vertex is exported in its own `SHAPE DEFINITION REPRESENTATION` (vertex "
-                     "name and style are not lost, but the STEP file size increases)")
+            FreeVertexMode::Single, textIdTr(
+                "Each vertex is exported in its own `SHAPE DEFINITION REPRESENTATION` (vertex "
+                "name and style are not lost, but the STEP file size increases)"
+            )
         },
     });
 
-    this->writePCurves.setDescription(
-        textIdTr("Indicates whether parametric curves (curves in parametric space of surface) should be "
-                 "written into the STEP file.\n"
-                 "It can be disabled in order to minimize the size of the resulting file.")
-    );
+    this->writePCurves.setDescription(textIdTr(
+        "Indicates whether parametric curves (curves in parametric space of surface) should be "
+        "written into the STEP file.\n"
+        "It can be disabled in order to minimize the size of the resulting file."
+    ));
 
-    this->writeSubShapesNames.setDescription(
-        textIdTr("Indicates whether to write sub-shape names to 'Name' attributes of "
-                 "STEP Representation Items")
-    );
+    this->writeSubShapesNames.setDescription(textIdTr(
+        "Indicates whether to write sub-shape names to 'Name' attributes of STEP Representation Items"
+    ));
 
     this->headerAuthor.setDescription(textIdTr("Author attribute in STEP header"));
     this->headerOrganization.setDescription(textIdTr("Organization(of author) attribute in STEP header"));
