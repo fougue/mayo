@@ -5,30 +5,30 @@
 
 #include "qt_app_translator.h"
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QReadWriteLock>
+#include "../base/i18n_translation_cache.h"
 
-#include <unordered_map>
+#include <QtCore/QCoreApplication>
 
 namespace Mayo {
 
-// Function called by the Application i18n system, see Application::addTranslator()
+// Function called by the i18n system, see TextId::addTranslatorFunction()
 std::string_view qtAppTranslate(const TextId& text, int n)
 {
-    const QString qstr = QCoreApplication::translate(text.trContext.data(), text.key.data(), nullptr, n);
-    auto qstrHash = qHash(qstr);
-    static std::unordered_map<decltype(qstrHash), std::string> mapStr;
-    static QReadWriteLock mapStrLock;
-    {
-        QReadLocker locker(&mapStrLock);
-        auto it = mapStr.find(qstrHash);
-        if (it != mapStr.cend())
-            return it->second;
-    }
+    static I18nTranslationCache trCache;
 
-    QWriteLocker locker(&mapStrLock);
-    auto [it, ok] = mapStr.insert({ qstrHash, qstr.toStdString() });
-    return ok ? it->second : std::string_view{};
+    if (std::string_view tr = trCache.find(text, n); !tr.empty())
+        return tr;
+
+    thread_local std::string buffer;
+    buffer.clear();
+    buffer.append(text.trContext);
+    buffer.push_back('\0');
+    buffer.append(text.key);
+    buffer.push_back('\0');
+    const QString qTr = QCoreApplication::translate(
+        buffer.data(), buffer.data() + text.trContext.size() + 1, nullptr, n
+    );
+    return trCache.insert(text, n, qTr.toStdString());
 }
 
 } // namespace Mayo
