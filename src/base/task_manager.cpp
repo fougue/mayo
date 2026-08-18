@@ -192,8 +192,17 @@ void TaskManager::Private::execEntity(Entity* entity)
         return;
 
     this->taskMgr->signalStarted.send(entity->taskId);
-    const TaskJob& fn = entity->taskJob;
-    fn(&entity->taskProgress);
+    // The task job must never let an exception escape: as tasks are typically run through
+    // std::async whose future is not waited for, the exception would be silently swallowed and the
+    // "ended" signal never sent, leaving any code waiting for task completion stuck forever
+    try {
+        const TaskJob& fn = entity->taskJob;
+        fn(&entity->taskProgress);
+    }
+    catch (...) {
+        // Nothing to report here: the task job is responsible for translating errors into messages
+    }
+
     if (!entity->taskProgress.isAbortRequested())
         entity->taskProgress.setValue(100);
 

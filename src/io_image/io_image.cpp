@@ -36,6 +36,7 @@ namespace Mayo {
 
 // Defined in graphics_create_virtual_window.cpp
 OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_GraphicDriver>&, int , int);
+void graphicsPrepareVirtualWindowRendering(const OccHandle<Graphic3d_GraphicDriver>&);
 
 namespace IO {
 
@@ -237,10 +238,19 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     view->Redraw();
     GraphicsUtils::V3dView_fitAll(view);
     OccHandle<Image_AlienPixMap> pixmap = ImageWriter::createImage(view);
-    if (!pixmap)
+    if (!pixmap) {
+        this->messenger()->emitError(ImageWriterI18N::textIdTr("Failed to dump 3D view into image"));
         return false;
+    }
 
     const bool okSave = pixmap->Save(filepathTo<TCollection_AsciiString>(filepath));
+    if (!okSave) {
+        this->messenger()->emitError(fmt::format(
+            ImageWriterI18N::textIdTr("Failed to save image file(is the image format supported by "
+                                      "the OpenCascade build in use?)")
+        ));
+    }
+
     return okSave;
 }
 
@@ -300,6 +310,9 @@ OccHandle<Image_AlienPixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
     V3d_ImageDumpOptions dumpOptions;
     dumpOptions.BufferType = Graphic3d_BT_RGB;
     view->Window()->Size(dumpOptions.Width, dumpOptions.Height);
+    // Must be called just before dumping: rendering on a virtual window may have left the GL error
+    // state dirty, which would make the dump fail(see graphicsPrepareVirtualWindowRendering())
+    graphicsPrepareVirtualWindowRendering(view->Viewer()->Driver());
     const bool okPixmap = view->ToPixMap(*pixmap.get(), dumpOptions);
     if (!okPixmap)
         return {};
@@ -343,6 +356,7 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
     // Create virtual window
     auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), params.width, params.height);
     view->SetWindow(wnd);
+    graphicsPrepareVirtualWindowRendering(view->Viewer()->Driver());
 
     return view;
 }
