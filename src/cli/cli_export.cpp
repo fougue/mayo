@@ -21,6 +21,7 @@
 #include <QtCore/QtDebug>
 
 #include <fmt/format.h>
+#include <gsl/util>
 #include <atomic>
 #include <functional>
 #include <iomanip>
@@ -126,6 +127,11 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
 
 void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* helper, TaskProgress* progress)
 {
+    // Whatever happens below(including an exception being thrown), the export task counter has to be
+    // decremented, otherwise the application would never know that all tasks are done and would
+    // wait forever
+    auto _ = gsl::finally([=]{ --(helper->exportTaskCount); });
+
     auto appModule = AppModule::get();
     MessageCollecter errorCollect;
     errorCollect.only(MessageType::Error);
@@ -147,7 +153,6 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
     helper->taskMgr.setTitle(progress->taskId(), msg);
     helper->mapTaskStatus.at(progress->taskId())->success = okExport;
     helper->mapTaskStatus.at(progress->taskId())->finished = true;
-    --(helper->exportTaskCount);
 }
 
 } // namespace

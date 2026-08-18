@@ -15,6 +15,8 @@
 #include "task_progress.h"
 #include "tkernel_utils.h"
 
+#include <Standard_Failure.hxx>
+
 #include <fmt/format.h>
 #include <gsl/util>
 
@@ -48,6 +50,29 @@ void dispatchWarnings(std::string_view headerMsg, const MessageCollecter& msgCol
     const std::string strWarnings = msgCollect.asString("\n    ", MessageType::Warning);
     if (!strWarnings.empty())
         target->warning() << fmt::format("{}\n    {}", headerMsg, strWarnings);
+}
+
+// Executes 'fn' catching any exception it might throw, which is turned into an error message.
+// Reader/writer implementations are third-party code prone to throwing(OpenCascade uses exceptions
+// extensively). An exception escaping a task job would be silently swallowed by std::async and the
+// task would never signal its end, causing the whole application to hang(see issue #403)
+template<typename Function>
+bool safeExecute(Function fn, const std::function<bool(std::string_view)>& fnError)
+{
+    try {
+        return fn();
+    }
+    catch (const Standard_Failure& err) {
+        return fnError(
+            fmt::format("Exception '{}': {}", err.DynamicType()->Name(), err.GetMessageString())
+        );
+    }
+    catch (const std::exception& err) {
+        return fnError(fmt::format("Exception: {}", err.what()));
+    }
+    catch (...) {
+        return fnError("Unknown exception");
+    }
 }
 
 } // namespace
@@ -390,14 +415,18 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
     writer->applyProperties(args.parameters);
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
-        const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);
+        const bool okTransfer = safeExecute(
+            [&]{ return writer->transfer(args.applicationItems, &transferProgress); }, fnError
+        );
         if (!okTransfer)
             return fnError(textIdTr("File transfer problem"));
     }
 
     {
         TaskProgress writeProgress(progress, 60, textIdTr("Write"));
-        const bool okWriteFile = writer->writeFile(args.targetFilepath, &writeProgress);
+        const bool okWriteFile = safeExecute(
+            [&]{ return writer->writeFile(args.targetFilepath, &writeProgress); }, fnError
+        );
         if (!okWriteFile)
             return fnError(textIdTr("File write problem"));
     }
