@@ -34,20 +34,6 @@ if(OpenCASCADE_FOUND)
     set(OpenCASCADE_MAINTENANCE_VERSION ${CMAKE_MATCH_1})
     set(OpenCASCADE_VERSION "${OpenCASCADE_MAJOR_VERSION}.${OpenCASCADE_MINOR_VERSION}.${OpenCASCADE_MAINTENANCE_VERSION}")
 
-    # Add OpenCASCADE "HAVE_RAPIDJSON" compile flags
-    if(OpenCASCADE_HAVE_RAPIDJSON STREQUAL "true")
-        list(APPEND Mayo_CompileDefinitions HAVE_RAPIDJSON)
-    elseif(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
-        file(GLOB OpenCASCADE_CompileDefsCMakeFiles ${OpenCASCADE_DIR}/cmake/OpenCASCADECompileDefinitions*.cmake)
-        foreach(CMakeFile ${OpenCASCADE_CompileDefsCMakeFiles})
-            file(READ "${CMakeFile}" CMakeFileContents)
-            if(CMakeFileContents MATCHES ":HAVE_RAPIDJSON>")
-                list(APPEND Mayo_CompileDefinitions HAVE_RAPIDJSON)
-                break()
-            endif()
-        endforeach()
-    endif()
-
     # Set OpenCASCADE_3RDPARTY_BINARY_DIRS variable that will contain the OpenCASCADE
     # 3rd-party binary directories(ie containing DLL files)
     set(OpenCASCADE_3RDPARTY_BINARY_DIRS)

@@ -321,6 +321,27 @@ if(OpenCASCADE_FOUND)
         message(FATAL_ERROR "OpenCascade >= 7.4.0 is required")
     endif()
 
+    # Set OCCT_HAVE_<LIB> flags
+    set(OpenCASCADE_AllCompileDefinitions "")
+    file(GLOB OpenCASCADE_CompileDefsCMakeFiles "${OpenCASCADE_DIR}/cmake/OpenCASCADECompileDefinitions*.cmake")
+    foreach(CMakeFile IN LISTS OpenCASCADE_CompileDefsCMakeFiles)
+        file(READ "${CMakeFile}" CMakeFileContents)
+        string(APPEND OpenCASCADE_AllCompileDefinitions "\n${CMakeFileContents}")
+    endforeach()
+
+    function(Mayo_DetectOcctDefinition Definition Result)
+        set(${Result} FALSE PARENT_SCOPE)
+        if(OpenCASCADE_AllCompileDefinitions MATCHES ":${Definition}>")
+            set(${Result} TRUE PARENT_SCOPE)
+            message(STATUS "OpenCascade ${Definition}: yes")
+        else()
+            message(STATUS "OpenCascade ${Definition}: no")
+        endif()
+    endfunction()
+
+    Mayo_DetectOcctDefinition(HAVE_RAPIDJSON OCCT_HAVE_RAPIDJSON)
+    Mayo_DetectOcctDefinition(HAVE_FREEIMAGE OCCT_HAVE_FREEIMAGE)
+
     # std::iterator class template(used as a base class to provide typedefs) is deprecated in C++17
     # OpenCascade < 7.7.0 uses std::iterator for NCollection_StlIterator and this is causing many
     # deprecation warnings

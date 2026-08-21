@@ -50,7 +50,6 @@ echo set(CSF_OPT_BIN32 "%CSF_OPT_BIN32:\=/%")
 echo set(CSF_OPT_BIN32D "%CSF_OPT_BIN32D:\=/%")
 echo set(CSF_OPT_BIN64 "%CSF_OPT_BIN64:\=/%")
 echo set(CSF_OPT_BIN64D "%CSF_OPT_BIN64D:\=/%")
-echo set(OpenCASCADE_HAVE_RAPIDJSON "%HAVE_RAPIDJSON%")
 
 echo get_filename_component(TCL_DIR ${TCL_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
 echo get_filename_component(TK_DIR ${TK_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")

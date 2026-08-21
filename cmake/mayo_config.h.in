@@ -9,6 +9,5 @@
 #cmakedefine MAYO_HAVE_ASSIMP_aiGetVersionPatch
 #cmakedefine MAYO_HAVE_GMIO
 
-#ifdef HAVE_RAPIDJSON
-#  define OPENCASCADE_HAVE_RAPIDJSON
-#endif
+#cmakedefine OCCT_HAVE_RAPIDJSON
+#cmakedefine OCCT_HAVE_FREEIMAGE
