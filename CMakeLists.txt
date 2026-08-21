@@ -329,6 +329,9 @@ if(OpenCASCADE_FOUND)
         string(APPEND OpenCASCADE_AllCompileDefinitions "\n${CMakeFileContents}")
     endforeach()
 
+    message(STATUS "OpenCASCADE_CompileDefsCMakeFiles = ${OpenCASCADE_CompileDefsCMakeFiles}")
+    message(STATUS "OpenCASCADE_AllCompileDefinitions = ${OpenCASCADE_AllCompileDefinitions}")
+
     function(Mayo_DetectOcctDefinition Definition Result)
         set(${Result} FALSE PARENT_SCOPE)
         if(OpenCASCADE_AllCompileDefinitions MATCHES ":${Definition}>")
