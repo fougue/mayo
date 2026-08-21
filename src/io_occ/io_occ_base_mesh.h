@@ -25,6 +25,12 @@ public:
     static double lengthUnitFactor(LengthUnit lenUnit);
     static LengthUnit lengthUnit(double factor);
 
+    struct BaseParameters {
+        std::string rootPrefix;
+        RWMesh_CoordinateSystem systemCoordinatesConverter{RWMesh_CoordinateSystem_Undefined};
+        LengthUnit systemLengthUnit{LengthUnit::Undefined};
+    };
+#if 0
     struct BaseParameters : public PropertyGroup {
         PropertyString rootPrefix{ this, textId("rootPrefix") };
         PropertyEnum<RWMesh_CoordinateSystem> systemCoordinatesConverter{ this, textId("systemCoordinatesConverter") };
@@ -35,9 +41,10 @@ public:
 
         MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderParameters)
     };
+#endif
 
-    BaseParameters& parameters() override { return m_params; }
-    const BaseParameters& constParameters() const override { return m_params; }
+    BaseParameters& parameters() { return m_params; }
+    const BaseParameters& constParameters() const { return m_params; }
 
 protected:
     OccBaseMeshReader(RWMesh_CafReader& reader, BaseParameters& params);

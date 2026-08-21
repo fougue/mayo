@@ -11,7 +11,6 @@
 #include "io_reader.h"
 #include "io_writer.h"
 #include "messenger.h"
-#include "property_value_conversion.h"
 #include "task_manager.h"
 #include "task_progress.h"
 #include "tkernel_utils.h"
@@ -52,60 +51,55 @@ void dispatchWarnings(std::string_view headerMsg, const MessageCollecter& msgCol
 }
 
 // TODO Add tests
-bool copyValues(
-        PropertyGroup* destPropGroup,
-        const PropertyGroup* srcPropGroup,
-        const PropertyValueConversion& conv,
-        Messenger* messenger
-    )
+bool copyValues(PropertyGroup* dstPropGroup, const PropertyGroup* srcPropGroup, Messenger* messenger)
 {
     messenger = !messenger ? &Messenger::null() : messenger;
 
-    if (!destPropGroup || !srcPropGroup)
+    if (!dstPropGroup || !srcPropGroup)
         return false;
 
     auto srcPropSpan = srcPropGroup->properties();
-    auto destPropSpan = destPropGroup->properties();
+    auto dstPropSpan = dstPropGroup->properties();
 
-    if (destPropSpan.size() < srcPropSpan.size()) {
+    if (dstPropSpan.size() < srcPropSpan.size()) {
         messenger->emitError(fmt::format(
-            "Failed to copy property, size mismatch [ srcSize={}, destSize={} ]",
-            srcPropSpan.size(), destPropSpan.size()
+            "Failed to copy property, size mismatch [ srcSize={}, dstSize={} ]",
+            srcPropSpan.size(), dstPropSpan.size()
         ));
         return false;
     }
 
     for (size_t i = 0; i < srcPropSpan.size(); ++i) {
         const Property* srcProp = srcPropSpan[i];
-        Property* destProp = destPropSpan[i];
-        if (destProp->name().key != srcProp->name().key) {
+        Property* dstProp = dstPropSpan[i];
+        if (dstProp->name().key != srcProp->name().key) {
             // Try to find destination Property by name
-            auto itFound = std::find_if(destPropSpan.begin(), destPropSpan.end(), [=](const Property* prop) {
+            auto itFound = std::find_if(dstPropSpan.begin(), dstPropSpan.end(), [=](const Property* prop) {
                 return prop->name().key == srcProp->name().key;
             });
-            destProp = itFound != destPropSpan.end() ? *itFound : destProp;
+            dstProp = itFound != dstPropSpan.end() ? *itFound : dstProp;
         }
 
-        if (destProp->name().key != srcProp->name().key) {
+        if (dstProp->name().key != srcProp->name().key) {
             messenger->emitError(fmt::format(
                 "Failed to copy property value, name mismatch [ srcName={}, destName={} ]",
-                srcProp->name().key, destProp->name().key
+                srcProp->name().key, dstProp->name().key
             ));
             return false;
         }
 
-        if (destProp->dynTypeName() != srcProp->dynTypeName()) {
+        if (dstProp->dynTypeName() != srcProp->dynTypeName()) {
             messenger->emitError(fmt::format(
                 "Failed to copy property value, type mismatch [ name={}, srcType={}, dstType={} ]",
-                srcProp->name().key, srcProp->dynTypeName(), destProp->dynTypeName()
+                srcProp->name().key, srcProp->dynTypeName(), dstProp->dynTypeName()
             ));
             return false;
         }
 
-        const bool okConv = conv.fromVariant(destProp, conv.toVariant(*srcProp));
-        if (!okConv) {
+        const bool okCopyValue = dstProp->copyValue(*srcProp);
+        if (!okCopyValue) {
             messenger->emitError(fmt::format(
-                "Failed to copy property value, with PropertyValueConversion tool [ name={}, type={} ]",
+                "Failed to copy property value with Property::copyValue() [ name={}, type={} ]",
                 srcProp->name().key, srcProp->dynTypeName()
             ));
             return false;
@@ -264,7 +258,6 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
     const auto listFilepath = args.filepaths;
     TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
     Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
-    const PropertyValueConversion propValueConverter;
 
     bool ok = true;
 
@@ -312,14 +305,13 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
             return fnReadFileError(taskData, textIdTr("No supporting reader"));
 
         taskData.reader->setMessenger(&taskData.messenger);
-        if (args.parametersProvider) {
-
-            copyValues(
-                &taskData.reader->parameters(),
-                args.parametersProvider->findReaderParameters(taskData.fileFormat),
-                propValueConverter,
-                messenger
-            );
+        auto params = args.parametersProvider
+            ? args.parametersProvider->findReaderParameters(taskData.fileFormat)
+            : nullptr
+        ;
+        if (params) {
+            // TODO Report error on failure
+            params->saveTo(*taskData.reader);
         }
 
         if (!taskData.reader->readFile(taskData.filepath, &progress))
@@ -444,7 +436,6 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
         msgCollect.error() << errorMsg;
         return false;
     };
-    const PropertyValueConversion propValueConverter;
 
     auto _ = gsl::finally([&]{
         Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
@@ -458,7 +449,10 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
         return fnError(textIdTr("No supporting writer"));
 
     writer->setMessenger(&msgCollect);
-    copyValues(&writer->parameters(), args.parameters, propValueConverter, &msgCollect);
+    if (args.parameters) {
+        // TODO Report error on failure
+        args.parameters->saveTo(*writer);
+    }
 
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
@@ -507,7 +501,7 @@ System::Operation_ExportApplicationItems::withItems(gsl::span<const ApplicationI
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters)
+System::Operation_ExportApplicationItems::withParameters(const WriterProperties* parameters)
 {
     m_args.parameters = parameters;
     return *this;

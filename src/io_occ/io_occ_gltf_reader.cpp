@@ -11,10 +11,10 @@ OccGltfReader::Parameters::Parameters()
 {
     this->restoreDefaults();
     this->skipEmptyNodes.setDescription(
-        textIdTr("Ignore nodes without geometry(`Yes` by default)")
+        textId("Ignore nodes without geometry(`Yes` by default)")
     );
     this->useMeshNameAsFallback.setDescription(
-        textIdTr("Use mesh name in case if node name is empty(`Yes` by default)")
+        textId("Use mesh name in case if node name is empty(`Yes` by default)")
     );
 }
 

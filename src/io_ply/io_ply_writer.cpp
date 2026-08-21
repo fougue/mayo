@@ -55,7 +55,7 @@ Endianness hostEndianness()
 PlyWriter::Parameters::Parameters()
 {
     this->restoreDefaults();
-    this->comment.setDescription(textIdTr("Line that will appear in header"));
+    this->comment.setDescription(textId("Line that will appear in header"));
 }
 
 void PlyWriter::Parameters::restoreDefaults()

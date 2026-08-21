@@ -25,7 +25,7 @@ class GenericProperty : public Property {
 public:
     using ValueType = T;
 
-    GenericProperty(PropertyGroup* grp, const TextId& name);
+    GenericProperty(PropertyGroup* grp, const PropertyMeta& meta);
 
     Cpp::ValueOrConstRefType<T> value() const { return m_value; }
     bool setValue(const T& val);
@@ -71,17 +71,44 @@ private:
 };
 
 template<typename T>
-class GenericScalarProperty :
-        public GenericProperty<T>,
+class PropertyScalarMeta :
+        public PropertyMeta,
         public PropertyScalarConstraints<T>
 {
 public:
+    explicit PropertyScalarMeta(const TextId& name)
+        : PropertyMeta(name)
+    {}
+
+    PropertyScalarMeta(const TextId& name, T minimum, T maximum, T singleStep)
+        : PropertyMeta(name),
+          PropertyScalarConstraints<T>(minimum, maximum, singleStep)
+    {}
+};
+
+template<typename T>
+class GenericScalarProperty : public GenericProperty<T> {
+    static_assert(std::is_scalar_v<T>, "Requires scalar type");
+public:
     using ValueType = T;
-    GenericScalarProperty(PropertyGroup* grp, const TextId& name);
-    GenericScalarProperty(
-        PropertyGroup* grp, const TextId& name,
-        T minimum, T maximum, T singleStep
-    );
+    using MetaType = PropertyScalarMeta<T>;
+
+    GenericScalarProperty(PropertyGroup* group, const MetaType& meta)
+        : GenericProperty<T>(group, meta)
+    {}
+
+    const MetaType& scalarMeta() const {
+        return static_cast<const MetaType&>(this->meta());
+    }
+
+    bool setValue(const T& value)
+    {
+        const auto& m = this->scalarMeta();
+        if (m.constraintsEnabled() && (value < m.minimum() || value > m.maximum()))
+            return false;
+
+        return GenericProperty<T>::setValue(value);
+    }
 };
 
 class BasePropertyQuantity :
@@ -147,8 +174,8 @@ using PropertyDensity = GenericPropertyQuantity<Unit::Density>;
 // GenericProperty<>
 
 template<typename T>
-GenericProperty<T>::GenericProperty(PropertyGroup* grp, const TextId& name)
-    : Property(grp, name)
+GenericProperty<T>::GenericProperty(PropertyGroup* grp, const PropertyMeta& meta)
+    : Property(grp, meta)
 { }
 
 template<typename T>
@@ -182,22 +209,6 @@ void PropertyScalarConstraints<T>::setRange(T minVal, T maxVal)
     this->setMinimum(minVal);
     this->setMaximum(maxVal);
 }
-
-// GenericScalarProperty<>
-
-template<typename T>
-GenericScalarProperty<T>::GenericScalarProperty(PropertyGroup* grp, const TextId& name)
-    : GenericProperty<T>(grp, name)
-{ }
-
-template<typename T>
-GenericScalarProperty<T>::GenericScalarProperty(
-        PropertyGroup* grp, const TextId& name,
-        T minimum, T maximum, T singleStep
-    )
-    : GenericProperty<T>(grp, name),
-      PropertyScalarConstraints<T>(minimum, maximum, singleStep)
-{ }
 
 // GenericPropertyQuantity<>
 

@@ -172,8 +172,9 @@ PtrPropertyGroup OccFactoryWriter::createParameters(Format format) const
         return std::make_unique<OccVrmlWriter::Parameters>();
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+    std::unique_ptr<PropertyGroup> makeOccGltfWriterProperties();
     if (format == Format_GLTF)
-        return std::make_unique<OccGltfWriter::Parameters>();
+        return makeOccGltfWriterProperties();
 #endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)

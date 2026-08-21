@@ -4,6 +4,7 @@
 ****************************************************************************/
 
 #include "io_occ_common.h"
+#include "../base/enumeration_fromenum.h"
 #include "../base/meta_enum.h"
 #include "../base/text_id.h"
 
@@ -26,6 +27,20 @@ const char* OccCommon::toCafString(OccCommon::LengthUnit unit)
     case LengthUnit::Mile: return "MI";
     }
     throw std::invalid_argument(fmt::format("{} isn't supported", MetaEnum::name(unit)));
+}
+
+const Enumeration& OccCommon::enum_RWMesh_CoordinateSystem()
+{
+    static const auto enumObj =
+        Enumeration::fromType<RWMesh_CoordinateSystem>(textIdContext())
+        .chopPrefix("RWMesh_CoordinateSystem_");
+    return enumObj;
+}
+
+const Enumeration& OccCommon::enum_LengthUnit()
+{
+    static const auto enumObj = Enumeration::fromType<LengthUnit>(textIdContext());
+    return enumObj;
 }
 
 } // namespace Mayo::IO

@@ -7,16 +7,17 @@
 
 #include "io_format.h"
 
-namespace Mayo { class PropertyGroup; }
-
 namespace Mayo::IO {
+
+class ReaderProperties;
+class WriterProperties;
 
 // Abstract mechanism to provide reader/writer parameters for a format
 class ParametersProvider {
 public:
     virtual ~ParametersProvider() = default;
-    virtual const PropertyGroup* findReaderParameters(Format format) const = 0;
-    virtual const PropertyGroup* findWriterParameters(Format format) const = 0;
+    virtual const ReaderProperties* findReaderParameters(Format format) const = 0;
+    virtual const WriterProperties* findWriterParameters(Format format) const = 0;
 };
 
 } // namespace Mayo::IO

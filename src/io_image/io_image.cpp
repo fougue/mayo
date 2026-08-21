@@ -39,37 +39,37 @@ namespace IO {
 
 ImageWriter::Parameters::Parameters(const GuiApplication* guiApp)
 {
-    this->width.setDescription(textIdTr("Image width in pixels"));
+    this->width.setDescription(textId("Image width in pixels"));
     this->width.setConstraintsEnabled(true);
     this->width.setRange(0, std::numeric_limits<int>::max());
 
-    this->height.setDescription(textIdTr("Image height in pixels"));
+    this->height.setDescription(textId("Image height in pixels"));
     this->height.setConstraintsEnabled(true);
     this->height.setRange(0, std::numeric_limits<int>::max());
 
     this->backgroundColorStart.setDescription(
-        textIdTr("Start color of the image background gradient")
+        textId("Start color of the image background gradient")
     );
     this->backgroundColorEnd.setDescription(
-        textIdTr("End color of the image background gradient")
+        textId("End color of the image background gradient")
     );
     this->backgroundGradientFill.setDescription(
-        textIdTr("Type of gradient fill for the image background")
+        textId("Type of gradient fill for the image background")
     );
     this->backgroundGradientFill.setDescriptions({
-        { GradientFill::None, textIdTr("No gadient fill, single color background") },
-        { GradientFill::Horizontal, textIdTr("Gradient directed from left to right") },
-        { GradientFill::Vertical, textIdTr("Gradient directed from top to bottom") },
-        { GradientFill::DiagonalTopLeftBottomRight, textIdTr("Gradient directed from top left corner to bottom right") },
-        { GradientFill::DiagonalTopRightBottomLeft, textIdTr("Gradient directed from top right corner to bottom left") },
-        { GradientFill::Radial, textIdTr("Gradient directed from center in all directions forming concentric circles") }
+        { GradientFill::None, textId("No gadient fill, single color background") },
+        { GradientFill::Horizontal, textId("Gradient directed from left to right") },
+        { GradientFill::Vertical, textId("Gradient directed from top to bottom") },
+        { GradientFill::DiagonalTopLeftBottomRight, textId("Gradient directed from top left corner to bottom right") },
+        { GradientFill::DiagonalTopRightBottomLeft, textId("Gradient directed from top right corner to bottom left") },
+        { GradientFill::Radial, textId("Gradient directed from center in all directions forming concentric circles") }
     });
 
     this->cameraOrientation.setDescription(
-        textIdTr("Camera orientation expressed in Z-up convention as a unit vector")
+        textId("Camera orientation expressed in Z-up convention as a unit vector")
     );
     this->cameraProjection.setDescription(
-        textIdTr("Camera projection type, specifies how the 3D scene is projected onto a 2D image for display")
+        textId("Camera projection type, specifies how the 3D scene is projected onto a 2D image for display")
     );
 
     if (guiApp) {

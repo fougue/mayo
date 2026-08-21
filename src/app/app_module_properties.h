@@ -26,7 +26,12 @@
 
 namespace Mayo {
 
-namespace IO { class System; }
+namespace IO {
+class System;
+class ReaderProperties;
+class WriterProperties;
+} // namespace IO
+
 class Settings;
 
 enum class ActionOnDocumentFileChange {
@@ -105,8 +110,8 @@ private:
     friend class AppModule;
     Settings* m_settings = nullptr;
     std::vector<std::unique_ptr<PropertyGroup>> m_vecPtrPropertyGroup;
-    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatReaderParameters;
-    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
+    std::unordered_map<IO::Format, IO::ReaderProperties*> m_mapFormatReaderParameters;
+    std::unordered_map<IO::Format, IO::WriterProperties*> m_mapFormatWriterParameters;
 };
 
 } // namespace Mayo

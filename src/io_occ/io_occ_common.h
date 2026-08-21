@@ -5,9 +5,11 @@
 
 #pragma once
 
-#include "../base/enumeration_fromenum.h"
+#include "../base/text_id.h"
 
 #include <RWMesh_CoordinateSystem.hxx>
+
+namespace Mayo { class Enumeration; }
 
 namespace Mayo::IO {
 
@@ -27,21 +29,9 @@ public:
     };
 
     static const char* toCafString(LengthUnit unit);
+
+    static const Enumeration& enum_RWMesh_CoordinateSystem();
+    static const Enumeration& enum_LengthUnit();
 };
 
 } // namespace Mayo::IO
-
-
-namespace Mayo {
-
-template<> struct EnumNames<IO::OccCommon::LengthUnit> {
-    inline static std::string_view trContext = IO::OccCommon::textIdContext();
-    inline static std::string_view junkPrefix = {};
-};
-
-template<> struct EnumNames<RWMesh_CoordinateSystem> {
-    inline static std::string_view trContext = IO::OccCommon::textIdContext();
-    inline static std::string_view junkPrefix = "RWMesh_CoordinateSystem_";
-};
-
-} // namespace Mayo

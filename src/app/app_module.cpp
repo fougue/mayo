@@ -69,29 +69,29 @@ public:
 class AppModuleIOParametersProvider : public IO::ParametersProvider {
 public:
     AppModuleIOParametersProvider(
-            const std::unordered_map<IO::Format, PropertyGroup*>& mapFormatReaderParameters,
-            const std::unordered_map<IO::Format, PropertyGroup*>& mapFormatWriterParameters
+            const std::unordered_map<IO::Format, IO::ReaderProperties*>& mapFormatReaderParameters,
+            const std::unordered_map<IO::Format, IO::WriterProperties*>& mapFormatWriterParameters
         ) :
         m_mapFormatReaderParameters(mapFormatReaderParameters),
         m_mapFormatWriterParameters(mapFormatWriterParameters)
     {
     }
 
-    const PropertyGroup* findReaderParameters(IO::Format format) const override
+    const IO::ReaderProperties* findReaderParameters(IO::Format format) const override
     {
         auto it = m_mapFormatReaderParameters.find(format);
         return it != m_mapFormatReaderParameters.cend() ? it->second : nullptr;
     }
 
-    const PropertyGroup* findWriterParameters(IO::Format format) const override
+    const IO::WriterProperties* findWriterParameters(IO::Format format) const override
     {
         auto it = m_mapFormatWriterParameters.find(format);
         return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
     }
 
 private:
-    const std::unordered_map<IO::Format, PropertyGroup*>& m_mapFormatReaderParameters;
-    const std::unordered_map<IO::Format, PropertyGroup*>& m_mapFormatWriterParameters;
+    const std::unordered_map<IO::Format, IO::ReaderProperties*>& m_mapFormatReaderParameters;
+    const std::unordered_map<IO::Format, IO::WriterProperties*>& m_mapFormatWriterParameters;
 };
 
 } // namespace

@@ -10,93 +10,61 @@
 
 namespace Mayo {
 
-PropertyEnumeration::PropertyEnumeration(
-        PropertyGroup* grp, const TextId& name, const Enumeration* enumeration
-    )
-    : Property(grp, name),
-      m_enumeration(enumeration),
-      m_value(enumeration && !enumeration->empty() ? enumeration->itemAt(0).value : -1)
+PropertyEnum::PropertyEnum(PropertyGroup* grp, const PropertyEnumMeta& meta)
+    : Property(grp, meta),
+      m_value(!meta.enumeration().empty() ? meta.enumeration().itemAt(0).value : -1)
 {
 }
 
-const Enumeration& PropertyEnumeration::enumeration() const
+const PropertyEnumMeta& PropertyEnum::enumMeta() const
 {
-    if (!m_enumeration)
-        throw std::runtime_error("Internal Enumeration object must not be null");
-
-    return *m_enumeration;
+    return static_cast<const PropertyEnumMeta&>(this->meta());
 }
 
-PropertyEnumeration::PropertyEnumeration(PropertyGroup* grp, const TextId& name)
-    : Property(grp, name)
+TextId PropertyEnumMeta::findDescription(Enumeration::Value value) const
 {
+    const Enumeration::Item* ptrItem = m_enum.findItemByValue(value);
+    return ptrItem ? ptrItem->description : TextId{};
 }
 
-void PropertyEnumeration::setEnumeration(const Enumeration* enumeration)
+TextId PropertyEnum::valueName() const
 {
-    m_enumeration = enumeration;
+    return this->enumMeta().enumeration().findNameByValue(m_value);
 }
 
-void PropertyEnumeration::addDescription(Enumeration::Value value, std::string_view descr)
-{
-    m_vecDescription.push_back({ value, descr });
-}
-
-std::string_view PropertyEnumeration::findDescription(Enumeration::Value value) const
-{
-    auto itFound = std::find_if(
-        m_vecDescription.cbegin(),
-        m_vecDescription.cend(),
-        [=](const Description& descr) { return descr.value == value; }
-    );
-    return itFound != m_vecDescription.cend() ? itFound->text : std::string_view{};
-}
-
-void PropertyEnumeration::clearDescriptions()
-{
-    m_vecDescription.clear();
-}
-
-std::string_view PropertyEnumeration::valueName() const
-{
-    return m_enumeration ? m_enumeration->findNameByValue(m_value) : std::string_view{};
-}
-
-Enumeration::Value PropertyEnumeration::value() const
+Enumeration::Value PropertyEnum::value() const
 {
     return m_value;
 }
 
-bool PropertyEnumeration::setValue(Enumeration::Value value)
+bool PropertyEnum::setValue(Enumeration::Value value)
 {
     // TODO: check v is an enumerated value of m_enumeration
     return Property::setValueHelper(this, &m_value, value);
 }
 
-bool PropertyEnumeration::setValueByName(std::string_view name)
+bool PropertyEnum::setValueByName(std::string_view name)
 {
-    if (!m_enumeration)
-        return false;
-
-    return Property::setValueHelper(this, &m_value, m_enumeration->findValueByName(name));
+    const auto enumValue = this->enumMeta().enumeration().findValueByName(name);
+    return Property::setValueHelper(this, &m_value, enumValue);
 }
 
-bool PropertyEnumeration::copyValue(const Property& other)
+bool PropertyEnum::copyValue(const Property& other)
 {
     if (this->dynTypeName() == other.dynTypeName()) {
-        const auto& otherPropEnum = static_cast<const PropertyEnumeration&>(other);
-        if (m_enumeration == &otherPropEnum.enumeration())
+        const auto& otherPropEnum = static_cast<const PropertyEnum&>(other);
+        if (&this->enumMeta().enumeration() == &otherPropEnum.enumMeta().enumeration())
             return this->setValue(otherPropEnum.value());
     }
 
     return false;
 }
 
-const char* PropertyEnumeration::dynTypeName() const
+const char* PropertyEnum::dynTypeName() const
 {
-    return PropertyEnumeration::TypeName;
+    return PropertyEnum::TypeName;
 }
 
-const char PropertyEnumeration::TypeName[] = "Mayo::PropertyEnumeration";
+const char PropertyEnum::TypeName[] = "Mayo::PropertyEnum";
 
 } // namespace Mayo

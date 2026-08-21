@@ -7,8 +7,6 @@
 
 #include "../base/document_ptr.h"
 #include "../base/io_writer.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 
 #include <RWGltf_WriterTrsfFormat.hxx>
 #include <RWMesh_CoordinateSystemConverter.hxx>
@@ -33,30 +31,27 @@ public:
         ProductAndInstance, // Generates "Product [Instance]" name
     };
 
-    struct Parameters : public PropertyGroup {
-        PropertyEnum<RWMesh_CoordinateSystem> inputCoordinateSystem{ this, textId("inputCoordinateSystem") };
-        PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, textId("outputCoordinateSystem") };
-        PropertyEnum<RWGltf_WriterTrsfFormat> transformationFormat{ this, textId("transformationFormat") };
-        PropertyEnum<Format> format{ this, textId("format") };
-        PropertyBool forceExportUV{ this, textId("forceExportUV") };
-        PropertyEnum<OccGltfWriter::ShapeNameFormat> nodeNameFormat{ this, textId("nodeNameFormat") };
-        PropertyEnum<OccGltfWriter::ShapeNameFormat> meshNameFormat{ this, textId("meshNameFormat") };
-        PropertyBool embedTextures{ this, textId("embedTextures") };   // Only applicable if `format` == Format::Binary
-        PropertyBool mergeFaces{ this, textId("mergeFaces") };
-        PropertyBool keepIndices16b{ this, textId("keepIndices16b") }; // Only applicable if 'mergeFaces' == true
-
-        Parameters();
-        void restoreDefaults() override;
-
-    protected:
-        void onPropertyChanged(Property* prop) override;
+    struct Parameters {
+        RWMesh_CoordinateSystem inputCoordinateSystem  = RWMesh_CoordinateSystem_Undefined;
+        RWMesh_CoordinateSystem outputCoordinateSystem = RWMesh_CoordinateSystem_glTF;
+        RWGltf_WriterTrsfFormat transformationFormat = RWGltf_WriterTrsfFormat_Compact;
+        Format format = Format::Binary;
+        bool forceExportUV = true;
+#if OCC_VERSION_HEX >= 0x070600
+        OccGltfWriter::ShapeNameFormat nodeNameFormat = ShapeNameFormat::ProductOrInstance;
+        OccGltfWriter::ShapeNameFormat meshNameFormat = ShapeNameFormat::Product;
+#else
+        OccGltfWriter::ShapeNameFormat nodeNameFormat = ShapeNameFormat::Empty;
+        OccGltfWriter::ShapeNameFormat meshNameFormat = ShapeNameFormat::Empty;
+#endif
+        bool mergeFaces = false;
+        bool embedTextures = true;   // ⚠ Only applicable if `format` == Format::Binary
+        bool keepIndices16b = false; // ⚠ Only applicable if `mergeFaces` == true
     };
-    Parameters& parameters() override { return m_params; }
-    const Parameters& constParameters() const override { return m_params; }
+    Parameters& parameters() { return m_params; }
+    const Parameters& constParameters() const { return m_params; }
 
 private:
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfWriter)
-
     Parameters m_params;
     DocumentPtr m_document;
     NCollection_Sequence<TDF_Label> m_seqRootLabel;

@@ -75,16 +75,6 @@ void PropertyGroup::removeProperty(Property* prop)
         m_properties.erase(it);
 }
 
-const TextId& Property::name() const
-{
-    return m_name;
-}
-
-std::string_view Property::label() const
-{
-    return m_name.tr();
-}
-
 void Property::setEnabled(bool on)
 {
     if (m_isEnabled != on) {
@@ -93,9 +83,9 @@ void Property::setEnabled(bool on)
     }
 }
 
-Property::Property(PropertyGroup* group, const TextId& name)
+Property::Property(PropertyGroup* group, const PropertyMeta& meta)
     : m_group(group),
-      m_name(name)
+      m_meta(meta)
 {
     if (m_group)
         m_group->addProperty(this);
@@ -162,6 +152,34 @@ PropertyChangedBlocker::~PropertyChangedBlocker()
 {
     if (m_group)
         m_group->blockPropertyChanged(false);
+}
+
+PropertyMeta::PropertyMeta(const TextId& name)
+    : m_name(name)
+{
+}
+
+PropertyMeta& PropertyMeta::setDescription(const TextId& text)
+{
+    return this->setDescription(text.tr());
+}
+
+PropertyMeta& PropertyMeta::setDescription(std::string_view trText)
+{
+    m_description = std::string{trText};
+    return *this;
+}
+
+PropertyMeta& PropertyMeta::setUserReadOnly(bool on)
+{
+    m_isUserReadOnly = on;
+    return *this;
+}
+
+PropertyMeta& PropertyMeta::setUserVisible(bool on)
+{
+    m_isUserVisible = on;
+    return *this;
 }
 
 } // namespace Mayo

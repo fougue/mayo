@@ -6,108 +6,15 @@
 #include "io_occ_gltf_writer.h"
 
 #include "../base/application_item.h"
-#include "../base/enumeration_fromenum.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occt_ncollection_indexed_datamap_of_stringstring.h"
 #include "../base/occ_progress_indicator.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
-#include "../base/text_id.h"
-#include "io_occ_common.h"
 
 #include <fmt/format.h>
 #include <RWGltf_CafWriter.hxx>
 
 namespace Mayo::IO {
-
-OccGltfWriter::Parameters::Parameters()
-{
-    this->restoreDefaults();
-
-    this->inputCoordinateSystem.setDescription(
-        textIdTr("Source coordinate system transformation")
-    );
-    this->outputCoordinateSystem.setDescription(
-        textIdTr("Target coordinate system transformation")
-    );
-    this->transformationFormat.setDescription(
-        textIdTr("Preferred transformation format for writing into glTF file")
-    );
-    this->forceExportUV.setDescription(
-        textIdTr("Export UV coordinates even if there is no mapped texture")
-    );
-
-    this->transformationFormat.mutableEnumeration().chopPrefix("RWGltf_WriterTrsfFormat_");
-    this->transformationFormat.setDescriptions({
-        {
-            RWGltf_WriterTrsfFormat_Compact,
-            textIdTr("Automatically choose most compact representation between Mat4 and TRS")
-        },
-        {
-            RWGltf_WriterTrsfFormat_Mat4,
-            textIdTr("4x4 transformation matrix")
-        },
-        {
-            RWGltf_WriterTrsfFormat_TRS,
-            textIdTr("Transformation decomposed into Translation vector, Rotation quaternion and Scale factor(T * R * S)")
-        }
-    });
-
-    this->nodeNameFormat.setDescription(textIdTr("Name format for exporting nodes"));
-    this->meshNameFormat.setDescription(textIdTr("Name format for exporting meshes"));
-    this->embedTextures.setDescription(TextId::cache(fmt::format(textIdTr(
-            "Write image textures into target file.\n\n"
-            "If set to `false` then texture images will be written as separate files.\n\n"
-            "Applicable only if option `{0}` is set to `{1}`"
-        ),
-        this->format.label(),
-        MetaEnum::name<Format>(Format::Binary)
-    )));
-    this->mergeFaces.setDescription(textIdTr(
-        "Merge faces within a single part.\n\n"
-        "May reduce JSON size thanks to smaller number of primitive arrays"
-    ));
-    this->keepIndices16b.setDescription(TextId::cache(fmt::format(textIdTr(
-            "Prefer keeping 16-bit indexes while merging face.\n\n"
-            "May reduce binary data size thanks to smaller triangle indexes.\n\n"
-            "Applicable only if option `{}` is on"
-        ),
-        this->mergeFaces.label()
-    )));
-}
-
-void OccGltfWriter::Parameters::restoreDefaults()
-{
-    this->inputCoordinateSystem.setValue(RWMesh_CoordinateSystem_Undefined);
-    this->outputCoordinateSystem.setValue(RWMesh_CoordinateSystem_glTF);
-    this->transformationFormat.setValue(RWGltf_WriterTrsfFormat_Compact);
-    this->format.setValue(Format::Binary);
-    this->forceExportUV.setValue(false);
-#if OCC_VERSION_HEX >= 0x070600
-    this->nodeNameFormat.setValue(ShapeNameFormat::ProductOrInstance);
-    this->meshNameFormat.setValue(ShapeNameFormat::Product);
-#else
-    this->nodeNameFormat.setValue(ShapeNameFormat::Empty);
-    this->meshNameFormat.setValue(ShapeNameFormat::Empty);
-#endif
-    this->embedTextures.setValue(true);
-    this->mergeFaces.setValue(false);
-    this->keepIndices16b.setValue(false);
-
-    this->embedTextures.setEnabled(this->format == OccGltfWriter::Format::Binary);
-    this->keepIndices16b.setEnabled(this->mergeFaces);
-}
-
-void OccGltfWriter::Parameters::onPropertyChanged(Property* prop)
-{
-    if (prop == &this->format)
-        this->embedTextures.setEnabled(this->format == OccGltfWriter::Format::Binary);
-    else if (prop == &this->mergeFaces)
-        this->keepIndices16b.setEnabled(this->mergeFaces);
-
-    PropertyGroup::onPropertyChanged(prop);
-}
 
 bool OccGltfWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress*)
 {
@@ -163,9 +70,8 @@ bool OccGltfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 #else
     auto fnWarningOptionNA = [](std::string_view optionName) {
         return fmt::format(
-            textIdTr("Option supported from OpenCascade ≥ v7.6 [option={}, actual version={}]"),
-            optionName,
-            OCC_VERSION_COMPLETE
+            "Option supported from OpenCascade ≥ v7.6 [option={}, actual version={}]",
+            optionName, OCC_VERSION_COMPLETE
         );
     };
     if (m_params.nodeNameFormat != ShapeNameFormat::Empty)

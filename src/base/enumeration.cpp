@@ -35,6 +35,15 @@ Enumeration& Enumeration::changeTrContext(std::string_view context)
     return *this;
 }
 
+Enumeration& Enumeration::setDescription(Value value, const TextId& descr)
+{
+    const int indexValue = this->findIndexByValue_untyped(value);
+    if (indexValue != -1)
+        m_vecItem[indexValue].description = descr;
+
+    return *this;
+}
+
 int Enumeration::findIndexByValue_untyped(Value value) const
 {
     auto it = std::find_if(m_vecItem.cbegin(), m_vecItem.cend(), [=](const Item& item) {

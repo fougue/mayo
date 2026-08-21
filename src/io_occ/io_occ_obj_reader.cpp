@@ -12,7 +12,7 @@ OccObjReader::Parameters::Parameters()
 {
     this->restoreDefaults();
     this->singlePrecisionVertexCoords.setDescription(
-        textId("Single precision flag for reading vertex data(coordinates)").tr()
+        textId("Single precision flag for reading vertex data(coordinates)")
     );
 }
 

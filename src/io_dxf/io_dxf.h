@@ -25,22 +25,30 @@ public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
 
-    struct Parameters : public PropertyGroup {
-        PropertyBool importAnnotations{ this, textId("importAnnotations") };
-        PropertyBool groupLayers{ this, textId("groupLayers") };
-        PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), &OcctEnums::systemFontNames() };
+    struct Parameters {
+        bool importAnnotations{true};
+        bool groupLayers{true};
+        std::string fontNameForTextObjects = "Arial";
         // TODO
         // Add syncAttribs option? If ON the reader creates missing ATTRIBs from ATTDEF
         // Or mode-like:
         //   * "strict"   -> no creation of missing ATTRIBs
         //   * "sync"     -> creates missing ATTRIBs from ATTDEF
         //   * "diagnose" -> no creation but lists "incomplete" INSERTs regarding ATTDEF
+    };
 
+#if 0
+    struct Parameters : public PropertyGroup {
+        PropertyBool importAnnotations{ this, textId("importAnnotations") };
+        PropertyBool groupLayers{ this, textId("groupLayers") };
+        PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), &OcctEnums::systemFontNames() };
         Parameters();
         void restoreDefaults() override;
     };
-    Parameters& parameters() override { return m_params; }
-    const Parameters& constParameters() const override { return m_params; }
+#endif
+
+    Parameters& parameters() { return m_params; }
+    const Parameters& constParameters() const { return m_params; }
 
     // Scans the input string and replaces TEXT control codes of the form %%x and %%nnn with their
     // corresponding Unicode characters or formatting effects

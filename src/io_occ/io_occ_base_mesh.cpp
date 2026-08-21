@@ -25,8 +25,8 @@ namespace Mayo::IO {
 OccBaseMeshReader::BaseParameters::BaseParameters()
 {
     this->restoreDefaults();
-    this->rootPrefix.setDescription(textIdTr("Prefix for generating root labels name"));
-    this->systemLengthUnit.setDescription(textIdTr("System length units to convert into while reading files"));
+    this->rootPrefix.setDescription(textId("Prefix for generating root labels name"));
+    this->systemLengthUnit.setDescription(textId("System length units to convert into while reading files"));
 }
 
 void OccBaseMeshReader::BaseParameters::restoreDefaults()

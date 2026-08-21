@@ -145,7 +145,7 @@ public:
         Format targetFormat = Format_Unknown;
 
         // Optional: format-specific parameters to be considered when writing items
-        const PropertyGroup* parameters = nullptr; // TODO use ParametersProvider instead?
+        const WriterProperties* parameters = nullptr; // TODO use ParametersProvider instead?
 
         // Optional: the messenger object used to report any additional infos, warnings and errors
         Messenger* messenger = nullptr;
@@ -196,7 +196,7 @@ public:
         Operation& targetFormat(Format format);
         Operation& withItem(const ApplicationItem& appItem);
         Operation& withItems(gsl::span<const ApplicationItem> appItems);
-        Operation& withParameters(const PropertyGroup* parameters);
+        Operation& withParameters(const WriterProperties* parameters);
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
         bool execute(); // Runs System::exportApplicationItems() function

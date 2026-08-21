@@ -19,8 +19,8 @@ namespace Mayo::IO {
 OccObjWriter::Parameters::Parameters()
 {
     this->restoreDefaults();
-    this->inputCoordinateSystem.setDescription(textIdTr("Source coordinate system transformation"));
-    this->outputCoordinateSystem.setDescription(textIdTr("Target coordinate system transformation"));
+    this->inputCoordinateSystem.setDescription(textId("Source coordinate system transformation"));
+    this->outputCoordinateSystem.setDescription(textId("Target coordinate system transformation"));
 }
 
 void OccObjWriter::Parameters::restoreDefaults()

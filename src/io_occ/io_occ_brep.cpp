@@ -69,11 +69,11 @@ NCollection_Sequence<TDF_Label> OccBRepReader::transfer(DocumentPtr doc, TaskPro
 OccBRepWriter::Parameters::Parameters()
 {
     this->restoreDefaults();
-    this->saveShapeTriangulation.setDescription(textIdTr(
+    this->saveShapeTriangulation.setDescription(textId(
         "Specifies whether to save shape with or without triangles.\n"
         "Has no effect on triangulation-only geometry"
     ));
-    this->saveShapeTriangulationNormals.setDescription(textIdTr(
+    this->saveShapeTriangulationNormals.setDescription(textId(
         "Specifies whether to save triangulation with or without normals.\n"
         "Has no effect on triangulation-only geometry"
     ));

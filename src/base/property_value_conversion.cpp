@@ -164,7 +164,7 @@ bool propertyFromVariantColor(PropertyOccColor* prop, const PropertyValueConvers
 }
 
 // Helper function to set Property value from Variant holding the name of an enumerated value
-bool propertyFromVariantEnumValue(PropertyEnumeration* prop, const PropertyValueConversion::Variant& variant)
+bool propertyFromVariantEnumValue(PropertyEnum* prop, const PropertyValueConversion::Variant& variant)
 {
     if (variant.isConvertibleToConstRefString()) {
         const std::string& name = variant.toConstRefString();
@@ -256,8 +256,8 @@ PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Proper
     else if (isType<PropertyOccColor>(prop)) {
         return TKernelUtils::colorToHex(constRef<PropertyOccColor>(prop));
     }
-    else if (isType<PropertyEnumeration>(prop)) {
-        return std::string(constRef<PropertyEnumeration>(prop).valueName());
+    else if (isType<PropertyEnum>(prop)) {
+        return std::string{constRef<PropertyEnum>(prop).valueName().tr()};
     }
     else if (isType<BasePropertyQuantity>(prop)) {
         const auto& qtyProp = constRef<BasePropertyQuantity>(prop);
@@ -308,8 +308,8 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
     else if (isType<PropertyOccColor>(prop)) {
         return propertyFromVariantColor(ptr<PropertyOccColor>(prop), variant);
     }
-    else if (isType<PropertyEnumeration>(prop)) {
-        return propertyFromVariantEnumValue(ptr<PropertyEnumeration>(prop), variant);
+    else if (isType<PropertyEnum>(prop)) {
+        return propertyFromVariantEnumValue(ptr<PropertyEnum>(prop), variant);
     }
     else if (isType<BasePropertyQuantity>(prop)) {
         return propertyFromVariantQuantity(ptr<BasePropertyQuantity>(prop), variant);

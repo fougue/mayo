@@ -562,13 +562,13 @@ DxfReader::Parameters::Parameters()
     this->restoreDefaults();
 
     this->importAnnotations.setDescription(
-        textIdTr("Import text/dimension objects")
+        textId("Import text/dimension objects")
     );
     this->groupLayers.setDescription(
-        textIdTr("Group all objects within a layer into a single compound shape")
+        textId("Group all objects within a layer into a single compound shape")
     );
     this->fontNameForTextObjects.setDescription(
-        textIdTr("Name of the font to be used when creating shape for text objects")
+        textId("Name of the font to be used when creating shape for text objects")
     );
 }
 

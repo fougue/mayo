@@ -76,13 +76,51 @@ struct PropertyChangedBlocker {
     PropertyGroup* const m_group = nullptr;
 };
 
+// Temporarily blocks property-changed notifications for the specified group.
+// The blocker is automatically destroyed at the end of the current scope, restoring the group's
+// previous notification state
+// TODO Use __COUNTER__ to generated unique variable name ? Needs ugly macro concatenation
 #define Mayo_PropertyChangedBlocker(group) \
-            [[maybe_unused]] Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group)
+    [[maybe_unused]] Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group)
+
+// Describes the metadata associated with a Property
+// PropertyMeta stores information that is independent from the property's value, it can therefore
+// be shared by different Property instances when appropriate
+class PropertyMeta {
+public:
+    explicit PropertyMeta(const TextId& name);
+
+    // Returns the property's identifier
+    const TextId& name() const { return m_name; }
+
+    // Returns the property's translated descriptio
+    std::string_view description() const { return m_description; }
+    PropertyMeta& setDescription(const TextId& text);
+    PropertyMeta& setDescription(std::string_view trText);
+
+    // Returns whether the property is read-only from the user's perspective
+    // This flag affects user interaction with the property but does not prevent the property from
+    // being modified programmatically
+    bool isUserReadOnly() const { return m_isUserReadOnly; }
+    PropertyMeta& setUserReadOnly(bool on);
+
+    // Returns whether the property should be visible to the user
+    bool isUserVisible() const { return m_isUserVisible; }
+    PropertyMeta& setUserVisible(bool on);
+
+private:
+    const TextId m_name;
+    std::string m_description;
+    bool m_isUserReadOnly = false;
+    bool m_isUserVisible = true;
+};
 
 // Provides an abstract storage of a value with associated meta-data(name, description, ...)
 class Property {
 public:
-    Property(PropertyGroup* group, const TextId& name);
+    using MetaType = PropertyMeta;
+
+    Property(PropertyGroup* group, const PropertyMeta& meta);
     Property() = delete;
     Property(const Property&) = delete;
     Property(Property&&) = delete;
@@ -92,19 +130,13 @@ public:
 
     PropertyGroup* group() const { return m_group; }
 
-    const TextId& name() const;
-    std::string_view label() const;
+    const MetaType& meta() const { return m_meta; }
 
-    // ⚠ Memory constraint: the description is non-owning to avoid dynamic allocation
-    // The referenced text must remain valid for as long as this Property object is used
-    std::string_view description() const { return m_description; }
-    void setDescription(std::string_view text) { m_description = text; }
+    const TextId& name() const { return m_meta.name(); }
+    std::string_view description() const { return m_meta.description(); }
 
-    bool isUserReadOnly() const { return m_isUserReadOnly; }
-    void setUserReadOnly(bool on) { m_isUserReadOnly = on; }
-
-    bool isUserVisible() const { return m_isUserVisible; }
-    void setUserVisible(bool on) { m_isUserVisible = on; }
+    bool isUserReadOnly() const { return m_meta.isUserReadOnly(); }
+    bool isUserVisible() const { return m_meta.isUserVisible(); }
 
     bool isEnabled() const { return m_isEnabled; }
     void setEnabled(bool on);
@@ -131,13 +163,10 @@ protected:
     static bool setValueHelper(Property* prop, T* ptrValue, const T& newValue);
 
 private:
+    const PropertyMeta& m_meta;
     PropertyGroup* const m_group = nullptr;
-    const TextId m_name;
-    std::string_view m_description;
-    bool m_isUserReadOnly = false;
-    bool m_isUserVisible = true;
     bool m_isEnabled = true;
-    uint64_t m_userData;
+    uint64_t m_userData; // TODO std::optional<> ?
     bool m_hasUserData = false;
 };
 

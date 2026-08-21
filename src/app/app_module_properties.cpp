@@ -150,7 +150,7 @@ void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
     for (IO::Format format : ioSystem->readerFormats()) {
         auto sectionId_format = m_settings->addSection(groupId_import, IO::formatIdentifier(format));
         const IO::FactoryReader* factory = ioSystem->findFactoryReader(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createParameters(format);
+        std::unique_ptr<IO::ReaderProperties> ptrGroup = factory->createProperties(format);
         if (ptrGroup) {
             ptrGroup->setParentGroup(m_settings);
             for (Property* property : ptrGroup->properties())
@@ -167,7 +167,7 @@ void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
     for (IO::Format format : ioSystem->writerFormats()) {
         auto sectionId_format = m_settings->addSection(groupId_export, IO::formatIdentifier(format));
         const IO::FactoryWriter* factory = ioSystem->findFactoryWriter(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createParameters(format);
+        std::unique_ptr<IO::WriterProperties> ptrGroup = factory->createProperties(format);
         if (ptrGroup) {
             ptrGroup->setParentGroup(m_settings);
             for (Property* property : ptrGroup->properties())
