@@ -346,8 +346,11 @@ if(OpenCASCADE_FOUND)
         endif()
     endfunction()
 
-    Mayo_DetectOcctDefinition(HAVE_RAPIDJSON OCCT_HAVE_RAPIDJSON)
-    Mayo_DetectOcctDefinition(HAVE_FREEIMAGE OCCT_HAVE_FREEIMAGE)
+    Mayo_DetectOcctDefinition(HAVE_FREEIMAGE  OCCT_HAVE_FREEIMAGE)
+    Mayo_DetectOcctDefinition(HAVE_FREETYPE   OCCT_HAVE_FREETYPE)
+    Mayo_DetectOcctDefinition(HAVE_OPENGL_EXT OCCT_HAVE_OPENGL_EXT)
+    Mayo_DetectOcctDefinition(HAVE_RAPIDJSON  OCCT_HAVE_RAPIDJSON)
+    Mayo_DetectOcctDefinition(HAVE_TBB        OCCT_HAVE_TBB)
 
     # std::iterator class template(used as a base class to provide typedefs) is deprecated in C++17
     # OpenCascade < 7.7.0 uses std::iterator for NCollection_StlIterator and this is causing many

@@ -9,5 +9,8 @@
 #cmakedefine MAYO_HAVE_ASSIMP_aiGetVersionPatch
 #cmakedefine MAYO_HAVE_GMIO
 
-#cmakedefine OCCT_HAVE_RAPIDJSON
 #cmakedefine OCCT_HAVE_FREEIMAGE
+#cmakedefine OCCT_HAVE_FREETYPE
+#cmakedefine OCCT_HAVE_OPENGL_EXT
+#cmakedefine OCCT_HAVE_RAPIDJSON
+#cmakedefine OCCT_HAVE_TBB
