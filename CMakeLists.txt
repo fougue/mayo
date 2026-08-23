@@ -307,6 +307,10 @@ else()
         if(OpenCASCADE_TKernel_INCLUDE_DIR_IsSet EQUAL -1)
             list(APPEND Mayo_IncludeDirectories ${OpenCASCADE_INCLUDE_DIR})
         endif()
+
+        if(NOT DEFINED OpenCASCADE_CMAKE_DIR OR OpenCASCADE_CMAKE_DIR STREQUAL "")
+            set(OpenCASCADE_CMAKE_DIR "${OpenCASCADE_DIR}")
+        endif()
     endif()
 endif()
 
@@ -323,7 +327,7 @@ if(OpenCASCADE_FOUND)
 
     # Set OCCT_HAVE_<LIB> flags
     set(OpenCASCADE_AllCompileDefinitions "")
-    file(GLOB OpenCASCADE_CompileDefsCMakeFiles "${OpenCASCADE_DIR}/cmake/OpenCASCADECompileDefinitions*.cmake")
+    file(GLOB OpenCASCADE_CompileDefsCMakeFiles "${OpenCASCADE_CMAKE_DIR}/OpenCASCADECompileDefinitions*.cmake")
     foreach(CMakeFile IN LISTS OpenCASCADE_CompileDefsCMakeFiles)
         file(READ "${CMakeFile}" CMakeFileContents)
         string(APPEND OpenCASCADE_AllCompileDefinitions "\n${CMakeFileContents}")

@@ -34,6 +34,8 @@ if(OpenCASCADE_FOUND)
     set(OpenCASCADE_MAINTENANCE_VERSION ${CMAKE_MATCH_1})
     set(OpenCASCADE_VERSION "${OpenCASCADE_MAJOR_VERSION}.${OpenCASCADE_MINOR_VERSION}.${OpenCASCADE_MAINTENANCE_VERSION}")
 
+    set(OpenCASCADE_CMAKE_DIR "${OpenCASCADE_DIR}/cmake")
+
     # Set OpenCASCADE_3RDPARTY_BINARY_DIRS variable that will contain the OpenCASCADE
     # 3rd-party binary directories(ie containing DLL files)
     set(OpenCASCADE_3RDPARTY_BINARY_DIRS)
