@@ -7,7 +7,6 @@
 
 #include <gsl/span>
 
-#include <functional>
 #include <sstream>
 #include <string_view>
 #include <vector>
@@ -76,17 +75,6 @@ public:
     MessageStream error();
 
     static Messenger& null();
-};
-
-// Provides facility to construct a Messenger object from a lambda
-// This avoids to subclass Messenger
-class MessengerByCallback : public Messenger {
-public:
-    explicit MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
-    void emitMessage(MessageType msgType, std::string_view text) override;
-
-private:
-    std::function<void(MessageType, std::string_view)> m_fnCallback;
 };
 
 // Collects emitted messages into a array
