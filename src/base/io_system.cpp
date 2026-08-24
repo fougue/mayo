@@ -10,7 +10,7 @@
 #include "io_parameters_provider.h"
 #include "io_reader.h"
 #include "io_writer.h"
-#include "messenger.h"
+#include "message_collecter.h"
 #include "task_manager.h"
 #include "task_progress.h"
 #include "tkernel_utils.h"

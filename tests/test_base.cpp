@@ -22,7 +22,7 @@
 #include "../src/base/libtree.h"
 #include "../src/base/occ_handle.h"
 #include "../src/base/mesh_utils.h"
-#include "../src/base/messenger.h"
+#include "../src/base/message_collecter.h"
 #include "../src/base/meta_enum.h"
 #include "../src/base/occt_ncollection_harray1_of_builtintypes.h"
 #include "../src/base/property_builtins.h"

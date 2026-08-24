@@ -12,7 +12,7 @@
 #include "../base/application.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
-#include "../base/messenger.h"
+#include "../base/message_collecter.h"
 #include "../base/task_manager.h"
 #include "../qtcommon/qstring_conv.h"
 
