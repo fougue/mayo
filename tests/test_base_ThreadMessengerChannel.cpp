@@ -244,11 +244,11 @@ void TestBase::ThreadMessengerChannel_addGlobalOccPrinter_integrationForwardsOcc
     MessageCollecter recorder;
     {
         [[maybe_unused]] ThreadMessengerChannel::Scope scope(&recorder);
-        ::Message::SendWarning("integration warning");
-        ::Message::SendFail("integration failure");
+        ::Message::DefaultMessenger()->Send("integration warning", Message_Warning);
+        ::Message::DefaultMessenger()->Send("integration failure", Message_Fail);
     }
     // Messages emitted after the scope ends must not reach 'recorder'
-    ::Message::SendWarning("should not be recorded");
+    ::Message::DefaultMessenger()->Send("should not be recorded", Message_Warning);
 
     QCOMPARE(recorder.messages().size(), size_t(2));
     QCOMPARE(recorder.messages()[0].type, MessageType::Warning);
