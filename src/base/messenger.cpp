@@ -23,11 +23,6 @@ MessageStream::MessageStream(MessageType type, Messenger& messenger)
 {
 }
 
-//Message::Message(const Message& other)
-//    : m_type(other.m_type), m_messenger(other.m_messenger), m_buffer(other.m_buffer)
-//{
-//}
-
 MessageStream::~MessageStream()
 {
     const std::string str = m_istream.str();

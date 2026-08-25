@@ -98,6 +98,18 @@ private slots:
 
     void Span_test();
 
+    void ThreadMessengerChannel_addGlobalOccPrinterReturnsNonNullPrinter_test();
+    void ThreadMessengerChannel_addGlobalOccPrinterIsIdempotent_test();
+    void ThreadMessengerChannel_addGlobalOccPrinter_registersExactlyOnceWithDefaultMessenger_test();
+    void ThreadMessengerChannel_addGlobalOccPrinter_concurrentFirstCallsInstallExactlyOnce_test();
+    void ThreadMessengerChannel_addGlobalOccPrinter_integrationForwardsOcctMessagesToScopedMessenger_test();
+    void ThreadMessengerChannel_emitMessageWithoutActiveScopeIsDiscardedSilently_test();
+    void ThreadMessengerChannel_emitMessageWithActiveScopeIsForwarded_test();
+    void ThreadMessengerChannelScope_restoresPreviousMessengerOnDestruction_test();
+    void ThreadMessengerChannelScope_supportsNestedReentrance_test();
+    void ThreadMessengerChannelScope_boundToNullptrDiscardsMessages_test();
+    void ThreadMessengerChannelScope_isIsolatedPerThread_test();
+
     void XCaf_userDefinedAttributes_test();
 };
 

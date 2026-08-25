@@ -5,6 +5,7 @@
 
 #include "io_system.h"
 
+#include "caf_utils.h" // At least for std::hash<TDF_Label>
 #include "document.h"
 #include "io_parameters_provider.h"
 #include "message_collecter.h"
