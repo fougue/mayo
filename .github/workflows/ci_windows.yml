@@ -110,7 +110,7 @@ jobs:
     - name: Build
       working-directory: ${{github.workspace}}/build
       shell: cmd
-      run: cmake --build . --config Debug --parallel
+      run: cmake --build . --config Debug --parallel %NUMBER_OF_PROCESSORS%
 
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build
