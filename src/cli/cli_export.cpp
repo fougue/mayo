@@ -14,6 +14,7 @@
 #include "../base/io_system.h"
 #include "../base/message_collecter.h"
 #include "../base/task_manager.h"
+#include "../base/thread_messenger_channel.h"
 #include "../qtcommon/qstring_conv.h"
 
 #include <Message.hxx>
@@ -60,7 +61,7 @@ void printTaskProgress(Helper* helper, TaskId taskId)
     std::string strMessage = helper->taskMgr.title(taskId);
     std::replace(strMessage.begin(), strMessage.end(), '\n', ' ');
     strMessage = consoleToPrintable(strMessage);
-    auto lineWidth = int(strMessage.size());
+    auto lineWidth = static_cast<int>(strMessage.size());
     const bool taskFinished = helper->mapTaskStatus.at(taskId)->finished;
     const bool taskSuccess = helper->mapTaskStatus.at(taskId)->success;
     if (taskFinished && !taskSuccess) {
@@ -143,9 +144,9 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
     );
     const std::string strFilename = filepath.filename().u8string();
     const std::string msg =
-            okExport ?
-                fmt::format(CliExport::textIdTr("Exported {}"), strFilename) :
-                errorCollect.asString(" ");
+        okExport ?
+            fmt::format(CliExport::textIdTr("Exported {}"), strFilename) :
+            errorCollect.asString(" ");
     helper->taskMgr.setTitle(progress->taskId(), msg);
     helper->mapTaskStatus.at(progress->taskId())->success = okExport;
     helper->mapTaskStatus.at(progress->taskId())->finished = true;
@@ -201,7 +202,7 @@ void cli_asyncExportDocuments(
             fnPrintProgress();
     });
 
-    helper->exportTaskCount = int(args.filesToExport.size());
+    helper->exportTaskCount = static_cast<int>(args.filesToExport.size());
     taskMgr->signalEnded.connectSlot([=]{
         if (helper->exportTaskCount == 0) {
             bool okExport = true;
@@ -214,8 +215,9 @@ void cli_asyncExportDocuments(
         }
     });
 
-    // Suppress output from OpenCascade
-    Message::DefaultMessenger()->RemovePrinters(Message_Printer::get_type_descriptor());
+    // Suppress default OpenCascade printers
+    Message::DefaultMessenger()->RemovePrinters(Message_Printer::get_type_descriptor());    
+    ThreadMessengerChannel::addGlobalOccPrinter();
 
     // Execute import operation(synchronous)
     DocumentPtr doc = app->newDocument();

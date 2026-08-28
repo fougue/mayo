@@ -11,6 +11,7 @@
 #include "message_collecter.h"
 #include "task_manager.h"
 #include "task_progress.h"
+#include "thread_messenger_channel.h"
 
 #include <fmt/format.h>
 #include <gsl/util>
@@ -98,6 +99,9 @@ void readFile(ImportTaskData& taskData, const System& ioSystem, const System::Ar
         );
     }
 
+    // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
+    [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
+
     if (!taskData.reader->readFile(taskData.filepath, &progress))
         return error(System::textIdTr("File read problem"));
 
@@ -115,6 +119,9 @@ void transfer(ImportTaskData& taskData, const System::ArgsImport& args)
 
     TaskProgress progress(taskData.progress, portionSize, System::textIdTr("Transferring file"));
     if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
+        // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
+        [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
+
         taskData.seqTransferredEntity = taskData.reader->transfer(args.targetDocument, &progress);
         if (taskData.seqTransferredEntity.IsEmpty())
             taskData.messenger.error() << System::textIdTr("File transfer problem, no entity imported");
@@ -168,6 +175,11 @@ void dispatchMessages(ImportTaskData& taskData, Messenger* targetMessenger)
 }
 
 } // namespace
+
+System::System()
+{
+    ThreadMessengerChannel::addGlobalOccPrinter();
+}
 
 void System::addFormatProbe(const FormatProbe& probe)
 {
@@ -400,6 +412,10 @@ bool System::exportItems(const ArgsExport& args) const
 
     writer->setMessenger(&msgCollect);
     writer->applyProperties(args.parameters);
+
+    // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
+    [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&msgCollect);
+
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
         const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);

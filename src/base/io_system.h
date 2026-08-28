@@ -34,6 +34,7 @@ class ParametersProvider;
 class System {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::System)
 public:
+    System();
     ~System() = default;
 
     // Input data supplied to a format probe callback
