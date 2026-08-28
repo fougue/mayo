@@ -36,7 +36,7 @@ void TestIO::IO_Reload_bugGitHub332_test()
     // Import file in document
     const FilePath docFilePath = "tests/inputs/#332_file.stp";
     {
-        const bool okImport = m_ioSystem->importInDocument().targetDocument(doc).withFilepath(docFilePath).execute();
+        const bool okImport = m_ioSystem->importInDocument(doc, docFilePath);
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
         const TDF_Label entityLabel = doc->firstEntityNodeLabel();
@@ -61,7 +61,7 @@ void TestIO::IO_Reload_bugGitHub332_test()
 
     // Import file again in document
     {
-        const bool okImport = m_ioSystem->importInDocument().targetDocument(doc).withFilepath(docFilePath).execute();
+        const bool okImport = m_ioSystem->importInDocument(doc, docFilePath);
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
         const TDF_Label entityLabel = doc->firstEntityNodeLabel();
@@ -206,29 +206,21 @@ void TestIO::IO_bugGitHub166_test()
 
     auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
-    const bool okImport = m_ioSystem->importInDocument()
-            .targetDocument(doc)
-            .withFilepath(strInputFilePath.toStdString())
-            .execute()
-        ;
+    const bool okImport = m_ioSystem->importInDocument(doc, strInputFilePath.toStdString());
     QVERIFY(okImport);
     QVERIFY(doc->entityCount() > 0);
 
-    const bool okExport = m_ioSystem->exportApplicationItems()
-            .targetFile(strOutputFilePath.toStdString())
-            .targetFormat(outputFormat)
-            .withItem(ApplicationItem{doc})
-            .execute()
-        ;
+    const bool okExport = m_ioSystem->exportItems(
+        IO::System::ArgsExport()
+        .setTargetFile(strOutputFilePath.toStdString())
+        .setTargetFormat(outputFormat)
+        .setItem(ApplicationItem{doc})
+    );
     QVERIFY(okExport);
     app->closeDocument(doc);
 
     doc = app->newDocument();
-    const bool okImportOutput = m_ioSystem->importInDocument()
-            .targetDocument(doc)
-            .withFilepath(strOutputFilePath.toStdString())
-            .execute()
-        ;
+    const bool okImportOutput = m_ioSystem->importInDocument(doc, strOutputFilePath.toStdString());
     QVERIFY(okImportOutput);
     QVERIFY(doc->entityCount() > 0);
 }
@@ -263,11 +255,7 @@ void TestIO::IO_bugGitHub258_test()
 {
     auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
-    const bool okImport = m_ioSystem->importInDocument()
-            .targetDocument(doc)
-            .withFilepath("tests/inputs/#258_cube.off")
-            .execute()
-        ;
+    const bool okImport = m_ioSystem->importInDocument(doc, "tests/inputs/#258_cube.off");
     QVERIFY(okImport);
     QVERIFY(doc->entityCount() == 1);
 
@@ -386,10 +374,9 @@ void TestIO::IO_dxfLwPolylineClosedDuplicateLastVertex_test()
     auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
 
-    const bool okImport = m_ioSystem->importInDocument()
-        .targetDocument(doc)
-        .withFilepath("tests/inputs/lwpolyline_closed_duplicate_last_vertex.dxf")
-        .execute();
+    const bool okImport = m_ioSystem->importInDocument(
+        doc, "tests/inputs/lwpolyline_closed_duplicate_last_vertex.dxf"
+    );
     QVERIFY(okImport);
     QCOMPARE(doc->entityCount(), 1);
 }

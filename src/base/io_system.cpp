@@ -46,7 +46,7 @@ void dispatchWarnings(std::string_view headerMsg, const MessageCollecter& msgCol
         target->warning() << fmt::format("{}\n    {}", headerMsg, strWarnings);
 }
 
-bool isEntityPostProcessRequired(Format format, const System::Args_ImportInDocument& args)
+bool isEntityPostProcessRequired(Format format, const System::ArgsImport& args)
 {
     if (args.entityPostProcess && args.entityPostProcessRequiredIf)
         return args.entityPostProcessRequiredIf(format);
@@ -71,7 +71,7 @@ bool success(const ImportTaskData& taskData)
     return taskData.readSuccess && !taskData.seqTransferredEntity.IsEmpty();
 }
 
-void readFile(ImportTaskData& taskData, const System& ioSystem, const System::Args_ImportInDocument& args)
+void readFile(ImportTaskData& taskData, const System& ioSystem, const System::ArgsImport& args)
 {
     auto error = [&](std::string_view trErrorMsg) {
         taskData.messenger.error() << trErrorMsg;
@@ -104,7 +104,7 @@ void readFile(ImportTaskData& taskData, const System& ioSystem, const System::Ar
     taskData.readSuccess = true;
 }
 
-void transfer(ImportTaskData& taskData, const System::Args_ImportInDocument& args)
+void transfer(ImportTaskData& taskData, const System::ArgsImport& args)
 {
     if (!taskData.readSuccess)
         return;
@@ -123,7 +123,7 @@ void transfer(ImportTaskData& taskData, const System::Args_ImportInDocument& arg
     taskData.transferred = true;
 }
 
-auto postProcess(ImportTaskData& taskData, const System::Args_ImportInDocument& args)
+auto postProcess(ImportTaskData& taskData, const System::ArgsImport& args)
 {
     if (!success(taskData))
         return;
@@ -310,7 +310,7 @@ std::unique_ptr<Writer> System::createWriter(Format format) const
     return {};
 }
 
-bool System::importInDocument(const Args_ImportInDocument& args) const
+bool System::importInDocument(const ArgsImport& args) const
 {
     TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
     Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
@@ -373,12 +373,12 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
     }
 }
 
-System::Operation_ImportInDocument System::importInDocument() const
+bool System::importInDocument(const DocumentPtr& targetDoc, const FilePath& file)
 {
-    return Operation_ImportInDocument(*this);
+    return this->importInDocument(ArgsImport().setTargetDocument(targetDoc).setFilepath(file));
 }
 
-bool System::exportApplicationItems(const Args_ExportApplicationItems& args) const
+bool System::exportItems(const ArgsExport& args) const
 {
     TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
     MessageCollecter msgCollect;
@@ -417,69 +417,47 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
     return true;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath)
+System::ArgsExport& System::ArgsExport::setTargetFile(const FilePath& filepath)
 {
-    m_args.targetFilepath = filepath;
+    this->targetFilepath = filepath;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFormat(Format format)
+System::ArgsExport& System::ArgsExport::setTargetFormat(Format format)
 {
-    m_args.targetFormat = format;
+    this->targetFormat = format;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem)
+System::ArgsExport& System::ArgsExport::setItem(const ApplicationItem& appItem)
 {
-    m_args.applicationItems = { &appItem, 1 };
+    this->applicationItems = { &appItem, 1 };
     return *this;
 }
 
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItems(gsl::span<const ApplicationItem> appItems)
+System::ArgsExport& System::ArgsExport::setItems(gsl::span<const ApplicationItem> appItems)
 {
-    m_args.applicationItems = appItems;
+    this->applicationItems = appItems;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters)
+System::ArgsExport& System::ArgsExport::setParameters(const PropertyGroup* parameters)
 {
-    m_args.parameters = parameters;
+    this->parameters = parameters;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger)
+System::ArgsExport& System::ArgsExport::setMessenger(Messenger* messenger)
 {
-    m_args.messenger = messenger;
+    this->messenger = messenger;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress)
+System::ArgsExport& System::ArgsExport::setTaskProgress(TaskProgress* progress)
 {
-    m_args.progress = progress;
+    this->progress = progress;
     return *this;
-}
-
-bool System::Operation_ExportApplicationItems::execute()
-{
-    return m_system.exportApplicationItems(m_args);
-}
-
-System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(const System& system)
-    : m_system(system)
-{
-}
-
-System::Operation_ExportApplicationItems System::exportApplicationItems() const
-{
-    return Operation_ExportApplicationItems(*this);
 }
 
 void System::visitUniqueItems(
@@ -528,77 +506,58 @@ void System::traverseUniqueItems(
     });
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document)
+System::ArgsImport& System::ArgsImport::setTargetDocument(const DocumentPtr& document)
 {
-    m_args.targetDocument = document;
+    this->targetDocument = document;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withFilepaths(gsl::span<const FilePath> filepaths)
+System::ArgsImport& System::ArgsImport::setFilepath(const FilePath& filepath)
 {
-    m_args.filepaths = filepaths;
+    return this->setFilepaths(gsl::span<const FilePath>(&filepath, 1));
+}
+
+System::ArgsImport& System::ArgsImport::setFilepaths(gsl::span<const FilePath> filepaths)
+{
+    this->filepaths = filepaths;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withParametersProvider(const ParametersProvider* provider)
+System::ArgsImport& System::ArgsImport::setParametersProvider(const ParametersProvider* provider)
 {
-    m_args.parametersProvider = provider;
+    this->parametersProvider = provider;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withMessenger(Messenger* messenger)
+System::ArgsImport& System::ArgsImport::setMessenger(Messenger* messenger)
 {
-    m_args.messenger = messenger;
+    this->messenger = messenger;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress)
+System::ArgsImport& System::ArgsImport::setTaskProgress(TaskProgress* progress)
 {
-    m_args.progress = progress;
+    this->progress = progress;
     return *this;
 }
 
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withFilepath(const FilePath& filepath)
+System::ArgsImport& System::ArgsImport::setEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn)
 {
-    return this->withFilepaths(gsl::span<const FilePath>(&filepath, 1));
-}
-
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcess(std::function<void (TDF_Label, TaskProgress*)> fn)
-{
-    m_args.entityPostProcess = std::move(fn);
+    this->entityPostProcess = std::move(fn);
     return *this;
 }
 
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcessRequiredIf(std::function<bool(Format)> fn)
+System::ArgsImport& System::ArgsImport::setEntityPostProcessRequiredIf(std::function<bool(Format)> fn)
 {
-    m_args.entityPostProcessRequiredIf = std::move(fn);
+    this->entityPostProcessRequiredIf = std::move(fn);
     return *this;
 }
 
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep)
+System::ArgsImport& System::ArgsImport::setEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep)
 {
-    m_args.entityPostProcessProgressSize = progressSize;
-    m_args.entityPostProcessProgressStep = progressStep;
+    this->entityPostProcessProgressSize = progressSize;
+    this->entityPostProcessProgressStep = progressStep;
     return *this;
-}
-
-bool System::Operation_ImportInDocument::execute()
-{
-    return m_system.importInDocument(m_args);
-}
-
-System::Operation_ImportInDocument::Operation_ImportInDocument(const System& system)
-    : m_system(system)
-{
 }
 
 namespace {

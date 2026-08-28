@@ -94,7 +94,7 @@ public:
     //
 
     // Contains arguments for the importInDocument() function
-    struct Args_ImportInDocument {
+    struct ArgsImport {
         // Target document where entities read from `filepaths` will be imported
         DocumentPtr targetDocument;
 
@@ -126,15 +126,31 @@ public:
 
         // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
+
+        // Helper functions to provide fluent-like interface over ArgsImport
+        // See also https://en.wikipedia.org/wiki/Fluent_interface
+        ArgsImport& setTargetDocument(const DocumentPtr& document);
+        ArgsImport& setFilepath(const FilePath& filepath);
+        ArgsImport& setFilepaths(gsl::span<const FilePath> filepaths);
+        ArgsImport& setParametersProvider(const ParametersProvider* provider);
+
+        ArgsImport& setEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
+        ArgsImport& setEntityPostProcessRequiredIf(std::function<bool(Format)> fn);
+        ArgsImport& setEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep);
+
+        ArgsImport& setMessenger(Messenger* messenger);
+        ArgsImport& setTaskProgress(TaskProgress* progress);
     };
-    bool importInDocument(const Args_ImportInDocument& args) const;
+
+    bool importInDocument(const ArgsImport& args) const;
+    bool importInDocument(const DocumentPtr& targetDoc, const FilePath& file);
 
     //
     // Export service
     //
 
-    // Contains arguments for the exportApplicationItems() function
-    struct Args_ExportApplicationItems {
+    // Contains arguments for the exportItems() function
+    struct ArgsExport {
         // List of items to be exported
         gsl::span<const ApplicationItem> applicationItems;
 
@@ -152,78 +168,34 @@ public:
 
         // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
+
+        // Helper functions to provide fluent-like interface over ArgsExport
+        // See also https://en.wikipedia.org/wiki/Fluent_interface
+        ArgsExport& setTargetFile(const FilePath& filepath);
+        ArgsExport& setTargetFormat(Format format);
+        ArgsExport& setItem(const ApplicationItem& appItem);
+        ArgsExport& setItems(gsl::span<const ApplicationItem> appItems);
+        ArgsExport& setParameters(const PropertyGroup* parameters);
+        ArgsExport& setMessenger(Messenger* messenger);
+        ArgsExport& setTaskProgress(TaskProgress* progress);
     };
-    bool exportApplicationItems(const Args_ExportApplicationItems& args) const;
-
-    //
-    // Fluent API: import service
-    //
-
-    // Helper struct to provide fluent-like interface over Args_ImportInDocument
-    // See also https://en.wikipedia.org/wiki/Fluent_interface
-    struct Operation_ImportInDocument {
-        using Operation = Operation_ImportInDocument;
-        Operation& targetDocument(const DocumentPtr& document);
-        Operation& withFilepath(const FilePath& filepath);
-        Operation& withFilepaths(gsl::span<const FilePath> filepaths);
-        Operation& withParametersProvider(const ParametersProvider* provider);
-
-        Operation& withEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
-        Operation& withEntityPostProcessRequiredIf(std::function<bool(Format)> fn);
-        Operation& withEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep);
-
-        Operation& withMessenger(Messenger* messenger);
-        Operation& withTaskProgress(TaskProgress* progress);
-        bool execute(); // Runs System::importInDocument() function
-
-    private:
-        friend class System;
-        explicit Operation_ImportInDocument(const System& system);
-        const System& m_system;
-        Args_ImportInDocument m_args;
-    };
-    Operation_ImportInDocument importInDocument() const;
-
-    //
-    // Fluent API: export service
-    //
-
-    // Helper struct to provide fluent-like interface over Args_ExportApplicationItems
-    // See also https://en.wikipedia.org/wiki/Fluent_interface
-    struct Operation_ExportApplicationItems {
-        using Operation = Operation_ExportApplicationItems;
-        Operation& targetFile(const FilePath& filepath);
-        Operation& targetFormat(Format format);
-        Operation& withItem(const ApplicationItem& appItem);
-        Operation& withItems(gsl::span<const ApplicationItem> appItems);
-        Operation& withParameters(const PropertyGroup* parameters);
-        Operation& withMessenger(Messenger* messenger);
-        Operation& withTaskProgress(TaskProgress* progress);
-        bool execute(); // Runs System::exportApplicationItems() function
-
-    private:
-        friend class System;
-        explicit Operation_ExportApplicationItems(const System& system);
-        const System& m_system;
-        Args_ExportApplicationItems m_args;
-    };
-    Operation_ExportApplicationItems exportApplicationItems() const;
+    bool exportItems(const ArgsExport& args) const;
 
     // Helpers
 
     // Iterate over `spanItem` and call `fnCallback` for each item. Guarantees that doublon items
     // will be visited only once
     static void visitUniqueItems(
-            gsl::span<const ApplicationItem> spanItem,
-            std::function<void(const ApplicationItem&)> fnCallback
+        gsl::span<const ApplicationItem> spanItem,
+        std::function<void(const ApplicationItem&)> fnCallback
     );
 
     // Iterate over `spanItem` and then deep traverse the corresponding tree node to
     // call `fnCallback` for each item. Guarantees that doublon items will be visited only once
     static void traverseUniqueItems(
-            gsl::span<const ApplicationItem> spanItem,
-            std::function<void(const DocumentTreeNode&)> fnCallback,
-            TreeTraversal mode = TreeTraversal::PreOrder
+        gsl::span<const ApplicationItem> spanItem,
+        std::function<void(const DocumentTreeNode&)> fnCallback,
+        TreeTraversal mode = TreeTraversal::PreOrder
     );
 
     // Implementation

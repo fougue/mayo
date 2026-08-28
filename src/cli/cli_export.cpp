@@ -106,18 +106,19 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
 
     MessageCollecter errorCollect;
     errorCollect.only(MessageType::Error);
-    const bool okImport = appModule->ioSystem()->importInDocument()
-        .targetDocument(doc)
-        .withFilepaths(args.filesToOpen)
-        .withParametersProvider(appModule->ioParametersProvider())
-        .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+    const bool okImport = appModule->ioSystem()->importInDocument(
+        IO::System::ArgsImport()
+        .setTargetDocument(doc)
+        .setFilepaths(args.filesToOpen)
+        .setParametersProvider(appModule->ioParametersProvider())
+        .setEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
             BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
         })
-        .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
-        .withEntityPostProcessInfoProgress(20, CliExport::textIdTr("Mesh BRep shapes"))
-        .withMessenger(&errorCollect)
-        .withTaskProgress(progress)
-        .execute();
+        .setEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
+        .setEntityPostProcessInfoProgress(20, CliExport::textIdTr("Mesh BRep shapes"))
+        .setMessenger(&errorCollect)
+        .setTaskProgress(progress)
+    );
     helper->taskMgr.setTitle(progress->taskId(), okImport ? CliExport::textIdTr("Imported") : errorCollect.asString(" "));
     helper->mapTaskStatus.at(progress->taskId())->success = okImport;
     helper->mapTaskStatus.at(progress->taskId())->finished = true;
@@ -131,14 +132,15 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
     errorCollect.only(MessageType::Error);
     const IO::Format format = appModule->ioSystem()->probeFormat(filepath);
     const ApplicationItem appItems[] = { ApplicationItem{doc} };
-    const bool okExport = appModule->ioSystem()->exportApplicationItems()
-                .targetFile(filepath)
-                .targetFormat(format)
-                .withItems(appItems)
-                .withParameters(appModule->ioParametersProvider()->findWriterParameters(format))
-                .withMessenger(&errorCollect)
-                .withTaskProgress(progress)
-                .execute();
+    const bool okExport = appModule->ioSystem()->exportItems(
+        IO::System::ArgsExport()
+        .setTargetFile(filepath)
+        .setTargetFormat(format)
+        .setItems(appItems)
+        .setParameters(appModule->ioParametersProvider()->findWriterParameters(format))
+        .setMessenger(&errorCollect)
+        .setTaskProgress(progress)
+    );
     const std::string strFilename = filepath.filename().u8string();
     const std::string msg =
             okExport ?
