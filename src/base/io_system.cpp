@@ -71,17 +71,10 @@ bool success(const ImportTaskData& taskData)
     return taskData.readSuccess && !taskData.seqTransferredEntity.IsEmpty();
 }
 
-void writeImportError(ImportTaskData& taskData, std::string_view errorMsg)
-{
-    taskData.messenger.error() << fmt::format(
-        System::textIdTr("Error during import of '{}'\n{}"), taskData.filepath.u8string(), errorMsg
-    );
-}
-
 void readFile(ImportTaskData& taskData, const System& ioSystem, const System::Args_ImportInDocument& args)
 {
     auto error = [&](std::string_view trErrorMsg) {
-        writeImportError(taskData, trErrorMsg);
+        taskData.messenger.error() << trErrorMsg;
         taskData.readSuccess = false;
     };
 
@@ -124,7 +117,7 @@ void transfer(ImportTaskData& taskData, const System::Args_ImportInDocument& arg
     if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
         taskData.seqTransferredEntity = taskData.reader->transfer(args.targetDocument, &progress);
         if (taskData.seqTransferredEntity.IsEmpty())
-            writeImportError(taskData, System::textIdTr("File transfer problem"));
+            taskData.messenger.error() << System::textIdTr("File transfer problem, no entity imported");
     }
 
     taskData.transferred = true;
@@ -164,11 +157,11 @@ void dispatchMessages(ImportTaskData& taskData, Messenger* targetMessenger)
 {
     const auto strFilepath = taskData.filepath.make_preferred().u8string();
     dispatchWarnings(
-        fmt::format("Warning(s) during import from '{}'", strFilepath),
+        fmt::format("Warning(s) during import of '{}'", strFilepath),
         taskData.messenger, targetMessenger
     );
     dispatchErrors(
-        fmt::format("Errors(s) during import from '{}'", strFilepath),
+        fmt::format("Errors(s) during import of '{}'", strFilepath),
         taskData.messenger, targetMessenger
     );
     taskData.messenger.clear();
