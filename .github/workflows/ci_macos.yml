@@ -45,7 +45,7 @@ jobs:
           -DMayo_BuildTests=ON \
           -DMayo_BuildPluginAssimp=ON \
           -DQT_DIR=${{steps.globals.outputs.qt_path}}/lib/cmake/Qt${{matrix.qt_version_major}}
-        cmake --build . --config Release --parallel
+        cmake --build . --config Release --parallel $(sysctl -n hw.ncpu)
 
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build

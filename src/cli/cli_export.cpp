@@ -12,8 +12,9 @@
 #include "../base/application.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
-#include "../base/messenger.h"
+#include "../base/message_collecter.h"
 #include "../base/task_manager.h"
+#include "../base/thread_messenger_channel.h"
 #include "../qtcommon/qstring_conv.h"
 
 #include <Message.hxx>
@@ -60,7 +61,7 @@ void printTaskProgress(Helper* helper, TaskId taskId)
     std::string strMessage = helper->taskMgr.title(taskId);
     std::replace(strMessage.begin(), strMessage.end(), '\n', ' ');
     strMessage = consoleToPrintable(strMessage);
-    auto lineWidth = int(strMessage.size());
+    auto lineWidth = static_cast<int>(strMessage.size());
     const bool taskFinished = helper->mapTaskStatus.at(taskId)->finished;
     const bool taskSuccess = helper->mapTaskStatus.at(taskId)->success;
     if (taskFinished && !taskSuccess) {
@@ -106,18 +107,19 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
 
     MessageCollecter errorCollect;
     errorCollect.only(MessageType::Error);
-    const bool okImport = appModule->ioSystem()->importInDocument()
-        .targetDocument(doc)
-        .withFilepaths(args.filesToOpen)
-        .withParametersProvider(appModule->ioParametersProvider())
-        .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+    const bool okImport = appModule->ioSystem()->importInDocument(
+        IO::System::ArgsImport()
+        .setTargetDocument(doc)
+        .setFilepaths(args.filesToOpen)
+        .setParametersProvider(appModule->ioParametersProvider())
+        .setEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
             BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
         })
-        .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
-        .withEntityPostProcessInfoProgress(20, CliExport::textIdTr("Mesh BRep shapes"))
-        .withMessenger(&errorCollect)
-        .withTaskProgress(progress)
-        .execute();
+        .setEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
+        .setEntityPostProcessInfoProgress(20, CliExport::textIdTr("Mesh BRep shapes"))
+        .setMessenger(&errorCollect)
+        .setTaskProgress(progress)
+    );
     helper->taskMgr.setTitle(progress->taskId(), okImport ? CliExport::textIdTr("Imported") : errorCollect.asString(" "));
     helper->mapTaskStatus.at(progress->taskId())->success = okImport;
     helper->mapTaskStatus.at(progress->taskId())->finished = true;
@@ -131,19 +133,20 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
     errorCollect.only(MessageType::Error);
     const IO::Format format = appModule->ioSystem()->probeFormat(filepath);
     const ApplicationItem appItems[] = { ApplicationItem{doc} };
-    const bool okExport = appModule->ioSystem()->exportApplicationItems()
-                .targetFile(filepath)
-                .targetFormat(format)
-                .withItems(appItems)
-                .withParameters(appModule->ioParametersProvider()->findWriterParameters(format))
-                .withMessenger(&errorCollect)
-                .withTaskProgress(progress)
-                .execute();
+    const bool okExport = appModule->ioSystem()->exportItems(
+        IO::System::ArgsExport()
+        .setTargetFile(filepath)
+        .setTargetFormat(format)
+        .setItems(appItems)
+        .setParameters(appModule->ioParametersProvider()->findWriterParameters(format))
+        .setMessenger(&errorCollect)
+        .setTaskProgress(progress)
+    );
     const std::string strFilename = filepath.filename().u8string();
     const std::string msg =
-            okExport ?
-                fmt::format(CliExport::textIdTr("Exported {}"), strFilename) :
-                errorCollect.asString(" ");
+        okExport ?
+            fmt::format(CliExport::textIdTr("Exported {}"), strFilename) :
+            errorCollect.asString(" ");
     helper->taskMgr.setTitle(progress->taskId(), msg);
     helper->mapTaskStatus.at(progress->taskId())->success = okExport;
     helper->mapTaskStatus.at(progress->taskId())->finished = true;
@@ -199,7 +202,7 @@ void cli_asyncExportDocuments(
             fnPrintProgress();
     });
 
-    helper->exportTaskCount = int(args.filesToExport.size());
+    helper->exportTaskCount = static_cast<int>(args.filesToExport.size());
     taskMgr->signalEnded.connectSlot([=]{
         if (helper->exportTaskCount == 0) {
             bool okExport = true;
@@ -212,8 +215,9 @@ void cli_asyncExportDocuments(
         }
     });
 
-    // Suppress output from OpenCascade
-    Message::DefaultMessenger()->RemovePrinters(Message_Printer::get_type_descriptor());
+    // Suppress default OpenCascade printers
+    Message::DefaultMessenger()->RemovePrinters(Message_Printer::get_type_descriptor());    
+    ThreadMessengerChannel::addGlobalOccPrinter();
 
     // Execute import operation(synchronous)
     DocumentPtr doc = app->newDocument();

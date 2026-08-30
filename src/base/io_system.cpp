@@ -5,15 +5,13 @@
 
 #include "io_system.h"
 
-#include "caf_utils.h"
+#include "caf_utils.h" // At least for std::hash<TDF_Label>
 #include "document.h"
 #include "io_parameters_provider.h"
-#include "io_reader.h"
-#include "io_writer.h"
-#include "messenger.h"
+#include "message_collecter.h"
 #include "task_manager.h"
 #include "task_progress.h"
-#include "tkernel_utils.h"
+#include "thread_messenger_channel.h"
 
 #include <fmt/format.h>
 #include <gsl/util>
@@ -21,7 +19,6 @@
 #include <algorithm>
 #include <fstream>
 #include <locale>
-#include <mutex>
 #include <regex>
 #include <unordered_set>
 #include <vector>
@@ -50,7 +47,139 @@ void dispatchWarnings(std::string_view headerMsg, const MessageCollecter& msgCol
         target->warning() << fmt::format("{}\n    {}", headerMsg, strWarnings);
 }
 
+bool isEntityPostProcessRequired(Format format, const System::ArgsImport& args)
+{
+    if (args.entityPostProcess && args.entityPostProcessRequiredIf)
+        return args.entityPostProcessRequiredIf(format);
+    else
+        return false;
+}
+
+struct ImportTaskData {
+    std::unique_ptr<Reader> reader;
+    FilePath filepath;
+    Format fileFormat = Format_Unknown;
+    TaskProgress* progress = nullptr;
+    TaskId taskId = 0;
+    NCollection_Sequence<TDF_Label> seqTransferredEntity;
+    bool readSuccess = false;
+    bool transferred = false; // Is transfer done ?
+    MessageCollecter messenger;
+};
+
+bool success(const ImportTaskData& taskData)
+{
+    return taskData.readSuccess && !taskData.seqTransferredEntity.IsEmpty();
+}
+
+void readFile(ImportTaskData& taskData, const System& ioSystem, const System::ArgsImport& args)
+{
+    auto error = [&](std::string_view trErrorMsg) {
+        taskData.messenger.error() << trErrorMsg;
+        taskData.readSuccess = false;
+    };
+
+    taskData.fileFormat = ioSystem.probeFormat(taskData.filepath);
+    if (taskData.fileFormat == Format_Unknown)
+        return error(System::textIdTr("Unknown format"));
+
+    double portionSize = 40;
+    if (isEntityPostProcessRequired(taskData.fileFormat, args))
+        portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
+
+    TaskProgress progress(taskData.progress, portionSize, System::textIdTr("Reading file"));
+    taskData.reader = ioSystem.createReader(taskData.fileFormat);
+    if (!taskData.reader)
+        return error(System::textIdTr("No supporting reader"));
+
+    taskData.reader->setMessenger(&taskData.messenger);
+    if (args.parametersProvider) {
+        taskData.reader->applyProperties(
+            args.parametersProvider->findReaderParameters(taskData.fileFormat)
+        );
+    }
+
+    // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
+    [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
+
+    if (!taskData.reader->readFile(taskData.filepath, &progress))
+        return error(System::textIdTr("File read problem"));
+
+    taskData.readSuccess = true;
+}
+
+void transfer(ImportTaskData& taskData, const System::ArgsImport& args)
+{
+    if (!taskData.readSuccess)
+        return;
+
+    double portionSize = 60;
+    if (isEntityPostProcessRequired(taskData.fileFormat, args))
+        portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
+
+    TaskProgress progress(taskData.progress, portionSize, System::textIdTr("Transferring file"));
+    if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
+        // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
+        [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
+
+        taskData.seqTransferredEntity = taskData.reader->transfer(args.targetDocument, &progress);
+        if (taskData.seqTransferredEntity.IsEmpty())
+            taskData.messenger.error() << System::textIdTr("File transfer problem, no entity imported");
+    }
+
+    taskData.transferred = true;
+}
+
+auto postProcess(ImportTaskData& taskData, const System::ArgsImport& args)
+{
+    if (!success(taskData))
+        return;
+
+    if (!isEntityPostProcessRequired(taskData.fileFormat, args))
+        return;
+
+    TaskProgress progress(
+        taskData.progress, args.entityPostProcessProgressSize, args.entityPostProcessProgressStep
+    );
+    const double subPortionSize = 100. / static_cast<double>(taskData.seqTransferredEntity.Size());
+    for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
+        TaskProgress subProgress(&progress, subPortionSize);
+        args.entityPostProcess(labelEntity, &subProgress);
+    }
+}
+
+void addModelTreeEntities(const ImportTaskData& taskData, const DocumentPtr& targetDoc)
+{
+    if (!success(taskData))
+        return;
+
+    // Need to call Document::addEntityTreeNodeSequence() instead of addEntityTreeNode() in
+    // for() loop. The former function doesn't interleave update of the model tree and emission
+    // of "entity added" signal for each entity. This prevents data race to happen on the
+    // Document's model tree within slots connected to signal(and living in other threads)
+    targetDoc->addEntityTreeNodeSequence(taskData.seqTransferredEntity);
+}
+
+void dispatchMessages(ImportTaskData& taskData, Messenger* targetMessenger)
+{
+    const auto strFilepath = taskData.filepath.make_preferred().u8string();
+    dispatchWarnings(
+        fmt::format("Warning(s) during import of '{}'", strFilepath),
+        taskData.messenger, targetMessenger
+    );
+    dispatchErrors(
+        fmt::format("Errors(s) during import of '{}'", strFilepath),
+        taskData.messenger, targetMessenger
+    );
+    taskData.messenger.clear();
+}
+
 } // namespace
+
+System::System()
+{
+    ThreadMessengerChannel::addGlobalOccPrinter();
+}
 
 void System::addFormatProbe(const FormatProbe& probe)
 {
@@ -193,133 +322,27 @@ std::unique_ptr<Writer> System::createWriter(Format format) const
     return {};
 }
 
-bool System::importInDocument(const Args_ImportInDocument& args) const
+bool System::importInDocument(const ArgsImport& args) const
 {
-    DocumentPtr doc = args.targetDocument;
-    const auto listFilepath = args.filepaths;
     TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
     Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
 
-    bool ok = true;
-
-    using ReaderPtr = std::unique_ptr<Reader>;
-    struct TaskData {
-        ReaderPtr reader;
-        FilePath filepath;
-        Format fileFormat = Format_Unknown;
-        TaskProgress* progress = nullptr;
-        TaskId taskId = 0;
-        NCollection_Sequence<TDF_Label> seqTransferredEntity;
-        bool readSuccess = false;
-        bool transferred = false;
-        MessageCollecter messenger;
-    };
-
-    auto fnEntityPostProcessRequired = [&](Format format) {
-        if (args.entityPostProcess && args.entityPostProcessRequiredIf)
-            return args.entityPostProcessRequiredIf(format);
-        else
-            return false;
-    };
-    auto fnAddError = [&](TaskData& taskData, std::string_view errorMsg) {
-        ok = false;
-        taskData.messenger.error() << fmt::format(
-            textIdTr("Error during import of '{}'\n{}"), taskData.filepath.u8string(), errorMsg
-        );
-    };
-    auto fnReadFileError = [&](TaskData& taskData, std::string_view errorMsg) {
-        fnAddError(taskData, errorMsg);
-        return false;
-    };
-    auto fnReadFile = [&](TaskData& taskData) {
-        taskData.fileFormat = this->probeFormat(taskData.filepath);
-        if (taskData.fileFormat == Format_Unknown)
-            return fnReadFileError(taskData, textIdTr("Unknown format"));
-
-        double portionSize = 40;
-        if (fnEntityPostProcessRequired(taskData.fileFormat))
-            portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
-
-        TaskProgress progress(taskData.progress, portionSize, textIdTr("Reading file"));
-        taskData.reader = this->createReader(taskData.fileFormat);
-        if (!taskData.reader)
-            return fnReadFileError(taskData, textIdTr("No supporting reader"));
-
-        taskData.reader->setMessenger(&taskData.messenger);
-        if (args.parametersProvider) {
-            taskData.reader->applyProperties(
-                args.parametersProvider->findReaderParameters(taskData.fileFormat)
-            );
-        }
-
-        if (!taskData.reader->readFile(taskData.filepath, &progress))
-            return fnReadFileError(taskData, textIdTr("File read problem"));
-
-        return true;
-    };
-    auto fnTransfer = [&](TaskData& taskData) {
-        double portionSize = 60;
-        if (fnEntityPostProcessRequired(taskData.fileFormat))
-            portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
-
-        TaskProgress progress(taskData.progress, portionSize, textIdTr("Transferring file"));
-        if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
-            taskData.seqTransferredEntity = taskData.reader->transfer(doc, &progress);
-            if (taskData.seqTransferredEntity.IsEmpty())
-                fnAddError(taskData, textIdTr("File transfer problem"));
-        }
-
-        taskData.transferred = true;
-    };
-    auto fnPostProcess = [&](TaskData& taskData) {
-        if (!fnEntityPostProcessRequired(taskData.fileFormat))
-            return;
-
-        TaskProgress progress(
-            taskData.progress, args.entityPostProcessProgressSize, args.entityPostProcessProgressStep
-        );
-        const double subPortionSize = 100. / double(taskData.seqTransferredEntity.Size());
-        for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
-            TaskProgress subProgress(&progress, subPortionSize);
-            args.entityPostProcess(labelEntity, &subProgress);
-        }
-    };
-    auto fnAddModelTreeEntities = [&](const TaskData& taskData) {
-        // Need to call Document::addEntityTreeNodeSequence() instead of addEntityTreeNode() in
-        // for() loop. The former function doesn't interleave update of the model tree and emission
-        // of "entity added" signal for each entity. This prevents data race to happen on the
-        // Document's model tree within slots connected to signal(and living in other threads)
-        doc->addEntityTreeNodeSequence(taskData.seqTransferredEntity);
-    };
-    auto fnDispatchMessages = [=](TaskData& taskData) {
-        const auto strFilepath = taskData.filepath.make_preferred().u8string();
-        dispatchWarnings(
-            fmt::format("Warning(s) during import from '{}'", strFilepath),
-            taskData.messenger, messenger
-        );
-        dispatchErrors(
-            fmt::format("Errors(s) during import from '{}'", strFilepath),
-            taskData.messenger, messenger
-        );
-        taskData.messenger.clear();
-    };
-
-    if (listFilepath.size() == 1) { // Single file case
-        TaskData taskData;
-        taskData.filepath = listFilepath.front();
+    if (args.filepaths.size() == 1) {
+        // Single file case
+        ImportTaskData taskData;
+        taskData.filepath = args.filepaths.front();
         taskData.progress = rootProgress;
-        ok = fnReadFile(taskData);
-        if (ok) {
-            fnTransfer(taskData);
-            fnPostProcess(taskData);
-            fnAddModelTreeEntities(taskData);
-        }
-
-        fnDispatchMessages(taskData);
+        readFile(taskData, *this, args);
+        transfer(taskData, args);
+        postProcess(taskData, args);
+        addModelTreeEntities(taskData, args.targetDocument);
+        dispatchMessages(taskData, messenger);
+        return success(taskData);
     }
-    else { // Many files case
-        std::vector<TaskData> vecTaskData;
-        vecTaskData.resize(listFilepath.size());
+    else {
+        // Many files case
+        std::vector<ImportTaskData> vecTaskData;
+        vecTaskData.resize(args.filepaths.size());
 
         TaskManager childTaskManager;
         childTaskManager.signalProgressChanged.connectSlot([&](TaskId, double) {
@@ -327,46 +350,47 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
         });
 
         // Read files
-        for (TaskData& taskData : vecTaskData) {
-            taskData.filepath = listFilepath[&taskData - &vecTaskData.front()];
+        for (ImportTaskData& taskData : vecTaskData) {
+            taskData.filepath = args.filepaths[&taskData - &vecTaskData.front()];
             taskData.taskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
                 taskData.progress = progressChild;
-                taskData.readSuccess = fnReadFile(taskData);
+                readFile(taskData, *this, args);
             });
         }
 
-        for (const TaskData& taskData : vecTaskData)
+        for (const ImportTaskData& taskData : vecTaskData)
             childTaskManager.run(taskData.taskId, TaskAutoDestroy::Off);
 
-        // Transfer to document
+        // Transfer to target document
         auto taskDataCount = static_cast<int>(vecTaskData.size());
         while (taskDataCount > 0 && !rootProgress->isAbortRequested()) {
-            auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
+            auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const ImportTaskData& taskData) {
                 return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 25);
             });
-
             if (it != vecTaskData.end()) {
-                if (it->readSuccess) {
-                    fnTransfer(*it);
-                    fnPostProcess(*it);
-                    fnAddModelTreeEntities(*it);
-                }
-
-                fnDispatchMessages(*it);
+                transfer(*it, args);
+                postProcess(*it, args);
+                addModelTreeEntities(*it, args.targetDocument);
+                dispatchMessages(*it, messenger);
                 --taskDataCount;
             }
         } // endwhile
+
+        for (const ImportTaskData& taskData : vecTaskData) {
+            if (!success(taskData))
+                return false;
+        }
+
+        return true;
     }
-
-    return ok;
 }
 
-System::Operation_ImportInDocument System::importInDocument() const
+bool System::importInDocument(const DocumentPtr& targetDoc, const FilePath& file)
 {
-    return Operation_ImportInDocument(*this);
+    return this->importInDocument(ArgsImport().setTargetDocument(targetDoc).setFilepath(file));
 }
 
-bool System::exportApplicationItems(const Args_ExportApplicationItems& args) const
+bool System::exportItems(const ArgsExport& args) const
 {
     TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
     MessageCollecter msgCollect;
@@ -388,6 +412,10 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
 
     writer->setMessenger(&msgCollect);
     writer->applyProperties(args.parameters);
+
+    // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
+    [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&msgCollect);
+
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
         const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);
@@ -405,69 +433,47 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args) con
     return true;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath)
+System::ArgsExport& System::ArgsExport::setTargetFile(const FilePath& filepath)
 {
-    m_args.targetFilepath = filepath;
+    this->targetFilepath = filepath;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFormat(Format format)
+System::ArgsExport& System::ArgsExport::setTargetFormat(Format format)
 {
-    m_args.targetFormat = format;
+    this->targetFormat = format;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem)
+System::ArgsExport& System::ArgsExport::setItem(const ApplicationItem& appItem)
 {
-    m_args.applicationItems = { &appItem, 1 };
+    this->applicationItems = { &appItem, 1 };
     return *this;
 }
 
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItems(gsl::span<const ApplicationItem> appItems)
+System::ArgsExport& System::ArgsExport::setItems(gsl::span<const ApplicationItem> appItems)
 {
-    m_args.applicationItems = appItems;
+    this->applicationItems = appItems;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters)
+System::ArgsExport& System::ArgsExport::setParameters(const PropertyGroup* parameters)
 {
-    m_args.parameters = parameters;
+    this->parameters = parameters;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger)
+System::ArgsExport& System::ArgsExport::setMessenger(Messenger* messenger)
 {
-    m_args.messenger = messenger;
+    this->messenger = messenger;
     return *this;
 }
 
-System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress)
+System::ArgsExport& System::ArgsExport::setTaskProgress(TaskProgress* progress)
 {
-    m_args.progress = progress;
+    this->progress = progress;
     return *this;
-}
-
-bool System::Operation_ExportApplicationItems::execute()
-{
-    return m_system.exportApplicationItems(m_args);
-}
-
-System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(const System& system)
-    : m_system(system)
-{
-}
-
-System::Operation_ExportApplicationItems System::exportApplicationItems() const
-{
-    return Operation_ExportApplicationItems(*this);
 }
 
 void System::visitUniqueItems(
@@ -516,77 +522,58 @@ void System::traverseUniqueItems(
     });
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document)
+System::ArgsImport& System::ArgsImport::setTargetDocument(const DocumentPtr& document)
 {
-    m_args.targetDocument = document;
+    this->targetDocument = document;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withFilepaths(gsl::span<const FilePath> filepaths)
+System::ArgsImport& System::ArgsImport::setFilepath(const FilePath& filepath)
 {
-    m_args.filepaths = filepaths;
+    return this->setFilepaths(gsl::span<const FilePath>(&filepath, 1));
+}
+
+System::ArgsImport& System::ArgsImport::setFilepaths(gsl::span<const FilePath> filepaths)
+{
+    this->filepaths = filepaths;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withParametersProvider(const ParametersProvider* provider)
+System::ArgsImport& System::ArgsImport::setParametersProvider(const ParametersProvider* provider)
 {
-    m_args.parametersProvider = provider;
+    this->parametersProvider = provider;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withMessenger(Messenger* messenger)
+System::ArgsImport& System::ArgsImport::setMessenger(Messenger* messenger)
 {
-    m_args.messenger = messenger;
+    this->messenger = messenger;
     return *this;
 }
 
-System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress)
+System::ArgsImport& System::ArgsImport::setTaskProgress(TaskProgress* progress)
 {
-    m_args.progress = progress;
+    this->progress = progress;
     return *this;
 }
 
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withFilepath(const FilePath& filepath)
+System::ArgsImport& System::ArgsImport::setEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn)
 {
-    return this->withFilepaths(gsl::span<const FilePath>(&filepath, 1));
-}
-
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcess(std::function<void (TDF_Label, TaskProgress*)> fn)
-{
-    m_args.entityPostProcess = std::move(fn);
+    this->entityPostProcess = std::move(fn);
     return *this;
 }
 
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcessRequiredIf(std::function<bool(Format)> fn)
+System::ArgsImport& System::ArgsImport::setEntityPostProcessRequiredIf(std::function<bool(Format)> fn)
 {
-    m_args.entityPostProcessRequiredIf = std::move(fn);
+    this->entityPostProcessRequiredIf = std::move(fn);
     return *this;
 }
 
-System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep)
+System::ArgsImport& System::ArgsImport::setEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep)
 {
-    m_args.entityPostProcessProgressSize = progressSize;
-    m_args.entityPostProcessProgressStep = progressStep;
+    this->entityPostProcessProgressSize = progressSize;
+    this->entityPostProcessProgressStep = progressStep;
     return *this;
-}
-
-bool System::Operation_ImportInDocument::execute()
-{
-    return m_system.importInDocument(m_args);
-}
-
-System::Operation_ImportInDocument::Operation_ImportInDocument(const System& system)
-    : m_system(system)
-{
 }
 
 namespace {

@@ -65,8 +65,8 @@ bool OccVrmlWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskP
 
     const auto rep = m_shapeRepresentation;
     converter.Convert(
-                rep == VrmlAPI_ShadedRepresentation || rep == VrmlAPI_BothRepresentation,
-                rep == VrmlAPI_WireFrameRepresentation || rep == VrmlAPI_BothRepresentation
+        rep == VrmlAPI_ShadedRepresentation || rep == VrmlAPI_BothRepresentation,
+        rep == VrmlAPI_WireFrameRepresentation || rep == VrmlAPI_BothRepresentation
     );
     return true;
 }

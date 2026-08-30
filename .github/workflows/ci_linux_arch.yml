@@ -34,6 +34,6 @@ jobs:
           echo 'RUN mkdir /mayo/build'
           echo 'WORKDIR /mayo/build'
           echo 'RUN cmake .. -DMayo_BuildTests=ON -DMayo_BuildPluginAssimp=ON'
-          echo 'RUN cmake --build . --parallel --config Release'
+          echo 'RUN cmake --build . --parallel $(nproc) --config Release'
         } > podmanfile
         podman build --tag archlinux-ci -f ./podmanfile

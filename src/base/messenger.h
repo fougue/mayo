@@ -5,12 +5,8 @@
 
 #pragma once
 
-#include <gsl/span>
-
-#include <functional>
 #include <sstream>
 #include <string_view>
-#include <vector>
 
 namespace Mayo {
 
@@ -76,39 +72,6 @@ public:
     MessageStream error();
 
     static Messenger& null();
-};
-
-// Provides facility to construct a Messenger object from a lambda
-// This avoids to subclass Messenger
-class MessengerByCallback : public Messenger {
-public:
-    explicit MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
-    void emitMessage(MessageType msgType, std::string_view text) override;
-
-private:
-    std::function<void(MessageType, std::string_view)> m_fnCallback;
-};
-
-// Collects emitted messages into a array
-class MessageCollecter : public Messenger {
-public:
-    void only(MessageType msgType);
-    void ignore(MessageType msgType);
-    bool isIgnored(MessageType msgType) const;
-
-    void emitMessage(MessageType msgType, std::string_view text) override;
-
-    gsl::span<const Messenger::Message> messages() const;
-    std::string asString(std::string_view separator, MessageType msgType) const;
-    std::string asString(std::string_view separator) const;
-
-    void clear();
-
-private:
-    static unsigned toFlag(MessageType msgType);
-
-    unsigned m_ignoredTypes = 0;
-    std::vector<Messenger::Message> m_vecMessage;
 };
 
 } // namespace Mayo

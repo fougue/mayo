@@ -48,7 +48,7 @@ jobs:
           -DMayo_BuildTests=ON \
           -DMayo_BuildPluginAssimp=ON \
           -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
-        cmake --build . --config Release --parallel
+        cmake --build . --config Release --parallel $(sysctl -n hw.ncpu)
 
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build

@@ -6,7 +6,6 @@
 #pragma once
 
 #include <QtCore/QObject>
-#include <QtTest/QtTest>
 
 namespace Mayo {
 
@@ -15,24 +14,26 @@ namespace IO { class System; }
 class TestIO : public QObject {
     Q_OBJECT
 private slots:
-    void IO_Reload_bugGitHub332_test();
+    void Regression_bugGitHub166_test();
+    void Regression_bugGitHub166_test_data();
+    void Regression_bugGitHub258_test();
+    void Regression_bugGitHub332_test();
 
-    void IO_probeFormat_test();
-    void IO_probeFormat_test_data();
-    void IO_probeFormatDirect_test();
-    void IO_OccStaticVariablesRollback_test();
-    void IO_OccStaticVariablesRollback_test_data();
-    void IO_bugGitHub166_test();
-    void IO_bugGitHub166_test_data();
-    void IO_bugGitHub258_test();
+    void System_probeFormat_test();
+    void System_probeFormat_test_data();
+    void System_probeFormatDirect_test();
+    void System_importInDocument_catchVrmlReaderSendFail_test();
 
-    void IO_dxfReplaceTextControlCodes_test();
-    void IO_dxfReplaceTextControlCodes_test_data();
+    void OccStaticVariablesRollback_test();
+    void OccStaticVariablesRollback_test_data();
 
-    void IO_dxfGetPlainMText_test();
-    void IO_dxfGetPlainMText_test_data();
+    void DxfReader_replaceTextControlCodes_test();
+    void DxfReader_replaceTextControlCodes_test_data();
 
-    void IO_dxfLwPolylineClosedDuplicateLastVertex_test();
+    void DxfReader_getPlainMText_test();
+    void DxfReader_getPlainMText_test_data();
+
+    void DxfReader_lwPolylineClosedDuplicateLastVertex_test();
 
     void initTestCase();
     void cleanupTestCase();

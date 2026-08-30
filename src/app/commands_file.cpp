@@ -186,19 +186,19 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, gsl::span<con
             const TaskId taskId = context->taskMgr()->newTask([=](TaskProgress* progress) {
                 QElapsedTimer chrono;
                 chrono.start();
-                const bool okImport =
-                    appModule->ioSystem()->importInDocument()
-                        .targetDocument(app->findDocumentByIdentifier(newDocId))
-                        .withFilepath(fp)
-                        .withParametersProvider(appModule->ioParametersProvider())
-                        .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                            BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
-                        })
-                        .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                        .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
-                        .withMessenger(appModule)
-                        .withTaskProgress(progress)
-                    .execute();
+                const bool okImport = appModule->ioSystem()->importInDocument(
+                    IO::System::ArgsImport()
+                    .setTargetDocument(app->findDocumentByIdentifier(newDocId))
+                    .setFilepath(fp)
+                    .setParametersProvider(appModule->ioParametersProvider())
+                    .setEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                        BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
+                    })
+                    .setEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
+                    .setEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
+                    .setMessenger(appModule)
+                    .setTaskProgress(progress)
+                );
                 if (okImport)
                     appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
             });
@@ -244,19 +244,19 @@ void FileCommandTools::importInDocument(
 
         auto appModule = AppModule::get();
         auto doc = appModule->application()->findDocumentByIdentifier(targetDocId);
-        const bool okImport =
-            appModule->ioSystem()->importInDocument()
-                .targetDocument(doc)
-                .withFilepaths(arrayFilePaths)
-                .withParametersProvider(appModule->ioParametersProvider())
-                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                    BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
-                })
-                .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
-                .withMessenger(appModule)
-                .withTaskProgress(progress)
-            .execute();
+        const bool okImport = appModule->ioSystem()->importInDocument(
+            IO::System::ArgsImport()
+            .setTargetDocument(doc)
+            .setFilepaths(arrayFilePaths)
+            .setParametersProvider(appModule->ioParametersProvider())
+            .setEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                BRepMeshingUtils::compute(labelEntity, appModule->properties()->meshingOptions(), progress);
+            })
+            .setEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
+            .setEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
+            .setMessenger(appModule)
+            .setTaskProgress(progress)
+        );
         if (okImport)
             appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
     });
@@ -454,15 +454,15 @@ void CommandExportSelectedApplicationItems::execute()
     const TaskId taskId = this->taskMgr()->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
-        const bool okExport =
-            appModule->ioSystem()->exportApplicationItems()
-                .targetFile(filepathFrom(strFilepath))
-                .targetFormat(format)
-                .withItems(this->guiApp()->selectionModel()->selectedItems())
-                .withParameters(appModule->ioParametersProvider()->findWriterParameters(format))
-                .withMessenger(appModule)
-                .withTaskProgress(progress)
-            .execute();
+        const bool okExport = appModule->ioSystem()->exportItems(
+            IO::System::ArgsExport()
+            .setTargetFile(filepathFrom(strFilepath))
+            .setTargetFormat(format)
+            .setItems(this->guiApp()->selectionModel()->selectedItems())
+            .setParameters(appModule->ioParametersProvider()->findWriterParameters(format))
+            .setMessenger(appModule)
+            .setTaskProgress(progress)
+        );
         if (okExport)
             appModule->emitInfo(fmt::format(Command::textIdTr("Export time: {}ms"), chrono.elapsed()));
     });

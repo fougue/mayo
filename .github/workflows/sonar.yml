@@ -78,7 +78,7 @@ jobs:
           unzip -o build-wrapper.zip
           build-wrapper-linux-x86/build-wrapper-linux-x86-64 \
             --out-dir bw-output \
-            cmake --build build --config Debug --parallel
+            cmake --build build --config Debug --parallel $(nproc)
 
       - name: Execute Mayo unit tests
         working-directory: ${{github.workspace}}/build

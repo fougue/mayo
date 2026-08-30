@@ -10,14 +10,13 @@
 
 namespace Mayo {
 
-namespace IO { class System; }
-
 class TestBase : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
     void DocumentRefCount_test();
 
+    void CppUtils_indexInSpan_test();
     void CppUtils_toggle_test();
 
     void TextId_test();
@@ -33,18 +32,15 @@ private slots:
 
     void PropertyValueConversionVariant_toInt_test();
     void PropertyValueConversionVariant_toInt_test_data();
-
     void PropertyValueConversionVariant_toString_test();
     void PropertyValueConversionVariant_toString_test_data();
-
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
     void PropertyValueConversion_bugGitHub219_test();
-
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 
-    void DoubleToString_test();
+    void StringConv_DoubleToString_test();
     void StringConv_test();
 
     void BRepUtils_moreComplex_test();
@@ -96,7 +92,17 @@ private slots:
     void LibTree_nodeRoot_test();
     void LibTree_removeRoot_test();
 
-    void Span_test();
+    void ThreadMessengerChannel_addGlobalOccPrinterReturnsNonNullPrinter_test();
+    void ThreadMessengerChannel_addGlobalOccPrinterIsIdempotent_test();
+    void ThreadMessengerChannel_addGlobalOccPrinter_registersExactlyOnceWithDefaultMessenger_test();
+    void ThreadMessengerChannel_addGlobalOccPrinter_concurrentFirstCallsInstallExactlyOnce_test();
+    void ThreadMessengerChannel_addGlobalOccPrinter_integrationForwardsOcctMessagesToScopedMessenger_test();
+    void ThreadMessengerChannel_emitMessageWithoutActiveScopeIsDiscardedSilently_test();
+    void ThreadMessengerChannel_emitMessageWithActiveScopeIsForwarded_test();
+    void ThreadMessengerChannelScope_restoresPreviousMessengerOnDestruction_test();
+    void ThreadMessengerChannelScope_supportsNestedReentrance_test();
+    void ThreadMessengerChannelScope_boundToNullptrDiscardsMessages_test();
+    void ThreadMessengerChannelScope_isIsolatedPerThread_test();
 
     void XCaf_userDefinedAttributes_test();
 };
