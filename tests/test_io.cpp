@@ -33,7 +33,7 @@ Q_DECLARE_METATYPE(std::string)
 
 namespace Mayo {
 
-void TestIO::IO_Reload_bugGitHub332_test()
+void TestIO::Regression_bugGitHub332_test()
 {
     auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
@@ -77,7 +77,78 @@ void TestIO::IO_Reload_bugGitHub332_test()
     }
 }
 
-void TestIO::IO_probeFormat_test()
+void TestIO::Regression_bugGitHub166_test()
+{
+    QFETCH(std::string, strInputFilePath);
+    QFETCH(std::string, strOutputFilePath);
+    QFETCH(IO::Format, outputFormat);
+
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+    const bool okImport = m_ioSystem->importInDocument(doc, strInputFilePath);
+    QVERIFY(okImport);
+    QVERIFY(doc->entityCount() > 0);
+
+    const bool okExport = m_ioSystem->exportItems(
+        IO::System::ArgsExport()
+            .setTargetFile(strOutputFilePath)
+            .setTargetFormat(outputFormat)
+            .setItem(ApplicationItem{doc})
+        );
+    QVERIFY(okExport);
+    app->closeDocument(doc);
+
+    doc = app->newDocument();
+    const bool okImportOutput = m_ioSystem->importInDocument(doc, strOutputFilePath);
+    QVERIFY(okImportOutput);
+    QVERIFY(doc->entityCount() > 0);
+}
+
+void TestIO::Regression_bugGitHub166_test_data()
+{
+    QTest::addColumn<std::string>("strInputFilePath");
+    QTest::addColumn<std::string>("strOutputFilePath");
+    QTest::addColumn<IO::Format>("outputFormat");
+
+    using namespace std::string_literals;
+    QTest::newRow("PLY->STL") << "tests/inputs/cube.ply"s << "tests/outputs/cube.stl"s << IO::Format_STL;
+    QTest::newRow("STL->PLY") << "tests/inputs/cube.stla"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
+
+    QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
+    QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj"s << "tests/outputs/cube.stl"s << IO::Format_STL;
+#ifdef OPENCASCADE_HAVE_RAPIDJSON
+    QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
+    QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.stl"s << IO::Format_STL;
+#endif
+
+#if OCC_VERSION_HEX >= 0x070600
+    QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
+    QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
+#  ifdef OPENCASCADE_HAVE_RAPIDJSON
+    QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
+    QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj"s << "tests/outputs/cube.glTF"s << IO::Format_GLTF;
+#  endif
+#endif
+}
+
+void TestIO::Regression_bugGitHub258_test()
+{
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+    const bool okImport = m_ioSystem->importInDocument(doc, "tests/inputs/#258_cube.off");
+    QVERIFY(okImport);
+    QVERIFY(doc->entityCount() == 1);
+
+    const TopoDS_Shape shape = doc->xcaf().shape(doc->firstEntityNodeLabel());
+    const TopoDS_Face& face = TopoDS::Face(shape);
+    TopLoc_Location locFace;
+    auto triangulation = BRep_Tool::Triangulation(face, locFace);
+    QVERIFY(!triangulation.IsNull());
+    QCOMPARE(triangulation->NbNodes(), 24);
+    QCOMPARE(triangulation->NbTriangles(), 12);
+}
+
+void TestIO::System_probeFormat_test()
 {
     QFETCH(std::string, strFilePath);
     QFETCH(IO::Format, expectedPartFormat);
@@ -85,7 +156,7 @@ void TestIO::IO_probeFormat_test()
     QCOMPARE(m_ioSystem->probeFormat(strFilePath), expectedPartFormat);
 }
 
-void TestIO::IO_probeFormat_test_data()
+void TestIO::System_probeFormat_test_data()
 {
     QTest::addColumn<std::string>("strFilePath");
     QTest::addColumn<IO::Format>("expectedPartFormat");
@@ -103,7 +174,7 @@ void TestIO::IO_probeFormat_test_data()
     QTest::newRow("cube.wrl") << "tests/inputs/cube.wrl"s << IO::Format_VRML;
 }
 
-void TestIO::IO_probeFormatDirect_test()
+void TestIO::System_probeFormatDirect_test()
 {
     char fileSample[1024];
     IO::System::FormatProbeInput input;
@@ -144,7 +215,7 @@ void TestIO::IO_probeFormatDirect_test()
     QCOMPARE(IO::probeFormat_OFF(input), IO::Format_OFF);
 }
 
-void TestIO::IO_OccStaticVariablesRollback_test()
+void TestIO::OccStaticVariablesRollback_test()
 {
     using Variant = PropertyValueConversion::Variant;
     QFETCH(std::string, varName);
@@ -194,7 +265,7 @@ void TestIO::IO_OccStaticVariablesRollback_test()
     QCOMPARE(fnStaticVariableValue(cVarName, varInitValue.index()), varInitValue);
 }
 
-void TestIO::IO_OccStaticVariablesRollback_test_data()
+void TestIO::OccStaticVariablesRollback_test_data()
 {
     using Variant = PropertyValueConversion::Variant;
     QTest::addColumn<std::string>("varName");
@@ -210,78 +281,7 @@ void TestIO::IO_OccStaticVariablesRollback_test_data()
     QTest::newRow("var_str2") << "mayo.test.variable_str2"s << Variant("foo") << Variant("blah");
 }
 
-void TestIO::IO_bugGitHub166_test()
-{
-    QFETCH(std::string, strInputFilePath);
-    QFETCH(std::string, strOutputFilePath);
-    QFETCH(IO::Format, outputFormat);
-
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-    const bool okImport = m_ioSystem->importInDocument(doc, strInputFilePath);
-    QVERIFY(okImport);
-    QVERIFY(doc->entityCount() > 0);
-
-    const bool okExport = m_ioSystem->exportItems(
-        IO::System::ArgsExport()
-        .setTargetFile(strOutputFilePath)
-        .setTargetFormat(outputFormat)
-        .setItem(ApplicationItem{doc})
-    );
-    QVERIFY(okExport);
-    app->closeDocument(doc);
-
-    doc = app->newDocument();
-    const bool okImportOutput = m_ioSystem->importInDocument(doc, strOutputFilePath);
-    QVERIFY(okImportOutput);
-    QVERIFY(doc->entityCount() > 0);
-}
-
-void TestIO::IO_bugGitHub166_test_data()
-{
-    QTest::addColumn<std::string>("strInputFilePath");
-    QTest::addColumn<std::string>("strOutputFilePath");
-    QTest::addColumn<IO::Format>("outputFormat");
-
-    using namespace std::string_literals;
-    QTest::newRow("PLY->STL") << "tests/inputs/cube.ply"s << "tests/outputs/cube.stl"s << IO::Format_STL;
-    QTest::newRow("STL->PLY") << "tests/inputs/cube.stla"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
-
-    QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
-    QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj"s << "tests/outputs/cube.stl"s << IO::Format_STL;
-#ifdef OPENCASCADE_HAVE_RAPIDJSON
-    QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
-    QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.stl"s << IO::Format_STL;
-#endif
-
-#if OCC_VERSION_HEX >= 0x070600
-    QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
-    QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
-#  ifdef OPENCASCADE_HAVE_RAPIDJSON
-    QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
-    QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj"s << "tests/outputs/cube.glTF"s << IO::Format_GLTF;
-#  endif
-#endif
-}
-
-void TestIO::IO_bugGitHub258_test()
-{
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-    const bool okImport = m_ioSystem->importInDocument(doc, "tests/inputs/#258_cube.off");
-    QVERIFY(okImport);
-    QVERIFY(doc->entityCount() == 1);
-
-    const TopoDS_Shape shape = doc->xcaf().shape(doc->firstEntityNodeLabel());
-    const TopoDS_Face& face = TopoDS::Face(shape);
-    TopLoc_Location locFace;
-    auto triangulation = BRep_Tool::Triangulation(face, locFace);
-    QVERIFY(!triangulation.IsNull());
-    QCOMPARE(triangulation->NbNodes(), 24);
-    QCOMPARE(triangulation->NbTriangles(), 12);
-}
-
-void TestIO::IO_dxfReplaceTextControlCodes_test()
+void TestIO::DxfReader_replaceTextControlCodes_test()
 {
     QFETCH(std::string, strInput);
     QFETCH(std::string, strOutput);
@@ -290,7 +290,7 @@ void TestIO::IO_dxfReplaceTextControlCodes_test()
     QCOMPARE(strInput, strOutput);
 }
 
-void TestIO::IO_dxfReplaceTextControlCodes_test_data()
+void TestIO::DxfReader_replaceTextControlCodes_test_data()
 {
     QTest::addColumn<std::string>("strInput");
     QTest::addColumn<std::string>("strOutput");
@@ -314,7 +314,7 @@ void TestIO::IO_dxfReplaceTextControlCodes_test_data()
     QTest::newRow("test16") << "%%o%%c"s << "Ø"s;
 }
 
-void TestIO::IO_dxfGetPlainMText_test()
+void TestIO::DxfReader_getPlainMText_test()
 {
     QFETCH(std::string, strInput);
     QFETCH(std::string, strOutput);
@@ -323,7 +323,7 @@ void TestIO::IO_dxfGetPlainMText_test()
     QCOMPARE(strActual, strOutput);
 }
 
-void TestIO::IO_dxfGetPlainMText_test_data()
+void TestIO::DxfReader_getPlainMText_test_data()
 {
     QTest::addColumn<std::string>("strInput");
     QTest::addColumn<std::string>("strOutput");
@@ -383,7 +383,7 @@ void TestIO::IO_dxfGetPlainMText_test_data()
     QTest::newRow("unicode-unchanged") << "X \\U+010 Y"s << "X \\U+010 Y"s;
 }
 
-void TestIO::IO_dxfLwPolylineClosedDuplicateLastVertex_test()
+void TestIO::DxfReader_lwPolylineClosedDuplicateLastVertex_test()
 {
     auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
