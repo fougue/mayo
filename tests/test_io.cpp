@@ -8,6 +8,7 @@
 #include "../src/base/application.h"
 #include "../src/base/caf_utils.h"
 #include "../src/base/io_system.h"
+#include "../src/base/message_collecter.h"
 #include "../src/base/property_value_conversion.h"
 #include "../src/base/occ_static_variables_rollback.h"
 #include "../src/base/string_conv.h"
@@ -213,6 +214,32 @@ void TestIO::System_probeFormatDirect_test()
 
     fnSetProbeInput("tests/inputs/cube.off");
     QCOMPARE(IO::probeFormat_OFF(input), IO::Format_OFF);
+}
+
+void TestIO::System_importInDocument_catchVrmlReaderSendFail_test()
+{
+#if OCC_VERSION_HEX >= 0x070700
+    // VRML reader available starting from Opencascade >= 7.7.0
+    // Relates to GitHub #268 and #269
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+    MessageCollecter msgCollect;
+    const bool okImport = m_ioSystem->importInDocument(
+        IO::System::ArgsImport()
+        .setTargetDocument(doc)
+        .setFilepath("tests/inputs/#268_ambient-intensity-outofrange.wrl")
+        .setMessenger(&msgCollect)
+    );
+    QVERIFY(!okImport);
+    const size_t errCount = std::count_if(
+        msgCollect.messages().begin(),
+        msgCollect.messages().end(),
+        [](const Messenger::Message& msg) { return msg.type == MessageType::Error; }
+    );
+    QCOMPARE(errCount, 1u);
+    // Should be message "Error in VrmlAPI_CafReader: IrrelevantNumberoccurred at line (...)"
+    QVERIFY(msgCollect.messages()[0].text.find("VrmlAPI_CafReader") != std::string::npos);
+#endif
 }
 
 void TestIO::OccStaticVariablesRollback_test()

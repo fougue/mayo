@@ -22,6 +22,7 @@ private slots:
     void System_probeFormat_test();
     void System_probeFormat_test_data();
     void System_probeFormatDirect_test();
+    void System_importInDocument_catchVrmlReaderSendFail_test();
 
     void OccStaticVariablesRollback_test();
     void OccStaticVariablesRollback_test_data();
