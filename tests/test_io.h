@@ -6,7 +6,6 @@
 #pragma once
 
 #include <QtCore/QObject>
-#include <QtTest/QtTest>
 
 namespace Mayo {
 
