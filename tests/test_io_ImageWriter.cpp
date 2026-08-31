@@ -76,6 +76,7 @@ struct HelperTestImage {
     {
         this->guiApp.addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
         this->writer.setMessenger(&this->messenger);
+        this->writer.parameters().antialiasing = IO::ImageWriter::Antialiasing::None;
     }
 
     IO::ImageWriter::Parameters& params()
