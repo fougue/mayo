@@ -45,6 +45,11 @@ jobs:
           -DMayo_BuildPluginAssimp=ON
         cmake --build . --config Release --parallel $(nproc)
 
+    - name: Install X11
+      run: |
+        sudo apt-get -y install \
+          xvfb  xkb-data  x11-xkb-utils  x11-utils
+
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build
       env:
@@ -56,6 +61,8 @@ jobs:
         localectl list-locales
         # Start X11 display server
         Xvfb $DISPLAY -screen 0 1280x1024x24 &
+        XVFB_PID=$!
         sleep 5s
         # Run tests
         ./test-mayo
+        kill "$XVFB_PID"
