@@ -763,8 +763,8 @@ if(Mayo_BuildTests)
             AUTOMOC ON
     )
 
-    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
-    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
+    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs)
+    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
 
     add_test(NAME test-mayo COMMAND test-mayo)
