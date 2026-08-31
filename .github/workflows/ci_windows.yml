@@ -87,6 +87,23 @@ jobs:
     - name: Extract Assimp
       run: 7z x assimp-${{matrix.assimp_version}}.zip
 
+    - name: Cache Mesa3D archive
+      id: cache-mesa3d
+      uses: actions/cache@v5
+      with:
+        path: mesa3d-26.1.7-msvc-x64.zip
+        key: mesa3d-26.1.7-msvc-x64
+
+    - name: Download Mesa3D
+      if: steps.cache-mesa3d.outputs.cache-hit != 'true'
+      uses: carlosperate/download-file-action@v2
+      with:
+        file-url: 'https://www.fougue.pro/share/bin/mesa3d-26.1.7-msvc-x64.zip'
+        sha256: c75afbaf82f7f9cbced08e879298243acebec89080c4e1fb481417357d7086fd
+
+    - name: Extract Mesa3D
+      run: 7z x mesa3d-26.1.7-msvc-x64.zip
+
     - name: Configure Compiler
       uses: ilammy/msvc-dev-cmd@v1
 
@@ -116,5 +133,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       shell: cmd
       run: |
+        copy /Y ${{github.workspace}}\mesa3d-26.1.7-msvc-x64\*.* debug
+        set "PATH=${{github.workspace}}\mesa3d-26.1.7-msvc-x64;%PATH%"
         debug\test-mayo.exe -o utests-output.txt
         more utests-output.txt
