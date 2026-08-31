@@ -89,6 +89,15 @@ jobs:
         sha256: ${{steps.globals.outputs.assimp_zip_sha256}}
         extract-dir: ${{github.workspace}}/libs
 
+    - name: Install Mesa3D
+      uses: ./.github/actions/install-win64-zip-dependency
+      with:
+        cache-key: cache-mesa3d-26.1.7
+        archive: mesa3d-26.1.7-msvc-x64.zip
+        url: ${{env.BIN_BASE_URL}}/mesa3d-26.1.7-msvc-x64.zip
+        sha256: c75afbaf82f7f9cbced08e879298243acebec89080c4e1fb481417357d7086fd
+        extract-dir: ${{github.workspace}}/libs
+
     - name: Configure Compiler
       uses: ilammy/msvc-dev-cmd@v1
 
@@ -119,7 +128,10 @@ jobs:
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build
       shell: cmd
-      run: ctest --test-dir . -C ${{matrix.config}} --output-on-failure
+      run: |
+        copy /Y ${{github.workspace}}\libs\mesa3d-26.1.7-msvc-x64\*.* ${{matrix.config}}
+        set "PATH=${{github.workspace}}\libs\mesa3d-26.1.7-msvc-x64;%PATH%"
+        ctest --test-dir . -C ${{matrix.config}} --output-on-failure
 
     - name: Show Unit Tests output
       if: always()
