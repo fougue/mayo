@@ -24,7 +24,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Test)
 set_property(CACHE BUILD_TESTING PROPERTY TYPE INTERNAL)
 
 # Copy common input files into build dir
-file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
+file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs)
 file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
 

@@ -693,8 +693,33 @@ endif()
 # Handle option Mayo_PostBuildCopyRuntimeDLLs
 ##########
 
+<<<<<<< HEAD
 if(Mayo_PostBuildCopyRuntimeDLLs)
     include(${PROJECT_SOURCE_DIR}/cmake/PostBuildCopyRuntimeDLLs.cmake)
+=======
+    target_compile_definitions(test-mayo PRIVATE ${Mayo_CompileDefinitions})
+    target_compile_options(test-mayo PRIVATE ${Mayo_CompileOptions})
+    target_link_libraries(
+        test-mayo PRIVATE
+        MayoCoreLib
+        MayoIOLib
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Test
+    )
+
+    set_target_properties(
+        test-mayo PROPERTIES
+            WIN32_EXECUTABLE FALSE
+            AUTOMOC ON
+    )
+
+    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs)
+    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
+
+    add_test(NAME test-mayo COMMAND test-mayo)
+>>>>>>> 855179b0 (Test_IO: add IO::ImageWriter tests)
 endif()
 
 ##########
