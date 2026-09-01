@@ -83,7 +83,7 @@ public:
         ));
         this->cameraProjection.mutableEnumeration().changeTrContext(ImageWriterI18N::textIdContext());
 
-        this->antialiasing.setDescription(ImageWriterI18N::textIdTr(
+        this->msaaSamples.setDescription(ImageWriterI18N::textIdTr(
             "Controls the multisample antialiasing (MSAA) level used when rendering the scene.\n"
             "Antialiasing smooths geometry edges and reduces visible pixel stair‑stepping. "
             "Higher levels improve image quality but increase rendering cost"
@@ -125,7 +125,7 @@ public:
         this->backgroundGradientFill.setValue(defaults.backgroundGradientFill);
         this->cameraOrientation.setValue(defaults.cameraOrientation);
         this->cameraProjection.setValue(defaults.cameraProjection);
-        this->antialiasing.setValue(defaults.antialiasing);
+        this->msaaSamples.setValue(defaults.msaaSamples);
         for (const auto& [driver, propDisplayMode] : this->mapDriverDisplayMode) {
             if (!driver->displayModes().empty())
                 propDisplayMode->setValue(driver->defaultDisplayMode());
@@ -139,7 +139,7 @@ public:
     PropertyEnum<GradientFill> backgroundGradientFill{ this, ImageWriterI18N::textId("backgroundGradientFill") };
     PropertyOccVec cameraOrientation{ this, ImageWriterI18N::textId("cameraOrientation") };
     PropertyEnum<CameraProjection> cameraProjection{ this, ImageWriterI18N::textId("cameraProjection") };
-    PropertyEnum<Antialiasing> antialiasing{ this, ImageWriterI18N::textId("antialiasing") };
+    PropertyEnum<MsaaSamples> msaaSamples{ this, ImageWriterI18N::textId("msaaSamples") };
     std::map<GraphicsObjectDriverPtr, std::unique_ptr<PropertyEnumeration>> mapDriverDisplayMode;
 
 private:
@@ -270,7 +270,7 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
         m_params.backgroundGradientFill = ptr->backgroundGradientFill;
         m_params.cameraOrientation = ptr->cameraOrientation;
         m_params.cameraProjection = ptr->cameraProjection;
-        m_params.antialiasing = ptr->antialiasing;
+        m_params.msaaSamples = ptr->msaaSamples;
 
         m_params.m_driverDisplayModes.clear();
         for (const auto& [driver, propDisplayMode] : ptr->mapDriverDisplayMode)
@@ -327,20 +327,20 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
         }
     };
 
-    auto fnMsaaSampleCount = [](Antialiasing quality) {
-        switch (quality) {
-        case Antialiasing::None:   return 0;
-        case Antialiasing::Low:    return 2;
-        case Antialiasing::Medium: return 4;
-        case Antialiasing::High:   return 8;
+    auto fnMsaaSampleCount = [](MsaaSamples samples) {
+        switch (samples) {
+        case MsaaSamples::Off: return 0;
+        case MsaaSamples::x2:  return 2;
+        case MsaaSamples::x4:  return 4;
+        case MsaaSamples::x8:  return 8;
+        case MsaaSamples::x16: return 16;
         }
         return 0;
     };
 
     // Create 3D view
     OccHandle<V3d_View> view = gfxScene->createV3dView();
-    view->ChangeRenderingParams().IsAntialiasingEnabled = params.antialiasing != Antialiasing::None;
-    view->ChangeRenderingParams().NbMsaaSamples = fnMsaaSampleCount(params.antialiasing);
+    view->ChangeRenderingParams().NbMsaaSamples = fnMsaaSampleCount(params.msaaSamples);
     if (params.backgroundGradientFill == GradientFill::None) {
         view->SetBackgroundColor(params.backgroundColorStart);
     }

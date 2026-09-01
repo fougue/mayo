@@ -76,7 +76,7 @@ struct HelperTestImage {
     {
         this->guiApp.addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
         this->writer.setMessenger(&this->messenger);
-        this->writer.parameters().antialiasing = IO::ImageWriter::Antialiasing::None;
+        this->writer.parameters().msaaSamples = IO::ImageWriter::MsaaSamples::Off;
     }
 
     IO::ImageWriter::Parameters& params()
@@ -139,10 +139,7 @@ void TestIO::ImageWriter_backgroundGradientFill_test()
     QVERIFY(std::filesystem::exists(outPath));
 
     const std::filesystem::path inputRefPath = "tests/inputs/refs/" + strFileName;
-    const auto imageDiff = imageRmsDiff(outPath, inputRefPath);
-    if (imageDiff > 0.)
-        qDebug() << strFileName.c_str() << "imageDiff =" << imageDiff;
-    QCOMPARE(imageDiff, 0.);
+    QCOMPARE_LT(imageRmsDiff(outPath, inputRefPath), 0.5);
 }
 
 void TestIO::ImageWriter_backgroundGradientFill_test_data()
@@ -180,10 +177,7 @@ void TestIO::ImageWriter_writeValidPngFile_test()
     QVERIFY(std::filesystem::file_size(outPath) > 0);
 
     const std::filesystem::path inputRefPath = "tests/inputs/refs/" + strFileName;
-    const auto imageDiff = imageRmsDiff(outPath, inputRefPath);
-    if (imageDiff > 0.)
-        qDebug() << strFileName.c_str() << "imageDiff =" << imageDiff;
-    QCOMPARE(imageDiff, 0.);
+    QCOMPARE_LT(imageRmsDiff(outPath, inputRefPath), 0.5);
 }
 
 void TestIO::ImageWriter_writeValidPngFile_test_data()

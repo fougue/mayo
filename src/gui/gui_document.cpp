@@ -108,12 +108,15 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
         Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, NCollection_Vec2<int>{20, 20}
     );
-    // 3D view - Enable anti-aliasing
-    // NOTE Graphic3d_RenderingParams::NbMsaaSamples needs to be set just after an OpenGL is active,
-    //      generally after binding to window
-    //      Can't call Graphic3d_GraphicDriver::InquireLimit(MaxMsaa) here because it needs an
-    //      OpenGL context
-    m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
+
+    // NOTE
+    // Graphic3d_RenderingParams::NbMsaaSamples needs to be set just after an OpenGL is active,
+    // generally after binding to window
+    // Can't call Graphic3d_GraphicDriver::InquireLimit(MaxMsaa) here because it needs an
+    // OpenGL context
+
+    // NOTE
+    // Graphic3d_RenderingParams::IsAntialiasingEnabled is applicable only when Method==Graphic3d_RM_RAYTRACING
 
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
