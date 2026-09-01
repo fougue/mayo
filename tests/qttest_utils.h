@@ -14,3 +14,9 @@
 #else
 #  define MAYO_QVERIFY_THROWS_EXCEPTION(exceptionType, ...)  QVERIFY_THROWS_EXCEPTION(exceptionType, __VA_ARGS__)
 #endif
+
+// Backport of Qt 6.4's QCOMPARE_LT() macro for older Qt versions
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+#  define QCOMPARE_LT(computed, baseline) \
+    QVERIFY2((computed) < (baseline), qPrintable(QString("FAIL: %1 !< %2").arg(computed).arg(baseline)))
+#endif
