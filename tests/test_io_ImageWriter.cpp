@@ -16,6 +16,7 @@
 #include "../src/graphics/graphics_shape_object_driver.h"
 #include "../src/gui/gui_application.h"
 #include "../src/io_image/io_image.h"
+#include "qttest_utils.h"
 
 #include <QtTest/QtTest>
 
@@ -121,6 +122,12 @@ void TestIO::ImageWriter_backgroundGradientFill_test()
     QFETCH(int, gradientFillEnum);
 
     using GradientFill = IO::ImageWriter::GradientFill;
+    if (static_cast<GradientFill>(gradientFillEnum) == GradientFill::Radial
+        && !IO::ImageWriter::isRadialGradientFillSupported())
+    {
+        QSKIP("Gradient fill not supported with this OpenCascade version");
+    }
+
     HelperTestImage helper;
     QVERIFY(m_ioSystem->importInDocument(helper.doc, "tests/inputs/cube.brep"));
 

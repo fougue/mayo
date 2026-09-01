@@ -26,6 +26,7 @@
 #include <Aspect_Window.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #include <Image_AlienPixMap.hxx>
+#include <Standard_Version.hxx>
 #include <V3d_View.hxx>
 
 #include <fmt/format.h>
@@ -364,6 +365,11 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
     view->SetWindow(wnd);
 
     return view;
+}
+
+bool ImageWriter::isRadialGradientFillSupported()
+{
+    return OCC_VERSION_HEX >= 0x070600;
 }
 
 std::optional<Enumeration::Value>
