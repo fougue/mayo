@@ -51,8 +51,8 @@ public:
         Perspective, Orthographic
     };
 
-    enum class Antialiasing {
-        None, Low, Medium, High
+    enum class MsaaSamples {
+        Off, x2, x4, x8, x16
     };
 
     enum class GradientFill {
@@ -79,7 +79,7 @@ public:
         GradientFill backgroundGradientFill = GradientFill::None;
         gp_Vec cameraOrientation = gp_Vec{1, -1, 1}; // X+ Y- Z+
         CameraProjection cameraProjection = CameraProjection::Orthographic;
-        Antialiasing antialiasing = Antialiasing::Medium;
+        MsaaSamples msaaSamples = MsaaSamples::x4;
 
         std::optional<Enumeration::Value> displayMode(const GraphicsObjectDriverPtr& driver) const;
         void setDisplayMode(const GraphicsObjectDriverPtr& driver, Enumeration::Value enumValue);
