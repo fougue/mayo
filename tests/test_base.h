@@ -87,7 +87,8 @@ private slots:
     void UnitSystem_test();
     void UnitSystem_test_data();
 
-    void LibTask_test();
+    void LibTask_runAndTrackProgress_test();
+
     void LibTree_test();
     void LibTree_nodeRoot_test();
     void LibTree_removeRoot_test();
