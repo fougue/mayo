@@ -9,6 +9,8 @@
 #include "../src/base/task_progress.h"
 #include "signal_emit_spy.h"
 
+#include <stdexcept>
+
 namespace Mayo {
 
 void TestBase::LibTask_runAndTrackProgress_test()
@@ -52,6 +54,25 @@ void TestBase::LibTask_runAndTrackProgress_test()
 
     QCOMPARE(vecProgressRec.front().value, 0.);
     QCOMPARE(vecProgressRec.back().value, 100.);
+}
+
+void TestBase::LibTask_runJobException_test()
+{
+    TaskManager taskMgr;
+
+    const TaskId taskId = taskMgr.newTask([](TaskProgress*) {
+        throw std::runtime_error("Test exception");
+    });
+
+    SignalEmitSpy sigStarted(&taskMgr.signalStarted);
+    SignalEmitSpy sigEnded(&taskMgr.signalEnded);
+
+    taskMgr.run(taskId, TaskAutoDestroy::Off);
+
+    QVERIFY(taskMgr.waitForDone(taskId, 250/*ms*/));
+
+    QCOMPARE(sigStarted.count, 1);
+    QCOMPARE(sigEnded.count, 1);
 }
 
 } // namespace Mayo
