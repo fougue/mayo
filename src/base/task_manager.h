@@ -30,6 +30,9 @@ public:
 
     // Allocates a new task entity in manager
     // Returns the task identifier(unique in the scope of the owning TaskManager)
+    // IMPORTANT
+    // The job must handle/report all expected errors itself. Exceptions escaping a TaskJob are
+    // caught by TaskManager and do not propagate to the caller
     TaskId newTask(TaskJob fn);
 
     // Asynchronous execution of job associated with task identifier 'id'
