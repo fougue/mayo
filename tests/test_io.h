@@ -35,6 +35,7 @@ private slots:
     void Regression_bugGitHub332_test();
 
     void System_importInDocument_catchVrmlReaderSendFail_test();
+    void System_importInDocumentReaderException_test();
     void System_probeFormatDirect_test();
     void System_probeFormat_test();
     void System_probeFormat_test_data();
