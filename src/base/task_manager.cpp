@@ -192,9 +192,23 @@ void TaskManager::Private::execEntity(Entity* entity)
         return;
 
     this->taskMgr->signalStarted.send(entity->taskId);
-    const TaskJob& fn = entity->taskJob;
-    fn(&entity->taskProgress);
-    if (!entity->taskProgress.isAbortRequested())
+
+    // Task jobs must never let exceptions escape from this function. Tasks are typically executed
+    // through std::async() and their future is not consumed with get(), so an exception escaping
+    // here would remain stored in the future. In that case, the "ended" signal would never be sent
+    // and the task would remain unfinished
+    bool success = false;
+    try {
+        const TaskJob& fn = entity->taskJob;
+        fn(&entity->taskProgress);
+        success = true;
+    }
+    catch (...) {
+        // Task job failed but nothing to report here as the job is responsible for translating
+        // errors into messages
+    }
+
+    if (success && !entity->taskProgress.isAbortRequested())
         entity->taskProgress.setValue(100);
 
     this->taskMgr->signalEnded.send(entity->taskId);
