@@ -19,7 +19,7 @@
 #include "../src/base/occ_handle.h"
 #include "../src/base/meta_enum.h"
 #include "../src/base/string_conv.h"
-#include "../src/base/task_manager.h"
+#include "signal_emit_spy.h"
 
 #include <BRep_Tool.hxx>
 #include <NCollection_String.hxx>
@@ -27,7 +27,6 @@
 #include <TDataStd_Name.hxx>
 
 #include <QtCore/QtDebug>
-#include <QtCore/QVariant>
 
 #include <gsl/util>
 #include <algorithm>
@@ -35,63 +34,10 @@
 #include <cmath>
 #include <climits>
 #include <cstring>
-#include <memory>
 #include <string>
-#include <type_traits>
 #include <utility>
-#include <variant>
-#include <vector>
 
 namespace Mayo {
-
-namespace {
-
-// Equivalent of QSignalSpy for KDBindings signals
-struct SignalEmitSpy {
-    struct UnknownType {};
-    using ArgValue = std::variant<UnknownType, std::int64_t, std::uint64_t>;
-    using SignalArguments = std::vector<ArgValue>;
-
-    template<typename... Args>
-    SignalEmitSpy(Signal<Args...>* signal) {
-        this->sigConnection = signal->connect([=](Args... args) {
-            ++this->count;
-            SignalArguments sigArgs;
-            SignalEmitSpy::recordArgs(&sigArgs, args...);
-            this->vecSignals.push_back(std::move(sigArgs));
-        });
-    }
-
-    ~SignalEmitSpy() {
-        this->sigConnection.disconnect();
-    }
-
-    static void recordArgs(SignalArguments* /*ptr*/) {
-    }
-
-    template<typename Arg, typename... Args>
-    static void recordArgs(SignalArguments* ptr, Arg arg, Args... args) {
-        if constexpr (std::is_integral_v<Arg>) {
-            if constexpr (std::is_signed_v<Arg>) {
-                ptr->push_back(static_cast<std::int64_t>(arg));
-            }
-            else {
-                ptr->push_back(static_cast<std::uint64_t>(arg));
-            }
-        }
-        else {
-            ptr->push_back(UnknownType{});
-        }
-
-        SignalEmitSpy::recordArgs(ptr, args...);
-    }
-
-    int count = 0;
-    std::vector<SignalArguments> vecSignals;
-    SignalConnectionHandle sigConnection;
-};
-
-} // namespace
 
 void TestBase::Application_test()
 {
@@ -282,49 +228,6 @@ void TestBase::Quantity_test()
     const QuantityArea area = (10 * Quantity_Millimeter) * (5 * Quantity_Centimeter);
     QCOMPARE(area.value(), 500.);
     QCOMPARE((Quantity_Millimeter / 5.).value(), 1/5.);
-}
-
-void TestBase::LibTask_test()
-{
-    struct ProgressRecord {
-        TaskId taskId;
-        double value;
-    };
-
-    TaskManager taskMgr;
-    const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
-        TaskProgress subProgress1(progress, 40);
-        for (int i = 0; i <= 100; ++i)
-            subProgress1.setValue(i);
-
-        TaskProgress subProgress2(progress, 60);
-        for (int i = 0; i <= 100; ++i)
-            subProgress2.setValue(i);
-    });
-    std::vector<ProgressRecord> vecProgressRec;
-    taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, double pct) {
-        vecProgressRec.push_back({ taskId, pct });
-    });
-
-    SignalEmitSpy sigStarted(&taskMgr.signalStarted);
-    SignalEmitSpy sigEnded(&taskMgr.signalEnded);
-    taskMgr.run(taskId);
-    taskMgr.waitForDone(taskId);
-
-    QCOMPARE(sigStarted.count, 1);
-    QCOMPARE(sigEnded.count, 1);
-    QCOMPARE(std::get<TaskId>(sigStarted.vecSignals.front().at(0)), taskId);
-    QCOMPARE(std::get<TaskId>(sigEnded.vecSignals.front().at(0)), taskId);
-    QVERIFY(!vecProgressRec.empty());
-    int prevPct = 0;
-    for (const ProgressRecord& rec : vecProgressRec) {
-        QCOMPARE(rec.taskId, taskId);
-        QVERIFY(prevPct <= rec.value);
-        prevPct = rec.value;
-    }
-
-    QCOMPARE(vecProgressRec.front().value, 0.);
-    QCOMPARE(vecProgressRec.back().value, 100.);
 }
 
 void TestBase::XCaf_userDefinedAttributes_test()
