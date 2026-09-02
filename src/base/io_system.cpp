@@ -11,6 +11,7 @@
 #include "message_collecter.h"
 #include "task_manager.h"
 #include "task_progress.h"
+#include "tkernel_utils.h"
 #include "thread_messenger_channel.h"
 
 #include <fmt/format.h>
@@ -19,7 +20,9 @@
 #include <algorithm>
 #include <fstream>
 #include <locale>
+#include <optional>
 #include <regex>
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 
@@ -72,6 +75,38 @@ bool success(const ImportTaskData& taskData)
     return taskData.readSuccess && !taskData.seqTransferredEntity.IsEmpty();
 }
 
+template<typename Function>
+auto noThrowExec(Messenger* messenger, Function fn)
+{
+    using FnReturnType = std::invoke_result_t<Function>;
+    using ReturnType = std::conditional_t<std::is_void_v<FnReturnType>, std::monostate, FnReturnType>;
+
+    messenger = messenger ? messenger : &Messenger::null();
+
+    try {
+        if constexpr (std::is_void_v<FnReturnType>) {
+            fn();
+            return std::optional<ReturnType>{std::monostate{}};
+        } else {
+            return std::optional<ReturnType>{fn()};
+        }
+    }
+    catch (const Standard_Failure& err) {
+        messenger->emitError(fmt::format(
+            System::textIdTr("Exception '{}' : {}"),
+            TKernelUtils::errorTypeName(err), TKernelUtils::errorMessage(err)
+        ));
+    }
+    catch (const std::exception& err) {
+        messenger->emitError(fmt::format(System::textIdTr("Exception : {}"), err.what()));
+    }
+    catch (...) {
+        messenger->emitError(System::textIdTr("Unknown exception"));
+    }
+
+    return std::optional<ReturnType>{};
+}
+
 void readFile(ImportTaskData& taskData, const System& ioSystem, const System::ArgsImport& args)
 {
     auto error = [&](std::string_view trErrorMsg) {
@@ -102,7 +137,10 @@ void readFile(ImportTaskData& taskData, const System& ioSystem, const System::Ar
     // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
     [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
 
-    if (!taskData.reader->readFile(taskData.filepath, &progress))
+    auto readFile = noThrowExec(&taskData.messenger, [&]{
+        return taskData.reader->readFile(taskData.filepath, &progress);
+    });
+    if (!readFile.value_or(false))
         return error(System::textIdTr("File read problem"));
 
     taskData.readSuccess = true;
@@ -122,7 +160,10 @@ void transfer(ImportTaskData& taskData, const System::ArgsImport& args)
         // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
         [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
 
-        taskData.seqTransferredEntity = taskData.reader->transfer(args.targetDocument, &progress);
+        auto transfer = noThrowExec(&taskData.messenger, [&]{
+            return taskData.reader->transfer(args.targetDocument, &progress);
+        });
+        taskData.seqTransferredEntity = transfer.value_or(NCollection_Sequence<TDF_Label>{});
         if (taskData.seqTransferredEntity.IsEmpty())
             taskData.messenger.error() << System::textIdTr("File transfer problem, no entity imported");
     }
@@ -130,7 +171,7 @@ void transfer(ImportTaskData& taskData, const System::ArgsImport& args)
     taskData.transferred = true;
 }
 
-auto postProcess(ImportTaskData& taskData, const System::ArgsImport& args)
+void postProcess(ImportTaskData& taskData, const System::ArgsImport& args)
 {
     if (!success(taskData))
         return;
@@ -144,7 +185,7 @@ auto postProcess(ImportTaskData& taskData, const System::ArgsImport& args)
     const double subPortionSize = 100. / static_cast<double>(taskData.seqTransferredEntity.Size());
     for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
         TaskProgress subProgress(&progress, subPortionSize);
-        args.entityPostProcess(labelEntity, &subProgress);
+        noThrowExec(&taskData.messenger, [&]{ args.entityPostProcess(labelEntity, &subProgress); });
     }
 }
 

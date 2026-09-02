@@ -60,8 +60,7 @@ public:
     ThrowingFactoryReader(IO::Format format, ThrowingReader::ThrowLocation throwLocation)
         : m_format(format),
           m_throwLocation(throwLocation)
-    {
-    }
+    { }
 
     gsl::span<const IO::Format> formats() const override
     {
@@ -82,7 +81,7 @@ public:
     }
 
 private:
-    IO::Format m_format = IO::Format_Unknown;
+    IO::Format m_format;
     ThrowingReader::ThrowLocation m_throwLocation;
 };
 
