@@ -24,9 +24,7 @@ namespace {
 
 class ThrowingReader : public IO::Reader {
 public:
-    enum class ThrowLocation {
-        ReadFile, Transfer
-    };
+    enum class ThrowLocation { ReadFile, Transfer };
 
     explicit ThrowingReader(ThrowLocation throwLocation)
         : m_throwLocation(throwLocation)
@@ -36,7 +34,6 @@ public:
     {
         if (m_throwLocation == ThrowLocation::ReadFile)
             throw std::runtime_error("Exception in Reader::readFile()");
-
         return true;
     }
 
@@ -44,8 +41,36 @@ public:
     {
         if (m_throwLocation == ThrowLocation::Transfer)
             throw std::runtime_error("Exception in Reader::transfer()");
-
         return {};
+    }
+
+    void applyProperties(const PropertyGroup*) override
+    { }
+
+private:
+    ThrowLocation m_throwLocation;
+};
+
+class ThrowingWriter : public IO::Writer {
+public:
+    enum class ThrowLocation { WriteFile, Transfer };
+
+    explicit ThrowingWriter(ThrowLocation throwLocation)
+        : m_throwLocation(throwLocation)
+    { }
+
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override
+    {
+        if (m_throwLocation == ThrowLocation::Transfer)
+            throw std::runtime_error("Exception in Writer::transfer()");
+        return {};
+    }
+
+    bool writeFile(const FilePath&, TaskProgress*) override
+    {
+        if (m_throwLocation == ThrowLocation::WriteFile)
+            throw std::runtime_error("Exception in Writer::writeFile()");
+        return true;
     }
 
     void applyProperties(const PropertyGroup*) override
@@ -71,7 +96,6 @@ public:
     {
         if (format != m_format)
             return {};
-
         return std::make_unique<ThrowingReader>(m_throwLocation);
     }
 
@@ -83,6 +107,35 @@ public:
 private:
     IO::Format m_format;
     ThrowingReader::ThrowLocation m_throwLocation;
+};
+
+class ThrowingFactoryWriter : public IO::FactoryWriter{
+public:
+    ThrowingFactoryWriter(IO::Format format, ThrowingWriter::ThrowLocation throwLocation)
+        : m_format(format),
+          m_throwLocation(throwLocation)
+    { }
+
+    gsl::span<const IO::Format> formats() const override
+    {
+        return gsl::span<const IO::Format>(&m_format, 1);
+    }
+
+    std::unique_ptr<IO::Writer> create(IO::Format format) const override
+    {
+        if (format != m_format)
+            return {};
+        return std::make_unique<ThrowingWriter>(m_throwLocation);
+    }
+
+    std::unique_ptr<PropertyGroup> createProperties(IO::Format, PropertyGroup*) const override
+    {
+        return {};
+    }
+
+private:
+    IO::Format m_format;
+    ThrowingWriter::ThrowLocation m_throwLocation;
 };
 
 } // namespace
@@ -202,6 +255,36 @@ void TestIO::System_importInDocumentReaderException_test()
         }
 
         QVERIFY(!importOk);
+    }
+}
+
+void TestIO::System_exportItemsWriterException_test()
+{
+    using ThrowLocation = ThrowingWriter::ThrowLocation;
+    for (const auto throwLocation : { ThrowLocation::WriteFile, ThrowLocation::Transfer }) {
+        IO::System ioSystem;
+        IO::addPredefinedFormatProbes(&ioSystem);
+        ioSystem.addFactoryWriter(
+            std::make_unique<ThrowingFactoryWriter>(IO::Format::Format_OCCBREP, throwLocation)
+        );
+
+        auto app = makeOccHandle<Application>();
+        DocumentPtr doc = app->newDocument();
+
+        bool exportOk = false;
+        try {
+            exportOk = ioSystem.exportItems(
+                IO::System::ArgsExport()
+                .setTargetFile(FilePath{"test.brep"})
+                .setTargetFormat(IO::Format::Format_OCCBREP)
+                .setItem(ApplicationItem(doc))
+            );
+        }
+        catch (...) {
+            QFAIL("IO::System::exportItems() must not throw");
+        }
+
+        QVERIFY(!exportOk);
     }
 }
 

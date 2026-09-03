@@ -10,7 +10,6 @@
 
 #include <atomic>
 #include <cassert>
-#include <cmath>
 #include <future>
 #include <memory>
 #include <unordered_map>

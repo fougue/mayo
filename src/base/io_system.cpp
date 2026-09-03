@@ -24,6 +24,7 @@
 #include <regex>
 #include <type_traits>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 namespace Mayo::IO {
@@ -58,23 +59,9 @@ bool isEntityPostProcessRequired(Format format, const System::ArgsImport& args)
         return false;
 }
 
-struct ImportTaskData {
-    std::unique_ptr<Reader> reader;
-    FilePath filepath;
-    Format fileFormat = Format_Unknown;
-    TaskProgress* progress = nullptr;
-    TaskId taskId = 0;
-    NCollection_Sequence<TDF_Label> seqTransferredEntity;
-    bool readSuccess = false;
-    bool transferred = false; // Is transfer done ?
-    MessageCollecter messenger;
-};
-
-bool success(const ImportTaskData& taskData)
-{
-    return taskData.readSuccess && !taskData.seqTransferredEntity.IsEmpty();
-}
-
+// Executes a callable while safely handling exceptions
+// Invokes the provided callable and returns its result wrapped in a `std::optional`
+// Any exception thrown during execution is caught and reported through the provided `Messenger`
 template<typename Function>
 auto noThrowExec(Messenger* messenger, Function fn)
 {
@@ -95,7 +82,7 @@ auto noThrowExec(Messenger* messenger, Function fn)
         messenger->emitError(fmt::format(
             System::textIdTr("Exception '{}' : {}"),
             TKernelUtils::errorTypeName(err), TKernelUtils::errorMessage(err)
-        ));
+            ));
     }
     catch (const std::exception& err) {
         messenger->emitError(fmt::format(System::textIdTr("Exception : {}"), err.what()));
@@ -105,6 +92,23 @@ auto noThrowExec(Messenger* messenger, Function fn)
     }
 
     return std::optional<ReturnType>{};
+}
+
+struct ImportTaskData {
+    std::unique_ptr<Reader> reader;
+    FilePath filepath;
+    Format fileFormat = Format_Unknown;
+    TaskProgress* progress = nullptr;
+    TaskId taskId = 0;
+    NCollection_Sequence<TDF_Label> seqTransferredEntity;
+    bool readSuccess = false;
+    bool transferred = false; // Is transfer done ?
+    MessageCollecter messenger;
+};
+
+bool success(const ImportTaskData& taskData)
+{
+    return taskData.readSuccess && !taskData.seqTransferredEntity.IsEmpty();
 }
 
 void readFile(ImportTaskData& taskData, const System& ioSystem, const System::ArgsImport& args)
@@ -459,15 +463,19 @@ bool System::exportItems(const ArgsExport& args) const
 
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
-        const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);
-        if (!okTransfer)
+        auto transfer = noThrowExec(&msgCollect, [&]{
+            return writer->transfer(args.applicationItems, &transferProgress);
+        });
+        if (!transfer.value_or(false))
             return fnError(textIdTr("File transfer problem"));
     }
 
     {
         TaskProgress writeProgress(progress, 60, textIdTr("Write"));
-        const bool okWriteFile = writer->writeFile(args.targetFilepath, &writeProgress);
-        if (!okWriteFile)
+        auto writeFile = noThrowExec(&msgCollect, [&]{
+            return writer->writeFile(args.targetFilepath, &writeProgress);
+        });
+        if (!writeFile.value_or(false))
             return fnError(textIdTr("File write problem"));
     }
 
