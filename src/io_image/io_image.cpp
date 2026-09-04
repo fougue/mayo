@@ -29,6 +29,9 @@
 #include <Standard_Version.hxx>
 #include <V3d_View.hxx>
 
+#include <OpenGl_Context.hxx>
+#include <OpenGl_GraphicDriver.hxx>
+
 #include <fmt/format.h>
 #include <gsl/util>
 #include <limits>
@@ -173,6 +176,21 @@ Aspect_GradientFillMethod toOccGradientFill(ImageWriter::GradientFill fill)
     return Aspect_GFM_NONE;
 }
 
+void graphicsResetErrors(const OccHandle<Graphic3d_GraphicDriver>& gfxDriver)
+{
+    // A drawable-less virtual context on macOS can leave a pending OpenGL error
+    // OpenCascade may then misinterpret it as an FBO/texture creation failure in ToPixMap()
+    auto glDriver = OccHandle<OpenGl_GraphicDriver>::DownCast(gfxDriver);
+    if (glDriver.IsNull())
+        return;
+
+    // Prefer the context being already current: in the desktop application the graphics driver is
+    // shared with the on-screen view, so avoid stealing "current" from it needlessly
+    const OccHandle<OpenGl_Context>& glContext = glDriver->GetSharedContext();
+    if (glContext && glContext->IsCurrent())
+        glContext->ResetErrors(false/*!ToPrintErrors*/);
+}
+
 } // namespace
 
 ImageWriter::ImageWriter(GuiApplication* guiApp)
@@ -246,10 +264,18 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     view->Redraw();
     GraphicsUtils::V3dView_fitAll(view);
     OccHandle<Image_AlienPixMap> pixmap = ImageWriter::createImage(view);
-    if (!pixmap)
+    if (!pixmap) {
+        this->messenger()->emitError(ImageWriterI18N::textIdTr("Failed to dump 3D view into image"));
         return false;
+    }
 
     const bool okSave = pixmap->Save(filepathTo<TCollection_AsciiString>(filepath));
+    if (!okSave) {
+        this->messenger()->emitError(ImageWriterI18N::textIdTr(
+            "Failed to save image file(is the image format supported by the OpenCascade build in use ?"
+        ));
+    }
+
     return okSave;
 }
 
@@ -310,6 +336,9 @@ OccHandle<Image_AlienPixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
     V3d_ImageDumpOptions dumpOptions;
     dumpOptions.BufferType = Graphic3d_BT_RGB;
     view->Window()->Size(dumpOptions.Width, dumpOptions.Height);
+    // Must be called just before dumping : rendering on a virtual window may have left the GL error
+    // state dirty, which would make the dump fail
+    graphicsResetErrors(view->Viewer()->Driver());
     const bool okPixmap = view->ToPixMap(*pixmap.get(), dumpOptions);
     if (!okPixmap)
         return {};
@@ -363,6 +392,7 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
     // Create virtual window
     auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), params.width, params.height);
     view->SetWindow(wnd);
+    graphicsResetErrors(view->Viewer()->Driver());
 
     return view;
 }
@@ -388,7 +418,6 @@ void ImageWriter::Parameters::setDisplayMode(const GraphicsObjectDriverPtr& driv
     if (it != m_driverDisplayModes.end())
         it->second = enumValue;
 }
-
 
 ImageFactoryWriter::ImageFactoryWriter(GuiApplication* guiApp)
     : m_guiApp(guiApp)
