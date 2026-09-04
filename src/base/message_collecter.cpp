@@ -5,6 +5,7 @@
 
 #include "message_collecter.h"
 
+#include <algorithm>
 #include <cassert>
 #include <string>
 
@@ -70,6 +71,15 @@ std::string MessageCollecter::asString(std::string_view separator) const
     }
 
     return str;
+}
+
+unsigned MessageCollecter::messageCount(MessageType msgType) const
+{
+    return std::count_if(
+        m_vecMessage.cbegin(),
+        m_vecMessage.cend(),
+        [](const Message& msg) { return msg.type == MessageType::Error; }
+    );
 }
 
 void MessageCollecter::clear()
