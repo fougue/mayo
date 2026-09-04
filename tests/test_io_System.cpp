@@ -8,135 +8,153 @@
 #include "../src/base/application.h"
 #include "../src/base/message_collecter.h"
 #include "../src/base/io_system.h"
+#include "../src/base/meta_enum.h"
 #include "signal_emit_spy.h"
 
 #include <QtTest/QtTest>
 
 #include <string>
 
+namespace Mayo { namespace {
+enum class ThrowLocation;
+enum class ExceptionType;
+}}
+
 // Needed for Q_FECTH()
 Q_DECLARE_METATYPE(Mayo::IO::Format)
 Q_DECLARE_METATYPE(std::string)
+Q_DECLARE_METATYPE(Mayo::ThrowLocation)
+Q_DECLARE_METATYPE(Mayo::ExceptionType)
 
 namespace Mayo {
 
 namespace {
 
-class ThrowingReader : public IO::Reader {
+struct OtherException {};
+
+enum class ThrowLocation {
+    Reader_readFile, Reader_transfer, Writer_writeFile, Writer_transfer
+};
+
+enum class ExceptionType {
+    Std, Occt, Other
+};
+
+const char* exceptionMsg(ThrowLocation throwLocation)
+{
+    switch (throwLocation) {
+    case ThrowLocation::Reader_transfer: return "Exception in Reader::transfer()";
+    case ThrowLocation::Reader_readFile: return "Exception in Reader::readFile()";
+    case ThrowLocation::Writer_transfer: return "Exception in Writer::transfer()";
+    case ThrowLocation::Writer_writeFile: return "Exception in Writer::writeFile()";
+    }
+    return "";
+}
+
+class ThrowingBase {
 public:
-    enum class ThrowLocation { ReadFile, Transfer };
-
-    explicit ThrowingReader(ThrowLocation throwLocation)
-        : m_throwLocation(throwLocation)
+    ThrowingBase(ThrowLocation throwLocation, ExceptionType exceptionType)
+        : m_throwLocation(throwLocation), m_exceptionType(exceptionType)
     { }
 
-    bool readFile(const FilePath&, TaskProgress*) override
+protected:
+    template<typename ReturnValueType>
+    ReturnValueType throwExceptionIfLocation(ThrowLocation location, ReturnValueType retValue) const
     {
-        if (m_throwLocation == ThrowLocation::ReadFile)
-            throw std::runtime_error("Exception in Reader::readFile()");
-        return true;
-    }
+        if (location == m_throwLocation) {
+            switch (m_exceptionType) {
+            case ExceptionType::Std:   throw std::runtime_error(exceptionMsg(m_throwLocation));
+            case ExceptionType::Occt:  throw Standard_Failure(exceptionMsg(m_throwLocation));
+            case ExceptionType::Other: throw OtherException{};
+            }
+        }
 
-    NCollection_Sequence<TDF_Label> transfer(DocumentPtr, TaskProgress*) override
-    {
-        if (m_throwLocation == ThrowLocation::Transfer)
-            throw std::runtime_error("Exception in Reader::transfer()");
-        return {};
+        return retValue;
     }
-
-    void applyProperties(const PropertyGroup*) override
-    { }
 
 private:
     ThrowLocation m_throwLocation;
+    ExceptionType m_exceptionType;
 };
 
-class ThrowingWriter : public IO::Writer {
+template<typename ThrowingClassType>
+class ThrowingFactoryBase {
 public:
-    enum class ThrowLocation { WriteFile, Transfer };
-
-    explicit ThrowingWriter(ThrowLocation throwLocation)
-        : m_throwLocation(throwLocation)
+    ThrowingFactoryBase(IO::Format format, ThrowLocation throwLocation, ExceptionType exceptionType)
+        : m_format(format), m_throwLocation(throwLocation), m_exceptionType(exceptionType)
     { }
 
-    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override
-    {
-        if (m_throwLocation == ThrowLocation::Transfer)
-            throw std::runtime_error("Exception in Writer::transfer()");
-        return {};
-    }
-
-    bool writeFile(const FilePath&, TaskProgress*) override
-    {
-        if (m_throwLocation == ThrowLocation::WriteFile)
-            throw std::runtime_error("Exception in Writer::writeFile()");
-        return true;
-    }
-
-    void applyProperties(const PropertyGroup*) override
-    { }
-
-private:
-    ThrowLocation m_throwLocation;
-};
-
-class ThrowingFactoryReader : public IO::FactoryReader {
-public:
-    ThrowingFactoryReader(IO::Format format, ThrowingReader::ThrowLocation throwLocation)
-        : m_format(format),
-          m_throwLocation(throwLocation)
-    { }
-
-    gsl::span<const IO::Format> formats() const override
-    {
+protected:
+    gsl::span<const IO::Format> base_formats() const {
         return gsl::span<const IO::Format>(&m_format, 1);
     }
 
-    std::unique_ptr<IO::Reader> create(IO::Format format) const override
-    {
-        if (format != m_format)
-            return {};
-        return std::make_unique<ThrowingReader>(m_throwLocation);
-    }
-
-    std::unique_ptr<PropertyGroup> createProperties(IO::Format, PropertyGroup*) const override
-    {
+    std::unique_ptr<ThrowingClassType> base_create(IO::Format format) const {
+        if (format == m_format)
+            return std::make_unique<ThrowingClassType>(m_throwLocation, m_exceptionType);
         return {};
     }
 
 private:
     IO::Format m_format;
-    ThrowingReader::ThrowLocation m_throwLocation;
+    ThrowLocation m_throwLocation;
+    ExceptionType m_exceptionType;
 };
 
-class ThrowingFactoryWriter : public IO::FactoryWriter{
+class ThrowingReader : public ThrowingBase, public IO::Reader {
 public:
-    ThrowingFactoryWriter(IO::Format format, ThrowingWriter::ThrowLocation throwLocation)
-        : m_format(format),
-          m_throwLocation(throwLocation)
-    { }
+    using ThrowingBase::ThrowingBase;
 
-    gsl::span<const IO::Format> formats() const override
-    {
-        return gsl::span<const IO::Format>(&m_format, 1);
+    bool readFile(const FilePath&, TaskProgress*) override {
+        return throwExceptionIfLocation(ThrowLocation::Reader_readFile, true);
     }
 
-    std::unique_ptr<IO::Writer> create(IO::Format format) const override
-    {
-        if (format != m_format)
-            return {};
-        return std::make_unique<ThrowingWriter>(m_throwLocation);
+    NCollection_Sequence<TDF_Label> transfer(DocumentPtr, TaskProgress*) override {
+        return throwExceptionIfLocation(ThrowLocation::Reader_transfer, NCollection_Sequence<TDF_Label>{});
     }
 
-    std::unique_ptr<PropertyGroup> createProperties(IO::Format, PropertyGroup*) const override
-    {
-        return {};
+    void applyProperties(const PropertyGroup*) override {
     }
-
-private:
-    IO::Format m_format;
-    ThrowingWriter::ThrowLocation m_throwLocation;
 };
+
+class ThrowingWriter : public ThrowingBase, public IO::Writer {
+public:
+    using ThrowingBase::ThrowingBase;
+
+    bool transfer(gsl::span<const ApplicationItem>, TaskProgress*) override {
+        return throwExceptionIfLocation(ThrowLocation::Writer_transfer, true);
+    }
+
+    bool writeFile(const FilePath&, TaskProgress*) override {
+        return throwExceptionIfLocation(ThrowLocation::Writer_writeFile, true);
+    }
+
+    void applyProperties(const PropertyGroup*) override {
+    }
+};
+
+class ThrowingFactoryReader : public ThrowingFactoryBase<ThrowingReader>, public IO::FactoryReader {
+public:
+    using ThrowingFactoryBase<ThrowingReader>::ThrowingFactoryBase;
+    gsl::span<const IO::Format> formats() const override { return base_formats(); }
+    std::unique_ptr<IO::Reader> create(IO::Format format) const override { return base_create(format); }
+    std::unique_ptr<PropertyGroup> createProperties(IO::Format, PropertyGroup*) const override { return {}; }
+};
+
+class ThrowingFactoryWriter : public ThrowingFactoryBase<ThrowingWriter>, public IO::FactoryWriter {
+public:
+    using ThrowingFactoryBase<ThrowingWriter>::ThrowingFactoryBase;
+    gsl::span<const IO::Format> formats() const override { return base_formats(); }
+    std::unique_ptr<IO::Writer> create(IO::Format format) const override { return base_create(format); }
+    std::unique_ptr<PropertyGroup> createProperties(IO::Format, PropertyGroup*) const override {return {}; }
+};
+
+const std::string& staticStringStore(std::string_view str)
+{
+    static std::vector<std::string> strStore;
+    strStore.push_back(std::string{str});
+    return strStore.back();
+}
 
 } // namespace
 
@@ -215,6 +233,7 @@ void TestIO::System_importInDocument_catchVrmlReaderSendFail_test()
     auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
     MessageCollecter msgCollect;
+    msgCollect.only(MessageType::Error);
     const bool okImport = m_ioSystem->importInDocument(
         IO::System::ArgsImport()
             .setTargetDocument(doc)
@@ -222,12 +241,7 @@ void TestIO::System_importInDocument_catchVrmlReaderSendFail_test()
             .setMessenger(&msgCollect)
         );
     QVERIFY(!okImport);
-    const size_t errCount = std::count_if(
-        msgCollect.messages().begin(),
-        msgCollect.messages().end(),
-        [](const Messenger::Message& msg) { return msg.type == MessageType::Error; }
-    );
-    QCOMPARE(errCount, 1u);
+    QCOMPARE(msgCollect.messageCount(MessageType::Error), 1);
     // Should be message "Error in VrmlAPI_CafReader: IrrelevantNumberoccurred at line (...)"
     QVERIFY(msgCollect.messages()[0].text.find("VrmlAPI_CafReader") != std::string::npos);
 #endif
@@ -235,57 +249,105 @@ void TestIO::System_importInDocument_catchVrmlReaderSendFail_test()
 
 void TestIO::System_importInDocumentReaderException_test()
 {
-    using ThrowLocation = ThrowingReader::ThrowLocation;
-    for (const auto throwLocation : { ThrowLocation::ReadFile, ThrowLocation::Transfer }) {
-        IO::System ioSystem;
-        IO::addPredefinedFormatProbes(&ioSystem);
-        ioSystem.addFactoryReader(
-            std::make_unique<ThrowingFactoryReader>(IO::Format::Format_OCCBREP, throwLocation)
+    QFETCH(ThrowLocation, throwLocation);
+    QFETCH(ExceptionType, exceptionType);
+
+    IO::System ioSystem;
+    IO::addPredefinedFormatProbes(&ioSystem);
+    ioSystem.addFactoryReader(
+        std::make_unique<ThrowingFactoryReader>(IO::Format::Format_OCCBREP, throwLocation, exceptionType)
+    );
+
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+
+    MessageCollecter msgCollect;
+    msgCollect.only(MessageType::Error);
+
+    bool importOk = false;
+    try {
+        importOk = ioSystem.importInDocument(
+            IO::System::ArgsImport()
+            .setTargetDocument(doc).setFilepath("test.brep").setMessenger(&msgCollect)
         );
-
-        auto app = makeOccHandle<Application>();
-        DocumentPtr doc = app->newDocument();
-
-        bool importOk = false;
-        try {
-            importOk = ioSystem.importInDocument(doc, FilePath{"test.brep"});
-        }
-        catch (...) {
-            QFAIL("IO::System::importInDocument() must not throw");
-        }
-
-        QVERIFY(!importOk);
     }
+    catch (...) {
+        QFAIL("IO::System::importInDocument() must not throw");
+    }
+
+    QVERIFY(!importOk);
+    QCOMPARE(msgCollect.messageCount(MessageType::Error), 1);
+    if (exceptionType != ExceptionType::Other)
+        QVERIFY(msgCollect.messages()[0].text.find(exceptionMsg(throwLocation)) != std::string::npos);
+}
+
+void TestIO::System_importInDocumentReaderException_test_data()
+{
+    QTest::addColumn<ThrowLocation>("throwLocation");
+    QTest::addColumn<ExceptionType>("exceptionType");
+
+    auto c_str = [](std::string_view lhs, std::string_view rhs) {
+        return staticStringStore(std::string{lhs}.append(rhs)).c_str();
+    };
+
+    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
+        QTest::newRow(c_str("readFile_Exception", name)) << ThrowLocation::Reader_readFile << value;
+
+    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
+        QTest::newRow(c_str("transfer_Exception", name)) << ThrowLocation::Reader_transfer << value;
 }
 
 void TestIO::System_exportItemsWriterException_test()
 {
-    using ThrowLocation = ThrowingWriter::ThrowLocation;
-    for (const auto throwLocation : { ThrowLocation::WriteFile, ThrowLocation::Transfer }) {
-        IO::System ioSystem;
-        IO::addPredefinedFormatProbes(&ioSystem);
-        ioSystem.addFactoryWriter(
-            std::make_unique<ThrowingFactoryWriter>(IO::Format::Format_OCCBREP, throwLocation)
+    QFETCH(ThrowLocation, throwLocation);
+    QFETCH(ExceptionType, exceptionType);
+
+    IO::System ioSystem;
+    IO::addPredefinedFormatProbes(&ioSystem);
+    ioSystem.addFactoryWriter(
+        std::make_unique<ThrowingFactoryWriter>(IO::Format::Format_OCCBREP, throwLocation, exceptionType)
+    );
+
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+
+    MessageCollecter msgCollect;
+    msgCollect.only(MessageType::Error);
+
+    bool exportOk = false;
+    try {
+        exportOk = ioSystem.exportItems(
+            IO::System::ArgsExport()
+            .setTargetFile(FilePath{"test.brep"})
+            .setTargetFormat(IO::Format::Format_OCCBREP)
+            .setItem(ApplicationItem(doc))
+            .setMessenger(&msgCollect)
         );
-
-        auto app = makeOccHandle<Application>();
-        DocumentPtr doc = app->newDocument();
-
-        bool exportOk = false;
-        try {
-            exportOk = ioSystem.exportItems(
-                IO::System::ArgsExport()
-                .setTargetFile(FilePath{"test.brep"})
-                .setTargetFormat(IO::Format::Format_OCCBREP)
-                .setItem(ApplicationItem(doc))
-            );
-        }
-        catch (...) {
-            QFAIL("IO::System::exportItems() must not throw");
-        }
-
-        QVERIFY(!exportOk);
     }
+    catch (...) {
+        QFAIL("IO::System::exportItems() must not throw");
+    }
+
+    QVERIFY(!exportOk);
+    QCOMPARE(msgCollect.messageCount(MessageType::Error), 1);
+    if (exceptionType != ExceptionType::Other)
+        QVERIFY(msgCollect.messages()[0].text.find(exceptionMsg(throwLocation)) != std::string::npos);
+}
+
+void TestIO::System_exportItemsWriterException_test_data()
+{
+    QTest::addColumn<ThrowLocation>("throwLocation");
+    QTest::addColumn<ExceptionType>("exceptionType");
+
+    auto c_str = [](std::string_view lhs, std::string_view rhs) {
+        return staticStringStore(std::string{lhs}.append(rhs)).c_str();
+    };
+
+    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
+        QTest::newRow(c_str("writeFile_Exception", name)) << ThrowLocation::Writer_writeFile << value;
+
+    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
+        QTest::newRow(c_str("transfer_Exception", name)) << ThrowLocation::Writer_transfer << value;
 }
 
 } // namespace Mayo
