@@ -132,12 +132,11 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
     MessageCollecter errorCollect;
     errorCollect.only(MessageType::Error);
     const IO::Format format = appModule->ioSystem()->probeFormat(filepath);
-    const ApplicationItem appItems[] = { ApplicationItem{doc} };
     const bool okExport = appModule->ioSystem()->exportItems(
         IO::System::ArgsExport()
         .setTargetFile(filepath)
         .setTargetFormat(format)
-        .setItems(appItems)
+        .setItem(ApplicationItem{doc})
         .setParameters(appModule->ioParametersProvider()->findWriterParameters(format))
         .setMessenger(&errorCollect)
         .setTaskProgress(progress)
@@ -156,9 +155,7 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
 } // namespace
 
 void cli_asyncExportDocuments(
-        const ApplicationPtr& app,
-        const CliExportArgs& args,
-        std::function<void(int)> fnContinuation
+        const ApplicationPtr& app, const CliExportArgs& args, std::function<void(int)> fnContinuation
     )
 {
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
