@@ -82,7 +82,7 @@ auto noThrowExec(Messenger* messenger, Function fn)
         messenger->emitError(fmt::format(
             System::textIdTr("Exception '{}' : {}"),
             TKernelUtils::errorTypeName(err), TKernelUtils::errorMessage(err)
-            ));
+        ));
     }
     catch (const std::exception& err) {
         messenger->emitError(fmt::format(System::textIdTr("Exception : {}"), err.what()));
