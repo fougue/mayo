@@ -11,6 +11,7 @@
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
 #include "../base/geom_utils.h"
+#include "../base/global.h"
 #include "../base/io_system.h"
 #include "../base/math_utils.h"
 #include "../base/messenger.h"
@@ -187,7 +188,11 @@ void graphicsResetErrors(const OccHandle<Graphic3d_GraphicDriver>& gfxDriver)
     // Prefer the context being already current: in the desktop application the graphics driver is
     // shared with the on-screen view, so avoid stealing "current" from it needlessly
     const OccHandle<OpenGl_Context>& glContext = glDriver->GetSharedContext();
+#if defined(MAYO_OS_MAC)
+    if (glContext && (glContext->IsCurrent() || glContext->MakeCurrent()))
+#else
     if (glContext && glContext->IsCurrent())
+#endif
         glContext->ResetErrors(false/*!ToPrintErrors*/);
 }
 
