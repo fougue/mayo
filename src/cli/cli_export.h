@@ -23,9 +23,7 @@ struct CliExportArgs {
 // Asynchronously exports input file(s) listed in 'args'
 // Calls 'fnContinuation' at the end of execution
 void cli_asyncExportDocuments(
-        const ApplicationPtr& app,
-        const CliExportArgs& args,
-        std::function<void(int)> fnContinuation
+    const ApplicationPtr& app, const CliExportArgs& args, std::function<void(int)> fnContinuation
 );
 
 } // namespace Mayo
