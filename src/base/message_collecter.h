@@ -25,6 +25,8 @@ public:
     std::string asString(std::string_view separator, MessageType msgType) const;
     std::string asString(std::string_view separator) const;
 
+    unsigned messageCount(MessageType msgType) const;
+
     void clear();
 
 private:
