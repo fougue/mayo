@@ -43,9 +43,9 @@ enum class ExceptionType {
 const char* exceptionMsg(ThrowLocation throwLocation)
 {
     switch (throwLocation) {
-    case ThrowLocation::Reader_transfer: return "Exception in Reader::transfer()";
-    case ThrowLocation::Reader_readFile: return "Exception in Reader::readFile()";
-    case ThrowLocation::Writer_transfer: return "Exception in Writer::transfer()";
+    case ThrowLocation::Reader_transfer:  return "Exception in Reader::transfer()";
+    case ThrowLocation::Reader_readFile:  return "Exception in Reader::readFile()";
+    case ThrowLocation::Writer_transfer:  return "Exception in Writer::transfer()";
     case ThrowLocation::Writer_writeFile: return "Exception in Writer::writeFile()";
     }
     return "";
@@ -236,10 +236,10 @@ void TestIO::System_importInDocument_catchVrmlReaderSendFail_test()
     msgCollect.only(MessageType::Error);
     const bool okImport = m_ioSystem->importInDocument(
         IO::System::ArgsImport()
-            .setTargetDocument(doc)
-            .setFilepath("tests/inputs/#268_ambient-intensity-outofrange.wrl")
-            .setMessenger(&msgCollect)
-        );
+        .setTargetDocument(doc)
+        .setFilepath("tests/inputs/#268_ambient-intensity-outofrange.wrl")
+        .setMessenger(&msgCollect)
+    );
     QVERIFY(!okImport);
     QCOMPARE(msgCollect.messageCount(MessageType::Error), 1);
     // Should be message "Error in VrmlAPI_CafReader: IrrelevantNumberoccurred at line (...)"
@@ -259,8 +259,6 @@ void TestIO::System_importInDocumentReaderException_test()
     );
 
     auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-
     MessageCollecter msgCollect;
     msgCollect.only(MessageType::Error);
 
@@ -268,7 +266,9 @@ void TestIO::System_importInDocumentReaderException_test()
     try {
         importOk = ioSystem.importInDocument(
             IO::System::ArgsImport()
-            .setTargetDocument(doc).setFilepath("test.brep").setMessenger(&msgCollect)
+            .setTargetDocument(app->newDocument())
+            .setFilepath("test.brep")
+            .setMessenger(&msgCollect)
         );
     }
     catch (...) {
@@ -289,12 +289,10 @@ void TestIO::System_importInDocumentReaderException_test_data()
     auto c_str = [](std::string_view lhs, std::string_view rhs) {
         return staticStringStore(std::string{lhs}.append(rhs)).c_str();
     };
-
-    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
+    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>()) {
         QTest::newRow(c_str("readFile_Exception", name)) << ThrowLocation::Reader_readFile << value;
-
-    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
         QTest::newRow(c_str("transfer_Exception", name)) << ThrowLocation::Reader_transfer << value;
+    }
 }
 
 void TestIO::System_exportItemsWriterException_test()
@@ -309,8 +307,6 @@ void TestIO::System_exportItemsWriterException_test()
     );
 
     auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-
     MessageCollecter msgCollect;
     msgCollect.only(MessageType::Error);
 
@@ -320,7 +316,7 @@ void TestIO::System_exportItemsWriterException_test()
             IO::System::ArgsExport()
             .setTargetFile(FilePath{"test.brep"})
             .setTargetFormat(IO::Format::Format_OCCBREP)
-            .setItem(ApplicationItem(doc))
+            .setItem(ApplicationItem(app->newDocument()))
             .setMessenger(&msgCollect)
         );
     }
@@ -342,12 +338,10 @@ void TestIO::System_exportItemsWriterException_test_data()
     auto c_str = [](std::string_view lhs, std::string_view rhs) {
         return staticStringStore(std::string{lhs}.append(rhs)).c_str();
     };
-
-    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
+    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>()) {
         QTest::newRow(c_str("writeFile_Exception", name)) << ThrowLocation::Writer_writeFile << value;
-
-    for (const auto& [value, name] : MetaEnum::entries<ExceptionType>())
         QTest::newRow(c_str("transfer_Exception", name)) << ThrowLocation::Writer_transfer << value;
+    }
 }
 
 } // namespace Mayo
