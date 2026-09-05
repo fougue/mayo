@@ -725,6 +725,10 @@ if(Mayo_BuildTests)
 
     file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
     file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
+    if(APPLE)
+        list(APPEND MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/init_cocoa.mm)
+    endif()
+
     add_executable(
         test-mayo
         ${MayoTests_HeaderFiles}
@@ -756,6 +760,9 @@ if(Mayo_BuildTests)
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Test
     )
+    if(APPLE)
+        target_link_libraries(test-mayo PRIVATE "-framework AppKit" "-framework Foundation")
+    endif()
 
     set_target_properties(
         test-mayo PROPERTIES

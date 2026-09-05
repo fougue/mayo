@@ -16,6 +16,8 @@
 #include <memory>
 #include <vector>
 
+#include "init_cocoa.h"
+
 namespace {
 
 // Helper function to return the path of some temporary file
@@ -59,6 +61,10 @@ OutputFile parseOutputFile(const QString& optionCmdLine)
 
 int main(int argc, char* argv[])
 {
+#ifdef __APPLE__
+    mayoInitCocoa();
+#endif
+
     // Preprocess command-line arguments
     QStringList args;
     QString* ptrArgOutputFileName = nullptr;
