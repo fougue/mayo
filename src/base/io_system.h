@@ -209,6 +209,7 @@ private:
 };
 
 // Predefined
+Format probeFormat_IFC(const System::FormatProbeInput& input);
 Format probeFormat_STEP(const System::FormatProbeInput& input);
 Format probeFormat_IGES(const System::FormatProbeInput& input);
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input);

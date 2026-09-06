@@ -89,8 +89,11 @@ void readFile(ImportTaskData& taskData, const System& ioSystem, const System::Ar
 
     TaskProgress progress(taskData.progress, portionSize, System::textIdTr("Reading file"));
     taskData.reader = ioSystem.createReader(taskData.fileFormat);
-    if (!taskData.reader)
-        return error(System::textIdTr("No supporting reader"));
+    if (!taskData.reader) {
+        return error(fmt::format(
+            System::textIdTr("{} files are not supported"), formatIdentifier(taskData.fileFormat)
+        ));
+    }
 
     taskData.reader->setMessenger(&taskData.messenger);
     if (args.parametersProvider) {
@@ -407,8 +410,11 @@ bool System::exportItems(const ArgsExport& args) const
     });
 
     std::unique_ptr<Writer> writer = this->createWriter(args.targetFormat);
-    if (!writer)
-        return fnError(textIdTr("No supporting writer"));
+    if (!writer) {
+        return fnError(fmt::format(
+            textIdTr("{} format is not supported for export"), formatIdentifier(args.targetFormat)
+        ));
+    }
 
     writer->setMessenger(&msgCollect);
     writer->applyProperties(args.parameters);
@@ -592,15 +598,24 @@ bool matchRegExp_anyWhere(std::string_view str, const std::regex& rx)
 
 } // namespace
 
+Format probeFormat_IFC(const System::FormatProbeInput& input)
+{
+    if (!probeFormat_STEP(input))
+        return Format_Unknown;
+
+    static const std::regex rx{ R"(FILE_SCHEMA\s*\(\s*\(\s*'IFC[A-Za-z0-9_]*'\s*\)\s*\))" };
+    return matchRegExp_anyWhere(input.contentsBegin, rx) ? Format_IFC : Format_Unknown;
+}
+
 Format probeFormat_STEP(const System::FormatProbeInput& input)
 {
-    const std::regex rx{ R"(^\s*ISO-10303-21\s*;\s*HEADER)" };
+    static const std::regex rx{ R"(^\s*ISO-10303-21\s*;\s*HEADER\s*;)" };
     return matchRegExp_atStart(input.contentsBegin, rx) ? Format_STEP : Format_Unknown;
 }
 
 Format probeFormat_IGES(const System::FormatProbeInput& input)
 {
-    const std::regex rx{ R"(^.{72}S\s*[0-9]+\s*[\n\r\f])" };
+    static const std::regex rx{ R"(^.{72}S\s*[0-9]+\s*[\n\r\f])" };
     return matchRegExp_atStart(input.contentsBegin, rx) ? Format_IGES : Format_Unknown;
 }
 
@@ -613,7 +628,7 @@ Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 Format probeFormat_OCCXCAF(const System::FormatProbeInput& input)
 {
     // Binary XCAF starts with "BINFILE" which is too short for a reliable identification...
-    const std::regex rxXml{ R"(^\s*"<document format=\"XmlXCAF\"")" };
+    static const std::regex rxXml{ R"(^\s*"<document format=\"XmlXCAF\"")" };
     return matchRegExp_atStart(input.contentsBegin, rxXml) ? Format_OCCXCAF : Format_Unknown;
 }
 
@@ -640,7 +655,7 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
     // ASCII STL ?
     {
-        const std::regex rx{ R"(^\s*solid\s+)" };
+        static const std::regex rx{ R"(^\s*solid\s+)" };
         if (matchRegExp_atStart(input.contentsBegin, rx))
             return Format_STL;
     }
@@ -650,19 +665,19 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
 Format probeFormat_OBJ(const System::FormatProbeInput& input)
 {
-    const std::regex rx{ R"([^\n]\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s)" };
+    static const std::regex rx{ R"([^\n]\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s)" };
     return matchRegExp_anyWhere(input.contentsBegin, rx) ? Format_OBJ : Format_Unknown;
 }
 
 Format probeFormat_PLY(const System::FormatProbeInput& input)
 {
-    const std::regex rx{ R"(^\s*ply\s+format\s+(ascii|binary_little_endian|binary_big_endian)\s+)" };
+    static const std::regex rx{ R"(^\s*ply\s+format\s+(ascii|binary_little_endian|binary_big_endian)\s+)" };
     return matchRegExp_atStart(input.contentsBegin, rx) ? Format_PLY : Format_Unknown;
 }
 
 Format probeFormat_OFF(const System::FormatProbeInput& input)
 {
-    const std::regex rx{ R"(^\s*[CN4]?OFF\s+)" };
+    static const std::regex rx{ R"(^\s*[CN4]?OFF\s+)" };
     return matchRegExp_atStart(input.contentsBegin, rx) ? Format_OFF : Format_Unknown;
 }
 
@@ -671,6 +686,10 @@ void addPredefinedFormatProbes(System* system)
     if (!system)
         return;
 
+    // NOTE
+    // IFC before STEP: IFC is a STEP-based format and would otherwise be detected as STEP.
+    // Other probes can follow in any order
+    system->addFormatProbe(probeFormat_IFC);
     system->addFormatProbe(probeFormat_STEP);
     system->addFormatProbe(probeFormat_IGES);
     system->addFormatProbe(probeFormat_OCCBREP);
@@ -683,13 +702,13 @@ void addPredefinedFormatProbes(System* system)
 
 bool isFormatAscii_OCCBREP(const System::FormatProbeInput& input)
 {
-    const std::regex rxAscii{ R"(^\s*DBRep_DrawableShape)" };
+    static const std::regex rxAscii{ R"(^\s*DBRep_DrawableShape)" };
     return matchRegExp_atStart(input.contentsBegin, rxAscii);
 }
 
 bool isFormatBinary_OCCBREP(const System::FormatProbeInput& input)
 {
-    const std::regex rxBin{ R"(^\s*Open CASCADE Topology V[0-9])" };
+    static const std::regex rxBin{ R"(^\s*Open CASCADE Topology V[0-9])" };
     return matchRegExp_atStart(input.contentsBegin, rxBin);
 }
 
