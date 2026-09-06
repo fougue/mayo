@@ -1,0 +1,14 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('Minimal IFC for unit test'),'2;1');
+FILE_NAME('minimal.ifc','2026-09-06T23:17:00',('TestUser'),(''),
+  'UnitTest','Copilot','Unknown');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+
+DATA;
+#1 = IFCPROJECT('0J$1', #2, 'Minimal Project', $, $, $, $, $);
+#2 = IFCOWNERHISTORY($, $, $, $, $, $, $, $);
+ENDSEC;
+
+END-ISO-10303-21;

@@ -173,6 +173,7 @@ void TestIO::System_probeFormat_test_data()
     QTest::newRow("cube.ply") << "tests/inputs/cube.ply"s << IO::Format_PLY;
     QTest::newRow("cube.off") << "tests/inputs/cube.off"s << IO::Format_OFF;
     QTest::newRow("cube.wrl") << "tests/inputs/cube.wrl"s << IO::Format_VRML;
+    QTest::newRow("minimal.ifc") << "tests/inputs/minimal.ifc"s << IO::Format_IFC;
 }
 
 void TestIO::System_probeFormatDirect_test()
@@ -214,6 +215,9 @@ void TestIO::System_probeFormatDirect_test()
 
     fnSetProbeInput("tests/inputs/cube.off");
     QCOMPARE(IO::probeFormat_OFF(input), IO::Format_OFF);
+
+    fnSetProbeInput("tests/inputs/minimal.ifc");
+    QCOMPARE(IO::probeFormat_IFC(input), IO::Format_IFC);
 }
 
 void TestIO::System_importInDocument_catchVrmlReaderSendFail_test()

@@ -13,15 +13,18 @@ namespace Mayo::IO {
 // Predefined I/O formats
 enum Format {
     Format_Unknown,
-    Format_Image,
     Format_3DS,
     Format_3MF,
     Format_AMF,
+    Format_Blender,
     Format_COLLADA,
     Format_DXF,
+    Format_DirectX,
     Format_FBX,
     Format_GLTF,
+    Format_IFC,
     Format_IGES,
+    Format_Image,
     Format_OBJ,
     Format_OCCBREP,
     Format_OCCXCAF,
@@ -30,9 +33,7 @@ enum Format {
     Format_STEP,
     Format_STL,
     Format_VRML,
-    Format_X3D,
-    Format_DirectX,
-    Format_Blender
+    Format_X3D
 };
 
 // Returns identifier(unique short name) corresponding to 'format'
