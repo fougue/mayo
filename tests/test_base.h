@@ -14,6 +14,19 @@ class TestBase : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
+    void Application_openDocument_test();
+    void Application_findDocumentByIdentifier_test();
+    void Application_findDocumentByLocation_test();
+    void Application_findIndexOfDocument_test();
+    void Application_setAutoExpandCompoundToAssembly_test();
+    void Application_DocumentIterator_empty_test();
+    void Application_DocumentIterator_test();
+
+    void ApplicationItem_default_test();
+    void ApplicationItem_document_test();
+    void ApplicationItem_documentTreeNode_test();
+    void ApplicationItem_equality_test();
+
     void DocumentRefCount_test();
 
     void CppUtils_indexInSpan_test();

@@ -92,7 +92,8 @@ DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatu
         *ptrReadStatus = readStatus;
 
     DocumentPtr doc = DocumentPtr::DownCast(stdDoc);
-    this->addDocument(doc);
+    // NOTE Application::addDocument() is called by Application::NewDocument()
+    doc->setFilePath(filepath);
     return doc;
 }
 

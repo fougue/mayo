@@ -38,7 +38,7 @@ DocumentPtr ApplicationItem::document() const
     else if (this->isDocumentTreeNode())
         return m_docTreeNode.document();
 
-    return DocumentPtr();
+    return {};
 }
 
 const DocumentTreeNode& ApplicationItem::documentTreeNode() const
@@ -46,11 +46,10 @@ const DocumentTreeNode& ApplicationItem::documentTreeNode() const
     return this->isDocumentTreeNode() ? m_docTreeNode : DocumentTreeNode::null();
 }
 
-bool ApplicationItem::operator==(const ApplicationItem& other) const
+bool operator==(const ApplicationItem& lhs, const ApplicationItem& rhs)
 {
-    return m_doc == other.m_doc
-            && m_docTreeNode.document() == other.m_docTreeNode.document()
-            && m_docTreeNode.id() == other.m_docTreeNode.id();
+    return lhs.document() == rhs.document()
+           && lhs.documentTreeNode() == rhs.documentTreeNode();
 }
 
 } // namespace Mayo

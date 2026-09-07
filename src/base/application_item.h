@@ -24,11 +24,11 @@ public:
     DocumentPtr document() const;
     const DocumentTreeNode& documentTreeNode() const;
 
-    bool operator==(const ApplicationItem& other) const;
-
 private:
     DocumentPtr m_doc;
     DocumentTreeNode m_docTreeNode;
 };
+
+bool operator==(const ApplicationItem& lhs, const ApplicationItem& rhs);
 
 } // namespace Mayo
