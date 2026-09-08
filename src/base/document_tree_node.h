@@ -26,11 +26,11 @@ public:
     const DocumentPtr& document() const { return m_document; }
     TreeNodeId id() const { return m_id; }
 
-    bool operator==(const DocumentTreeNode& other) const;
-
 private:
     DocumentPtr m_document; // TODO Document* or Document::identifier instead ?
     TreeNodeId m_id = 0;
 };
+
+bool operator==(const DocumentTreeNode& lhs, const DocumentTreeNode& rhs);
 
 } // namespace Mayo

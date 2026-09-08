@@ -20,8 +20,8 @@
 
 namespace Mayo {
 
-Document::Document(const ApplicationPtr& app)
-    : TDocStd_Document(NameFormatBinary),
+Document::Document(const ApplicationPtr& app, Format format)
+    : TDocStd_Document(Document::toNameFormat(format)),
       m_app(app)
 {
     TDF_TagSource::Set(this->rootLabel());

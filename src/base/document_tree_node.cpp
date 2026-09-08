@@ -44,13 +44,15 @@ bool DocumentTreeNode::isLeaf() const
         return false;
 }
 
-bool DocumentTreeNode::operator==(const DocumentTreeNode& other) const
+bool operator==(const DocumentTreeNode& lhs, const DocumentTreeNode& rhs)
 {
-    if (!this->isValid() || !other.isValid())
-        return false;
+    const bool lhsValid = lhs.isValid();
+    const bool rhsValid = rhs.isValid();
+    if (!lhsValid || !rhsValid)
+        return lhsValid == rhsValid;
 
-    return m_document->identifier() == other.document()->identifier()
-            && m_id == other.id();
+    return lhs.document()->identifier() == rhs.document()->identifier()
+           && lhs.id() == rhs.id();
 }
 
 } // namespace Mayo

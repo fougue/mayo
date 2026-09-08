@@ -7,7 +7,7 @@
 
 namespace Mayo {
 
-namespace Internal {
+namespace {
 
 static bool hasApplicationItem(gsl::span<ApplicationItem> vec, const ApplicationItem& item)
 {
@@ -21,7 +21,7 @@ static std::vector<ApplicationItem>::iterator findApplicationItem(
     return std::find(vec.begin(), vec.end(), item);
 }
 
-} // namespace Internal
+} // namespace
 
 gsl::span<const ApplicationItem> ApplicationItemSelectionModel::selectedItems() const
 {
@@ -30,23 +30,23 @@ gsl::span<const ApplicationItem> ApplicationItemSelectionModel::selectedItems() 
 
 bool ApplicationItemSelectionModel::isSelected(const ApplicationItem& item)
 {
-    return Internal::hasApplicationItem(m_vecSelectedItem, item);
+    return hasApplicationItem(m_vecSelectedItem, item);
 }
 
 void ApplicationItemSelectionModel::add(const ApplicationItem& item)
 {
-    if (!Internal::hasApplicationItem(m_vecSelectedItem, item)) {
+    if (!hasApplicationItem(m_vecSelectedItem, item)) {
         m_vecSelectedItem.push_back(item);
         std::vector<ApplicationItem> vecItem = { item };
         this->signalChanged.send(vecItem, {});
     }
 }
 
-void ApplicationItemSelectionModel::add(gsl::span<ApplicationItem> vecItem)
+void ApplicationItemSelectionModel::add(gsl::span<const ApplicationItem> vecItem)
 {
     std::vector<ApplicationItem> signalVecItem;
     for (const ApplicationItem& item : vecItem) {
-        if (!Internal::hasApplicationItem(m_vecSelectedItem, item)) {
+        if (!hasApplicationItem(m_vecSelectedItem, item)) {
             m_vecSelectedItem.push_back(item);
             signalVecItem.push_back(item);
         }
@@ -58,7 +58,7 @@ void ApplicationItemSelectionModel::add(gsl::span<ApplicationItem> vecItem)
 
 void ApplicationItemSelectionModel::remove(const ApplicationItem& item)
 {
-    auto itFound = Internal::findApplicationItem(m_vecSelectedItem, item);
+    auto itFound = findApplicationItem(m_vecSelectedItem, item);
     if (itFound != m_vecSelectedItem.end()) {
         m_vecSelectedItem.erase(itFound);
         std::vector<ApplicationItem> vecItem = { item };
@@ -66,11 +66,11 @@ void ApplicationItemSelectionModel::remove(const ApplicationItem& item)
     }
 }
 
-void ApplicationItemSelectionModel::remove(gsl::span<ApplicationItem> vecItem)
+void ApplicationItemSelectionModel::remove(gsl::span<const ApplicationItem> vecItem)
 {
     std::vector<ApplicationItem> signalVecItem;
     for (const ApplicationItem& item : vecItem) {
-        auto itFound = Internal::findApplicationItem(m_vecSelectedItem, item);
+        auto itFound = findApplicationItem(m_vecSelectedItem, item);
         if (itFound != m_vecSelectedItem.end()) {
             m_vecSelectedItem.erase(itFound);
             signalVecItem.push_back(item);

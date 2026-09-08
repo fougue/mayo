@@ -32,7 +32,9 @@ public:
         DocumentPtr current() const;
         int currentIndex() const { return m_currentIndex; }
     private:
-        int m_currentIndex = 0;
+        bool skipForeignDocuments();
+        const Application* m_app = nullptr;
+        int m_currentIndex = -1;
     };
 
     int documentCount() const;
