@@ -20,9 +20,9 @@ public:
     bool isSelected(const ApplicationItem& item);
 
     void add(const ApplicationItem& item);
-    void add(gsl::span<ApplicationItem> vecItem);
+    void add(gsl::span<const ApplicationItem> vecItem);
     void remove(const ApplicationItem& item);
-    void remove(gsl::span<ApplicationItem> vecItem);
+    void remove(gsl::span<const ApplicationItem> vecItem);
 //    void toggle(const ApplicationItem& item);
 //    void toggle(gsl::span<ApplicationItem> item);
 

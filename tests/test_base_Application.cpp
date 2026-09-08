@@ -7,7 +7,6 @@
 
 #include "../src/base/application.h"
 
-#include <XmlXCAFDrivers.hxx>
 #include <algorithm>
 
 namespace Mayo {
@@ -18,9 +17,9 @@ namespace Mayo {
 void TestBase::Application_openDocument_test()
 {
     auto app = makeOccHandle<Application>();
-    XmlXCAFDrivers::DefineFormat(app); // -> to load XML files
+    Application::defineMayoFormat(app);
 
-    const FilePath filepath = "tests/inputs/cube10.xml";
+    const FilePath filepath = "tests/inputs/cube10.myx";
 
     QCOMPARE(app->documentCount(), 0);
 
@@ -81,10 +80,10 @@ void TestBase::Application_findDocumentByIdentifier_test()
 void TestBase::Application_findDocumentByLocation_test()
 {
     auto app = makeOccHandle<Application>();
-    XmlXCAFDrivers::DefineFormat(app); // -> to load XML files
+    Application::defineMayoFormat(app);
 
-    const FilePath filepath1 = "tests/inputs/cube10.xml";
-    const FilePath filepath2 = "tests/inputs/cube20.xml";
+    const FilePath filepath1 = "tests/inputs/cube10.myx";
+    const FilePath filepath2 = "tests/inputs/cube20.myx";
 
     // The files must exist and contain valid Mayo documents
     DocumentPtr doc1 = app->openDocument(filepath1);
@@ -99,7 +98,7 @@ void TestBase::Application_findDocumentByLocation_test()
     QCOMPARE(app->findDocumentByLocation(filepath2), doc2);
 
     // Unknown location
-    const FilePath unknownFilepath = "Application_findDocumentByLocation_unknown.xml";
+    const FilePath unknownFilepath = "Application_findDocumentByLocation_unknown.myx";
 
     QVERIFY(app->findDocumentByLocation(unknownFilepath).IsNull());
 
@@ -161,7 +160,7 @@ void TestBase::Application_DocumentIterator_empty_test()
     Application::DocumentIterator it(app);
 
     QVERIFY(!it.hasNext());
-    QCOMPARE(it.currentIndex(), 0);
+    QCOMPARE(it.currentIndex(), -1);
 }
 
 void TestBase::Application_DocumentIterator_test()
@@ -177,24 +176,24 @@ void TestBase::Application_DocumentIterator_test()
     // First document
     QVERIFY(it.hasNext());
     QCOMPARE(it.currentIndex(), 0);
-    QCOMPARE(it.current().get(), doc1.get());
+    QCOMPARE(it.current(), doc1);
 
     // Second document
     it.next();
     QVERIFY(it.hasNext());
     QCOMPARE(it.currentIndex(), 1);
-    QCOMPARE(it.current().get(), doc2.get());
+    QCOMPARE(it.current(), doc2);
 
     // Third document
     it.next();
     QVERIFY(it.hasNext());
     QCOMPARE(it.currentIndex(), 2);
-    QCOMPARE(it.current().get(), doc3.get());
+    QCOMPARE(it.current(), doc3);
 
     // End of iteration
     it.next();
     QVERIFY(!it.hasNext());
-    QCOMPARE(it.currentIndex(), 3);
+    QCOMPARE(it.currentIndex(), -1);
 }
 
 } // namespace Mayo

@@ -8,27 +8,31 @@
 #include "property_builtins.h"
 #include "string_conv.h"
 #include "task_common.h"
-#include "tkernel_utils.h"
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <BinXCAFDrivers_DocumentStorageDriver.hxx>
 #include <XmlXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <XmlXCAFDrivers_DocumentStorageDriver.hxx>
-#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
+#if OCC_VERSION_HEX < 0x070500
 #  include <CDF_Session.hxx>
 #endif
 
 #include <atomic>
+#include <stdexcept>
 #include <unordered_map>
 
 namespace Mayo {
 
 class Document::FormatBinaryRetrievalDriver : public BinXCAFDrivers_DocumentRetrievalDriver {
 public:
-    explicit FormatBinaryRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+    explicit FormatBinaryRetrievalDriver(const ApplicationPtr& app)
+        : m_app(app)
+    {}
 
-#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
-    OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app);  }
+#if OCC_VERSION_HEX < 0x070600
+    OccHandle<CDM_Document> CreateDocument() override {
+        return m_app->newDocument(Document::Format::Binary);
+    }
 #endif
 
 private:
@@ -37,10 +41,14 @@ private:
 
 class Document::FormatXmlRetrievalDriver : public XmlXCAFDrivers_DocumentRetrievalDriver {
 public:
-    explicit FormatXmlRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+    explicit FormatXmlRetrievalDriver(const ApplicationPtr& app)
+        : m_app(app)
+    {}
 
-#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
-    OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app); }
+#if OCC_VERSION_HEX < 0x070600
+    OccHandle<CDM_Document> CreateDocument() override {
+        return m_app->newDocument(Document::Format::Xml);
+    }
 #endif
 
 private:
@@ -75,7 +83,7 @@ int Application::documentCount() const
 DocumentPtr Application::newDocument(Document::Format docFormat)
 {
     const char* docNameFormat = Document::toNameFormat(docFormat);
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+#if OCC_VERSION_HEX >= 0x070600
     OccHandle<CDM_Document> stdDoc;
 #else
     OccHandle<TDocStd_Document> stdDoc;
@@ -105,13 +113,13 @@ DocumentPtr Application::findDocumentByIndex(int docIndex) const
 #else
     XCAFApp_Application::GetDocument(docIndex + 1, doc);
 #endif
-    return !doc.IsNull() ? DocumentPtr::DownCast(doc) : DocumentPtr();
+    return !doc.IsNull() ? DocumentPtr::DownCast(doc) : DocumentPtr{};
 }
 
 DocumentPtr Application::findDocumentByIdentifier(Document::Identifier docIdent) const
 {
     auto itFound = d->m_mapIdentifierDocument.find(docIdent);
-    return itFound != d->m_mapIdentifierDocument.cend() ? itFound->second : DocumentPtr();
+    return itFound != d->m_mapIdentifierDocument.cend() ? itFound->second : DocumentPtr{};
 }
 
 DocumentPtr Application::findDocumentByLocation(const FilePath& location) const
@@ -126,6 +134,9 @@ DocumentPtr Application::findDocumentByLocation(const FilePath& location) const
 
 int Application::findIndexOfDocument(const DocumentPtr& doc) const
 {
+    if (doc.IsNull() || !doc->IsOpened() || doc->Application().get() != this)
+        return -1;
+
     for (DocumentIterator it(this); it.hasNext(); it.next()) {
         if (it.current() == doc)
             return it.currentIndex();
@@ -212,22 +223,30 @@ gsl::span<const char*> Application::envOpenCascadePaths()
     };
     return arrayPathName;
 }
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
-void Application::NewDocument(const TCollection_ExtendedString&, OccHandle<CDM_Document>& outDocument)
+#if OCC_VERSION_HEX >= 0x070600
+void Application::NewDocument(const TCollection_ExtendedString& format, OccHandle<CDM_Document>& outDocument)
 #else
-void Application::NewDocument(const TCollection_ExtendedString&, OccHandle<TDocStd_Document>& outDocument)
+void Application::NewDocument(const TCollection_ExtendedString& format, OccHandle<TDocStd_Document>& outDocument)
 #endif
 {
-    // TODO: check format == "mayo" if not throw exception
     // Extended from XCAFApp_Application::NewDocument() implementation, ensure that in future
     // OpenCascade versions this code is still compatible!
-    DocumentPtr newDoc = new Document(this);
+    DocumentPtr newDoc;
+    const std::string strFormat = to_stdString(format);
+    if (strFormat == Document::NameFormatBinary)
+        newDoc = new Document(this, Document::Format::Binary);
+    else if (strFormat == Document::NameFormatXml)
+        newDoc = new Document(this, Document::Format::Xml);
+
+    if (!newDoc)
+        throw std::runtime_error("Application::NewDocument() unknown format '" + strFormat + "'");
+
     CDF_Application::Open(newDoc); // Add the document in the session
     this->addDocument(newDoc);
     outDocument = newDoc;
 }
 
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+#if OCC_VERSION_HEX >= 0x070600
 void Application::InitDocument(const OccHandle<CDM_Document>& doc) const
 #else
 void Application::InitDocument(const OccHandle<TDocStd_Document>& doc) const
@@ -275,12 +294,32 @@ Application::DocumentIterator::DocumentIterator(const ApplicationPtr& app)
 }
 
 Application::DocumentIterator::DocumentIterator([[maybe_unused]] const Application* app)
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+#if OCC_VERSION_HEX >= 0x070500
     : CDF_DirectoryIterator(app->myDirectory)
 #else
     : CDF_DirectoryIterator(CDF_Session::CurrentSession()->Directory())
 #endif
+    , m_app(app)
 {
+    if (this->skipForeignDocuments())
+        m_currentIndex = 0;
+}
+
+bool Application::DocumentIterator::skipForeignDocuments()
+{
+#if OCC_VERSION_HEX < 0x070500
+    while (this->MoreDocument()) {
+        const DocumentPtr doc = this->current();
+        if (!doc.IsNull() && doc->IsOpened() && doc->Application().get() == m_app)
+            return true;
+
+        this->NextDocument();
+    }
+
+    return false;
+#else
+    return this->MoreDocument();
+#endif
 }
 
 bool Application::DocumentIterator::hasNext() const
@@ -291,7 +330,10 @@ bool Application::DocumentIterator::hasNext() const
 void Application::DocumentIterator::next()
 {
     this->NextDocument();
-    ++m_currentIndex;
+    if (this->skipForeignDocuments())
+        ++m_currentIndex;
+    else
+        m_currentIndex = -1;
 }
 
 DocumentPtr Application::DocumentIterator::current() const

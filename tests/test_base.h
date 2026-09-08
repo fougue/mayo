@@ -27,10 +27,39 @@ private slots:
     void ApplicationItem_documentTreeNode_test();
     void ApplicationItem_equality_test();
 
-    void DocumentRefCount_test();
+    void ApplicationItemSelectionModel_selectedItems_test();
+    void ApplicationItemSelectionModel_isSelected_test();
+    void ApplicationItemSelectionModel_addItem_test();
+    void ApplicationItemSelectionModel_addItems_test();
+    void ApplicationItemSelectionModel_removeItem_test();
+    void ApplicationItemSelectionModel_removeItems_test();
+    void ApplicationItemSelectionModel_clear_test();
+    void ApplicationItemSelectionModel_clearSignal_test();
+
+    void BRepUtils_makeEmptyCompound_test();
+    void BRepUtils_addShape_nullArguments_test();
+    void BRepUtils_addShape_nullTarget_test();
+    void BRepUtils_addShape_existingTarget_test();
+    void BRepUtils_makeEdge_test();
+    void BRepUtils_makeFace_test();
+    void BRepUtils_moreComplex_test();
+    void BRepUtils_hashCode_test();
+    void BRepUtils_shapeStringSerialization_test();
+    void BRepUtils_forEachSubShape_test();
+    void BRepUtils_forEachSubShapeExplorer_test();
+    void BRepUtils_forEachSubFace_test();
+    void BRepUtils_anySubShape_nullShape_test();
+    void BRepUtils_anySubShape_emptyCompound_test();
+    void BRepUtils_anySubShape_noMatchingShape_test();
+    void BRepUtils_anySubShape_singleMatch_test();
+    void BRepUtils_anySubShape_multipleShapes_test();
+    void BRepUtils_anySubShape_stopOnFirstMatch_test();
+    void BRepUtils_anySubShape_shapeType_test();
 
     void CppUtils_indexInSpan_test();
     void CppUtils_toggle_test();
+
+    void DocumentRefCount_test();
 
     void TextId_test();
 
@@ -55,16 +84,6 @@ private slots:
 
     void StringConv_DoubleToString_test();
     void StringConv_test();
-
-    void BRepUtils_moreComplex_test();
-    void BRepUtils_hashCode_test();
-    void BRepUtils_anySubShape_nullShape_test();
-    void BRepUtils_anySubShape_emptyCompound_test();
-    void BRepUtils_anySubShape_noMatchingShape_test();
-    void BRepUtils_anySubShape_singleMatch_test();
-    void BRepUtils_anySubShape_multipleShapes_test();
-    void BRepUtils_anySubShape_stopOnFirstMatch_test();
-    void BRepUtils_anySubShape_shapeType_test();
 
     void CafUtils_labelTag_test();
     void CafUtils_getNamedDataKeys_test();

@@ -6,7 +6,7 @@
 #include "brep_utils.h"
 
 #include "tkernel_utils.h"
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+#if OCC_VERSION_HEX >= 0x070500
 #  include "occ_progress_indicator.h"
 #endif
 
@@ -15,6 +15,8 @@
 #include <BRep_Tool.hxx>
 #include <BRepTools.hxx>
 #include <TopoDS_Compound.hxx>
+#include <Standard_Version.hxx>
+
 #include <climits>
 #include <sstream>
 
@@ -68,7 +70,7 @@ bool BRepUtils::moreComplex(TopAbs_ShapeEnum lhs, TopAbs_ShapeEnum rhs)
 
 size_t BRepUtils::hashCode(const TopoDS_Shape& shape)
 {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 8, 0)
+#if OCC_VERSION_HEX >= 0x070800
     return std::hash<TopoDS_Shape>{}(shape);
 #else
     return shape.HashCode(INT_MAX);
@@ -98,7 +100,7 @@ bool Mayo::BRepUtils::isGeometric(const TopoDS_Edge &edge)
 
 bool BRepUtils::isGeometric(const TopoDS_Face& face)
 {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+#if OCC_VERSION_HEX >= 0x070500
     return BRep_Tool::IsGeometric(face);
 #else
     auto tface = static_cast<const BRep_TFace*>(face.TShape().get());
@@ -112,7 +114,7 @@ void BRepUtils::computeMesh(
         [[maybe_unused]]TaskProgress* progress
     )
 {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+#if OCC_VERSION_HEX >= 0x070500
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     [[maybe_unused]]BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
 #else

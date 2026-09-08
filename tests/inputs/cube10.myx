@@ -1,62 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document format="XmlXCAF" xmlns="http://www.opencascade.org/OCAF/XML" xmlns:xcaf="http://www.opencascade.org/OCAF/XML/XCAF" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opencascade.org/OCAF/XML">
- <info date="2026-09-07" schemav="0" DocVersion="12" objnb="22">
-  <iitem>Copyright: Open Cascade, 2001-2002</iitem>
+<document format="XmlDocMayo" xmlns="http://www.opencascade.org/OCAF/XML" xmlns:xcaf="http://www.opencascade.org/OCAF/XML/XCAF" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opencascade.org/OCAF/XML">
+ <info date="2026-09-08" schemav="0" DocVersion="9" objnb="23">
+  <iitem>Copyright (c) 2016, Fougue SAS &lt;https://www.fougue.pro&gt;</iitem>
   <iitem>REFERENCE_COUNTER: 0</iitem>
   <iitem>MODIFICATION_COUNTER: 1</iitem>
  </info>
  <comments/>
  <label tag="0">
-  <TDataStd_TreeNode id="1" treeid="efd212eb-6dfd-11d4-b9c8-0060b0ee281b" children="2 "/>
+  <TDF_TagSource id="1">0</TDF_TagSource>
+  <TDataStd_TreeNode id="2" treeid="efd212eb-6dfd-11d4-b9c8-0060b0ee281b" children="3 "/>
   <label tag="1">
-   <XCAFDoc_DocumentTool id="3"/>
-   <TDataStd_TreeNode id="2" treeid="efd212eb-6dfd-11d4-b9c8-0060b0ee281b"/>
+   <xcaf:DocumentTool id="4"/>
+   <TDataStd_TreeNode id="3" treeid="efd212eb-6dfd-11d4-b9c8-0060b0ee281b"/>
    <label tag="1">
-    <TDataStd_Name id="4" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Shapes</TDataStd_Name>
-    <XCAFDoc_ShapeTool id="5"/>
-    <TDF_TagSource id="6">1</TDF_TagSource>
+    <TDataStd_Name id="5">Shapes</TDataStd_Name>
+    <xcaf:ShapeTool id="6"/>
+    <TDF_TagSource id="7">1</TDF_TagSource>
     <label tag="1">
-     <TNaming_NamedShape id="7" evolution="primitive">
+     <TNaming_NamedShape id="8" evolution="primitive">
       <olds/>
       <news>
        <shape tshape="+34" index="1"/>
       </news>
      </TNaming_NamedShape>
-     <TDataStd_Name id="8" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Cube10</TDataStd_Name>
+     <TDataStd_Name id="9">SOLID</TDataStd_Name>
     </label>
    </label>
    <label tag="2">
-    <TDataStd_Name id="9" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Colors</TDataStd_Name>
-    <XCAFDoc_ColorTool id="10"/>
+    <TDataStd_Name id="10">Colors</TDataStd_Name>
+    <xcaf:ColorTool id="11"/>
    </label>
    <label tag="3">
-    <TDataStd_Name id="11" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Layers</TDataStd_Name>
-    <XCAFDoc_LayerTool id="12"/>
+    <TDataStd_Name id="12">Layers</TDataStd_Name>
+    <xcaf:LayerTool id="13"/>
    </label>
    <label tag="4">
-    <TDataStd_Name id="13" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">D&amp;GTs</TDataStd_Name>
-    <XCAFDoc_DimTolTool id="14"/>
+    <TDataStd_Name id="14">D&amp;GTs</TDataStd_Name>
+    <xcaf:DimTolTool id="15"/>
    </label>
    <label tag="5">
-    <TDataStd_Name id="15" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Materials</TDataStd_Name>
-    <XCAFDoc_MaterialTool id="16"/>
+    <TDataStd_Name id="16">Materials</TDataStd_Name>
+    <xcaf:MaterialTool id="17"/>
    </label>
    <label tag="7">
-    <TDataStd_Name id="17" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Views</TDataStd_Name>
-    <XCAFDoc_ViewTool id="18"/>
+    <TDataStd_Name id="18">Views</TDataStd_Name>
+    <xcaf:ViewTool id="19"/>
    </label>
    <label tag="8">
-    <TDataStd_Name id="19" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Clipping Planes</TDataStd_Name>
-    <XCAFDoc_ClippingPlaneTool id="20"/>
+    <TDataStd_Name id="20">Clipping Planes</TDataStd_Name>
+    <xcaf:ClippingPlaneTool id="21"/>
    </label>
    <label tag="9">
-    <TDataStd_Name id="21" nameguid="2a96b608-ec8b-11d0-bee7-080009dc3333">Notes</TDataStd_Name>
-    <XCAFDoc_NotesTool id="22"/>
+    <TDataStd_Name id="22">Notes</TDataStd_Name>
+    <XCAFDoc_NotesTool:XCAFDoc_NotesTool id="23"/>
    </label>
   </label>
  </label>
  <shapes>
-CASCADE Topology V3, (c) Open Cascade
+CASCADE Topology V2, (c) Matra-Datavision
 Locations 0
 Curve2ds 24
 1 0 0 1 0 
@@ -126,7 +127,9 @@ Ed
  1e-07 1 1 0
 1  1 0 0 10
 2  1 1 0 0 10
+0 0 10 0
 2  2 2 0 0 10
+0 0 10 0
 0
 
 0101000
@@ -142,7 +145,9 @@ Ed
  1e-07 1 1 0
 1  2 0 0 10
 2  3 1 0 0 10
+10 0 10 -10
 2  4 3 0 0 10
+0 0 0 10
 0
 
 0101000
@@ -158,7 +163,9 @@ Ed
  1e-07 1 1 0
 1  3 0 0 10
 2  5 1 0 0 10
+0 -10 10 -10
 2  6 4 0 0 10
+0 0 10 0
 0
 
 0101000
@@ -167,7 +174,9 @@ Ed
  1e-07 1 1 0
 1  4 0 0 10
 2  7 1 0 0 10
+0 0 0 -10
 2  8 5 0 0 10
+0 0 0 10
 0
 
 0101000
@@ -199,7 +208,9 @@ Ed
  1e-07 1 1 0
 1  5 0 0 10
 2  9 6 0 0 10
+0 0 10 0
 2  10 2 0 0 10
+0 10 10 10
 0
 
 0101000
@@ -215,7 +226,9 @@ Ed
  1e-07 1 1 0
 1  6 0 0 10
 2  11 6 0 0 10
+10 0 10 -10
 2  12 3 0 0 10
+10 0 10 10
 0
 
 0101000
@@ -231,7 +244,9 @@ Ed
  1e-07 1 1 0
 1  7 0 0 10
 2  13 6 0 0 10
+0 -10 10 -10
 2  14 4 0 0 10
+0 10 10 10
 0
 
 0101000
@@ -240,7 +255,9 @@ Ed
  1e-07 1 1 0
 1  8 0 0 10
 2  15 6 0 0 10
+0 0 0 -10
 2  16 5 0 0 10
+10 0 10 10
 0
 
 0101000
@@ -258,7 +275,9 @@ Ed
  1e-07 1 1 0
 1  9 0 0 10
 2  17 2 0 0 10
+0 0 0 10
 2  18 5 0 0 10
+0 0 10 0
 0
 
 0101000
@@ -267,7 +286,9 @@ Ed
  1e-07 1 1 0
 1  10 0 0 10
 2  19 2 0 0 10
+10 0 10 10
 2  20 3 0 0 10
+0 0 10 0
 0
 
 0101000
@@ -285,7 +306,9 @@ Ed
  1e-07 1 1 0
 1  11 0 0 10
 2  21 4 0 0 10
+0 0 0 10
 2  22 5 0 0 10
+0 10 10 10
 0
 
 0101000
@@ -294,7 +317,9 @@ Ed
  1e-07 1 1 0
 1  12 0 0 10
 2  23 4 0 0 10
+10 0 10 10
 2  24 3 0 0 10
+0 10 10 10
 0
 
 0101000
