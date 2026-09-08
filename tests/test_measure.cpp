@@ -13,7 +13,6 @@
 #include "../src/base/unit_system.h"
 #include "../src/io_occ/io_occ_stl.h"
 #include "../src/measure/measure_tool_brep.h"
-#include "../qtcommon/qstring_conv.h"
 
 #include <BRep_Builder.hxx>
 #include <BRepAdaptor_Curve.hxx>
@@ -186,7 +185,7 @@ void TestMeasure::BRepMinDistance_TwoConfusedFaces_test()
         const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(face1, face2);
         QCOMPARE(minDist.value.value(), 0.);
     } catch (const IMeasureError& err) {
-        qDebug() << to_QString(err.message());
+        qDebug() << std::string{err.message()}.c_str();
     }
 }
 
@@ -264,3 +263,5 @@ void TestMeasure::BRepBoundingBox_NullShape_test()
 }
 
 } // namespace Mayo
+
+QTEST_APPLESS_MAIN(Mayo::TestMeasure)

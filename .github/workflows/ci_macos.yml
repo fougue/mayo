@@ -49,4 +49,4 @@ jobs:
 
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build
-      run: ./test-mayo
+      run: ctest --test-dir . --output-on-failure

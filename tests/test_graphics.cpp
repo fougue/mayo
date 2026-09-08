@@ -54,3 +54,5 @@ void TestGraphics::Regression_bugGitHub255_test()
 }
 
 } // namespace Mayo
+
+QTEST_APPLESS_MAIN(Mayo::TestGraphics)

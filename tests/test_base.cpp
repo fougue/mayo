@@ -343,3 +343,5 @@ void TestBase::XCaf_userDefinedAttributes_test()
 }
 
 } // namespace Mayo
+
+QTEST_APPLESS_MAIN(Mayo::TestBase)

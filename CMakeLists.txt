@@ -717,57 +717,11 @@ if(Mayo_BuildConvCli)
 endif() # Mayo_BuildConvCli
 
 ##########
-# Target: test-mayo
+# Targets: test-base, test-io, ...
 ##########
 
 if(Mayo_BuildTests)
-    enable_testing()
-
-    file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
-    file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
-    add_executable(
-        test-mayo
-        ${MayoTests_HeaderFiles}
-        ${MayoTests_SourceFiles}
-        # src/measure
-        ${PROJECT_SOURCE_DIR}/src/measure/measure_display.cpp
-        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool.cpp
-        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool_brep.cpp
-        # src/app
-        ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/brep_meshing.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/document_files_watcher.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/qstring_utils.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/qtgui_utils.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
-        # src/qtcommon
-        ${PROJECT_SOURCE_DIR}/src/qtcommon/qtcore_utils.cpp
-    )
-
-    target_compile_definitions(test-mayo PRIVATE ${Mayo_CompileDefinitions})
-    target_compile_options(test-mayo PRIVATE ${Mayo_CompileOptions})
-    target_link_libraries(
-        test-mayo PRIVATE
-        MayoCoreLib
-        MayoIOLib
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Gui
-        Qt${QT_VERSION_MAJOR}::Test
-    )
-
-    set_target_properties(
-        test-mayo PROPERTIES
-            WIN32_EXECUTABLE FALSE
-            AUTOMOC ON
-    )
-
-    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
-    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
-
-    add_test(NAME test-mayo COMMAND test-mayo)
+    include(${PROJECT_SOURCE_DIR}/cmake/BuildTests.cmake)
 endif()
 
 ##########

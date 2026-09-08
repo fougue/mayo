@@ -449,3 +449,5 @@ void TestIO::cleanupTestCase()
 }
 
 } // namespace Mayo
+
+QTEST_APPLESS_MAIN(Mayo::TestIO)

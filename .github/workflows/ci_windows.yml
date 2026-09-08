@@ -115,6 +115,4 @@ jobs:
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build
       shell: cmd
-      run: |
-        debug\test-mayo.exe -o utests-output.txt
-        more utests-output.txt
+      run: ctest --test-dir . -C Debug -V
