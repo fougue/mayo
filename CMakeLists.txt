@@ -73,7 +73,6 @@ if(WIN32)
         set(Mayo_PostBuildCopyRuntimeDLLs_DefaultValue ON)
     endif()
 
-    message(STATUS "Mayo_PostBuildCopyRuntimeDLLs_DefaultValue=${Mayo_PostBuildCopyRuntimeDLLs_DefaultValue}")
     option(
         Mayo_PostBuildCopyRuntimeDLLs
         "\
@@ -98,6 +97,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Mayo_EnableCoverage=${Mayo_EnableCoverage}")
 endif()
 
+if(Mayo_BuildTests)
+    set(Mayo_TestOutputFilenameTemplate ""
+        CACHE STRING "Template for tests output filename. If specified then test output is redirected to a file"
+    )
+    set(Mayo_TestOutputFormat "txt" CACHE STRING "Test output format")
+    set_property(CACHE Mayo_TestOutputFormat PROPERTY STRINGS txt xml csv junitxml tap)
+else()
+    unset(Mayo_TestOutputFilenameTemplate CACHE)
+    unset(Mayo_TestOutputFormat CACHE)
+endif()
+
 # TODO
 # option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
 
@@ -119,15 +129,11 @@ if(QT_FOUND)
     endif()
 
     if(Mayo_BuildApp)
-        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Test)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Svg)
         if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
             find_package(Qt5 REQUIRED COMPONENTS WinExtras)
         elseif(QT_VERSION_MAJOR EQUAL 6)
             find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
-        endif()
-
-        if(Mayo_PostBuildCopyRuntimeDLLs)
-            find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg)
         endif()
     endif()
 endif()
@@ -600,51 +606,6 @@ if(Mayo_BuildApp)
             WIN32_EXECUTABLE TRUE
             AUTOMOC ON  AUTOUIC ON  AUTORCC ON
     )
-
-    if(Mayo_PostBuildCopyRuntimeDLLs)
-        # Run "qmake -query QT_INSTALL_PLUGINS" to retrieve base folder of Qt plugins
-        get_target_property(Qt_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
-        execute_process(
-            COMMAND ${Qt_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
-            OUTPUT_VARIABLE QtPluginsDir
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-        # Copy required Qt plugins
-        file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
-        file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
-        file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
-        set(QtPluginsDLLs ${QtPluginIconEnginesDLLs} ${QtPluginImageFormatsDLLs} ${QtPluginPlatformsDLLs})
-        foreach(QtPluginDLL ${QtPluginsDLLs})
-            cmake_path(GET QtPluginDLL PARENT_PATH QtPluginDLL_Path)
-            cmake_path(GET QtPluginDLL_Path FILENAME QtPluginDLL_PathName)
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-            )
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${QtPluginDLL}" "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-            )
-        endforeach()
-
-        # Copy OpenCascade 3rd-party DLLs
-        foreach(Occ3rdDLL ${OpenCASCADE_3RDPARTY_DLLS})
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Occ3rdDLL}" $<TARGET_FILE_DIR:mayo>
-            )
-        endforeach()
-
-        # Copy runtime DLLs specified with library IMPORTED_LOCATION property
-        add_custom_command(
-            TARGET mayo POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    $<TARGET_RUNTIME_DLLS:mayo> $<TARGET_FILE_DIR:mayo>
-            COMMAND_EXPAND_LISTS
-        )
-    endif() # Mayo_PostBuildCopyRuntimeDLLs
 endif() # Mayo_BuildApp
 
 ##########
@@ -723,6 +684,73 @@ endif() # Mayo_BuildConvCli
 if(Mayo_BuildTests)
     include(${PROJECT_SOURCE_DIR}/cmake/BuildTests.cmake)
 endif()
+
+##########
+# Handle option Mayo_PostBuildCopyRuntimeDLLs
+##########
+
+if(Mayo_PostBuildCopyRuntimeDLLs)
+    # Helper function to copy runtime DLLs of a target
+    function(mayo_copy_runtime_dlls TARGET)
+        if(NOT TARGET "${TARGET}")
+            return()
+        endif()
+
+        add_custom_command(
+            TARGET ${TARGET} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<TARGET_RUNTIME_DLLS:${TARGET}>
+                    $<TARGET_FILE_DIR:${TARGET}>
+            COMMAND_EXPAND_LISTS
+        )
+    endfunction()
+
+    if (Mayo_BuildApp)
+        # Run "qmake -query QT_INSTALL_PLUGINS" to retrieve base folder of Qt plugins
+        get_target_property(Qt_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+        execute_process(
+            COMMAND ${Qt_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
+            OUTPUT_VARIABLE QtPluginsDir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        # Copy required Qt plugins
+        file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
+        file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
+        file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
+        set(QtPluginsDLLs ${QtPluginIconEnginesDLLs} ${QtPluginImageFormatsDLLs} ${QtPluginPlatformsDLLs})
+        foreach(QtPluginDLL ${QtPluginsDLLs})
+            cmake_path(GET QtPluginDLL PARENT_PATH QtPluginDLL_Path)
+            cmake_path(GET QtPluginDLL_Path FILENAME QtPluginDLL_PathName)
+            add_custom_command(
+                TARGET mayo POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
+            )
+            add_custom_command(
+                TARGET mayo POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${QtPluginDLL}" "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
+            )
+        endforeach()
+    endif()
+
+    foreach(Target mayo mayo-conv ${Mayo_TestTargets})
+        mayo_copy_runtime_dlls(${Target})
+    endforeach()
+
+    # Copy OpenCascade 3rd-party DLLs
+    foreach(Target mayo mayo-conv ${Mayo_TestTargets})
+        if(TARGET ${Target})
+            foreach(Occ3rdDLL ${OpenCASCADE_3RDPARTY_DLLS})
+                add_custom_command(
+                    TARGET ${Target} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Occ3rdDLL}" "$<TARGET_FILE_DIR:${Target}>"
+                )
+            endforeach()
+            break()
+        endif()
+    endforeach()
+endif() # Mayo_PostBuildCopyRuntimeDLLs
 
 ##########
 # Target: OtherFiles

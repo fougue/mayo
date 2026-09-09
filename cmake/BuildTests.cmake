@@ -5,6 +5,9 @@
 
 include(CTest)
 enable_testing()
+set_property(CACHE BUILD_TESTING PROPERTY TYPE INTERNAL)
+
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Test)
 
 # Copy common input files into build dir
 file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
@@ -23,17 +26,37 @@ function(mayo_add_test MODULE)
     set(TARGET "test-${MODULE}")
     add_executable(${TARGET} ${TEST_SOURCES})
 
-    target_compile_definitions(${TARGET} PRIVATE ${Mayo_CompileDefinitions} ${TEST_DEFINITIONS})
-    target_compile_options(${TARGET} PRIVATE ${Mayo_CompileOptions} ${TEST_OPTIONS})
-    target_link_libraries(${TARGET} PRIVATE ${TEST_LIBRARIES} Qt${QT_VERSION_MAJOR}::Test)
+    target_compile_definitions(
+        ${TARGET} PRIVATE ${Mayo_CompileDefinitions} ${TEST_DEFINITIONS}
+    )
+    target_compile_options(
+        ${TARGET} PRIVATE ${Mayo_CompileOptions} ${TEST_OPTIONS}
+    )
+    target_link_libraries(
+        ${TARGET} PRIVATE ${TEST_LIBRARIES} Qt${QT_VERSION_MAJOR}::Test
+    )
     set_target_properties(${TARGET}
         PROPERTIES
             WIN32_EXECUTABLE FALSE
             AUTOMOC ON
     )
 
-    add_test(NAME ${TARGET} COMMAND ${TARGET})
+    set(TEST_COMMAND ${TARGET})
+    if(Mayo_TestOutputFilenameTemplate)
+        string(
+            REPLACE "<test>" "${TARGET}"
+            TEST_OUTPUT_FILENAME "${Mayo_TestOutputFilenameTemplate}"
+        )
+        list(APPEND TEST_COMMAND -o "${TEST_OUTPUT_FILENAME},${Mayo_TestOutputFormat}")
+    else()
+        list(APPEND TEST_COMMAND "-${Mayo_TestOutputFormat}")
+    endif()
+
+    add_test(NAME ${TARGET} COMMAND ${TEST_COMMAND})
+
     set_tests_properties(${TARGET} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+    set(Mayo_TestTargets ${Mayo_TestTargets} ${TARGET} PARENT_SCOPE)
 endfunction()
 
 # test-base
@@ -82,6 +105,8 @@ mayo_add_test(
 )
 
 # test-app
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui)
+
 file(
     GLOB MayoTestApp_SourceFiles
     ${PROJECT_SOURCE_DIR}/tests/test_app*.h
