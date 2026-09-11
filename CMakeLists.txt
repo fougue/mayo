@@ -99,7 +99,11 @@ endif()
 
 if(Mayo_BuildTests)
     set(Mayo_TestOutputFilenameTemplate ""
-        CACHE STRING "Template for tests output filename. If specified then test output is redirected to a file"
+        CACHE STRING "\
+Template for tests output filename. If specified then test output is redirected to a file\n\
+Use specific <test> placeholder to expand the name of test executable. For example :\n\
+    <test>-results.xml -> test-base-results.xml, test-io-results.xml, ...\
+"
     )
     set(Mayo_TestOutputFormat "txt" CACHE STRING "Test output format")
     set_property(CACHE Mayo_TestOutputFormat PROPERTY STRINGS txt xml csv junitxml tap)
@@ -690,67 +694,8 @@ endif()
 ##########
 
 if(Mayo_PostBuildCopyRuntimeDLLs)
-    # Helper function to copy runtime DLLs of a target
-    function(mayo_copy_runtime_dlls TARGET)
-        if(NOT TARGET "${TARGET}")
-            return()
-        endif()
-
-        add_custom_command(
-            TARGET ${TARGET} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    $<TARGET_RUNTIME_DLLS:${TARGET}>
-                    $<TARGET_FILE_DIR:${TARGET}>
-            COMMAND_EXPAND_LISTS
-        )
-    endfunction()
-
-    if (Mayo_BuildApp)
-        # Run "qmake -query QT_INSTALL_PLUGINS" to retrieve base folder of Qt plugins
-        get_target_property(Qt_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
-        execute_process(
-            COMMAND ${Qt_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
-            OUTPUT_VARIABLE QtPluginsDir
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-        # Copy required Qt plugins
-        file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
-        file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
-        file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
-        set(QtPluginsDLLs ${QtPluginIconEnginesDLLs} ${QtPluginImageFormatsDLLs} ${QtPluginPlatformsDLLs})
-        foreach(QtPluginDLL ${QtPluginsDLLs})
-            cmake_path(GET QtPluginDLL PARENT_PATH QtPluginDLL_Path)
-            cmake_path(GET QtPluginDLL_Path FILENAME QtPluginDLL_PathName)
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-            )
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${QtPluginDLL}" "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-            )
-        endforeach()
-    endif()
-
-    foreach(Target mayo mayo-conv ${Mayo_TestTargets})
-        mayo_copy_runtime_dlls(${Target})
-    endforeach()
-
-    # Copy OpenCascade 3rd-party DLLs
-    foreach(Target mayo mayo-conv ${Mayo_TestTargets})
-        if(TARGET ${Target})
-            foreach(Occ3rdDLL ${OpenCASCADE_3RDPARTY_DLLS})
-                add_custom_command(
-                    TARGET ${Target} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Occ3rdDLL}" "$<TARGET_FILE_DIR:${Target}>"
-                )
-            endforeach()
-            break()
-        endif()
-    endforeach()
-endif() # Mayo_PostBuildCopyRuntimeDLLs
+    include(${PROJECT_SOURCE_DIR}/cmake/PostBuildCopyRuntimeDLLs.cmake)
+endif()
 
 ##########
 # Target: OtherFiles

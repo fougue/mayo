@@ -3,11 +3,25 @@
 #* SPDX-License-Identifier: BSD-2-Clause
 #****************************************************************************
 
+# -----------------------------------
+#
+# FILE BuildTests.cmake
+#
+# Configure the Mayo test suite, including test executables and CTest integration
+#
+# Common test input files are copied to the build directory in "<build-dir>/test/inputs"
+# Each test module is built as a separate executable and registered with CTest
+#
+# -----------------------------------
+
 include(CTest)
 enable_testing()
-set_property(CACHE BUILD_TESTING PROPERTY TYPE INTERNAL)
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Test)
+
+# Hide BUILD_TESTING option from CMake configuration interfaces
+# Mayo uses its own option (Mayo_BuildTests)
+set_property(CACHE BUILD_TESTING PROPERTY TYPE INTERNAL)
 
 # Copy common input files into build dir
 file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
