@@ -394,3 +394,5 @@ void TestApp::runWithinEventLoop(const std::function<void()>& fn, int delayMSec)
 }
 
 } // namespace Mayo
+
+QTEST_APPLESS_MAIN(Mayo::TestApp)

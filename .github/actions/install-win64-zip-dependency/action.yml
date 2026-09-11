@@ -1,0 +1,49 @@
+name: Install dependency
+description: Download, cache and extract a dependency archive
+
+inputs:
+  cache-key:
+    required: true
+    description: Cache key
+  archive:
+    required: true
+    description: Archive filename
+  url:
+    required: true
+    description: Archive download URL
+  sha256:
+    required: true
+    description: SHA256 checksum
+  extract-dir:
+    required: false
+    default: ${{ github.workspace }}
+    description: Extraction directory
+
+runs:
+  using: composite
+  steps:
+    # Cache the extracted directory — skip download+extract entirely on hit
+    - name: Cache extracted content
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: ${{ inputs.extract-dir }}
+        key: ${{ inputs.cache-key }}
+
+    - name: Download archive
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: carlosperate/download-file-action@v2
+      with:
+        file-url: ${{ inputs.url }}
+        file-name: ${{ inputs.archive }}
+        sha256: ${{ inputs.sha256 }}
+
+    - name: Extract archive
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path "${{ inputs.extract-dir }}" | Out-Null
+        & 7z x "${{ inputs.archive }}" "-o${{ inputs.extract-dir }}" -y
+        if ($LASTEXITCODE -ne 0) { throw "Extraction of ${{ inputs.archive }} failed" }
+        Remove-Item "${{ inputs.archive }}" -Force
+        Write-Host "Installed: ${{ inputs.archive }} -> ${{ inputs.extract-dir }}"

@@ -40,6 +40,6 @@ jobs:
           echo 'RUN cmake --build . --parallel $(nproc) --config Release'
           #echo 'RUN Xvfb $DISPLAY -screen 0 1280x1024x24 &'
           #echo 'RUN sleep 5s'
-          #echo 'RUN ./test-mayo'
+          #echo 'RUN ctest --test-dir . --output-on-failure'
         } > podmanfile
         podman build --tag fedora40-ci -f ./podmanfile

@@ -6,16 +6,32 @@ jobs:
   build-windows:
     strategy:
       matrix:
-        occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0, 7.8.0, 7.9.0, 8.0.0]
-        assimp_version: [6.0.5]
-        pch: [OFF]
         include:
-          - { occ_version: 7.7.0, assimp_version: 5.3.1, pch: ON }
-          - { occ_version: 7.8.0, assimp_version: 5.4.3, pch: ON }
+        # Must fail (OCCT 7.3 is unsupported)
+        - { occ_version: 7.3.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: OFF }
+        # Must succeed
+        - { occ_version: 7.4.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: OFF }
+        - { occ_version: 7.5.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: OFF }
+        - { occ_version: 7.6.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: OFF }
+        - { occ_version: 7.7.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: OFF }
+        - { occ_version: 7.8.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: ON  }
+        - { occ_version: 7.9.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: OFF }
+        - { occ_version: 7.9.0, assimp_version: 6.0.5, qt_version: '5.15', config: Release, pch: OFF }
+        - { occ_version: 7.9.0, assimp_version: 6.0.5, qt_version: '6.8',  config: Release, pch: ON  }
+        - { occ_version: 8.0.0, assimp_version: 6.0.5, qt_version: '5.15', config: Debug,   pch: OFF }
+        - { occ_version: 8.0.0, assimp_version: 6.0.5, qt_version: '6.8',  config: Release, pch: ON  }
+        - { occ_version: 8.0.0, assimp_version: 6.0.5, qt_version: '6.8',  config: Release, pch: OFF }
+        # Must succeed (with old Assimp versions)
+        - { occ_version: 7.7.0, assimp_version: 5.3.1, qt_version: '5.15', config: Debug,   pch: ON  }
+        - { occ_version: 7.8.0, assimp_version: 5.4.3, qt_version: '5.15', config: Debug,   pch: ON  }
 
     runs-on: windows-latest
-    name: build-win-msvc-occt${{matrix.occ_version}}-assimp${{matrix.assimp_version}}${{ matrix.pch == 'ON' && '-pch' || '' }}
+    name: build-win-msvc-occt${{matrix.occ_version}}-assimp${{matrix.assimp_version}}-qt${{matrix.qt_version}}-${{matrix.config}}${{matrix.pch == 'ON' && '-pch' || ''}}
     continue-on-error: ${{ matrix.occ_version == '7.3.0' }}
+
+    env:
+      BIN_BASE_URL: "https://www.fougue.pro/share/bin"
+      OCC_TOOLSET: vc14-64
 
     steps:
     - name: Set globals
@@ -50,42 +66,28 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
+        version: ${{matrix.qt_version}}.*
+        host: windows
+        target: desktop
         cache: true
-        cache-key-prefix: QtCache
 
-    - name: Cache OpenCascade archive
-      id: cache-occ
-      uses: actions/cache@v5
+    - name: Install OpenCascade
+      uses: ./.github/actions/install-win64-zip-dependency
       with:
-        path: OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
-        key: occ-${{matrix.occ_version}}
-
-    - name: Download OpenCascade
-      if: steps.cache-occ.outputs.cache-hit != 'true'
-      uses: carlosperate/download-file-action@v2
-      with:
-        file-url: 'https://www.fougue.pro/share/bin/OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip'
+        cache-key: occ-${{matrix.occ_version}}-${{steps.globals.outputs.occ_zip_sha256}}
+        archive: OpenCASCADE-${{matrix.occ_version}}-${{env.OCC_TOOLSET}}.zip
+        url: ${{env.BIN_BASE_URL}}/OpenCASCADE-${{matrix.occ_version}}-${{env.OCC_TOOLSET}}.zip
         sha256: ${{steps.globals.outputs.occ_zip_sha256}}
+        extract-dir: ${{github.workspace}}/libs
 
-    - name: Extract OpenCascade
-      run: 7z x OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
-
-    - name: Cache Assimp archive
-      id: cache-assimp
-      uses: actions/cache@v5
+    - name: Install Assimp
+      uses: ./.github/actions/install-win64-zip-dependency
       with:
-        path: assimp-${{matrix.assimp_version}}.zip
-        key: assimp-${{matrix.assimp_version}}
-
-    - name: Download Assimp
-      if: steps.cache-assimp.outputs.cache-hit != 'true'
-      uses: carlosperate/download-file-action@v2
-      with:
-        file-url: 'https://www.fougue.pro/share/bin/assimp-${{matrix.assimp_version}}.zip'
+        cache-key: assimp-${{matrix.assimp_version}}-${{steps.globals.outputs.assimp_zip_sha256}}
+        archive: assimp-${{matrix.assimp_version}}.zip
+        url: ${{env.BIN_BASE_URL}}/assimp-${{matrix.assimp_version}}.zip
         sha256: ${{steps.globals.outputs.assimp_zip_sha256}}
-
-    - name: Extract Assimp
-      run: 7z x assimp-${{matrix.assimp_version}}.zip
+        extract-dir: ${{github.workspace}}/libs
 
     - name: Configure Compiler
       uses: ilammy/msvc-dev-cmd@v1
@@ -99,22 +101,28 @@ jobs:
         set occ_version=${{matrix.occ_version}}
         set assimp_version=${{matrix.assimp_version}}
 
+        cmake --version
         cmake .. ^
           -DMayo_EnablePch=${{matrix.pch}} ^
           -DMayo_BuildTests=ON ^
           -DMayo_BuildPluginAssimp=ON ^
           -DMayo_PostBuildCopyRuntimeDLLs=ON ^
-          -DOpenCASCADE_DIR=${{github.workspace}}/OpenCASCADE-%occ_version%-vc14-64/opencascade-%occ_version% ^
-          -Dassimp_DIR=${{github.workspace}}/assimp-%assimp_version%/lib/cmake/assimp-%assimp_version:~0,3%
+          -DMayo_TestOutputFilenameTemplate="<test>-results.txt" ^
+          -DOpenCASCADE_DIR=${{github.workspace}}/libs/OpenCASCADE-%occ_version%-${{env.OCC_TOOLSET}}/opencascade-%occ_version% ^
+          -Dassimp_DIR=${{github.workspace}}/libs/assimp-%assimp_version%/lib/cmake/assimp-%assimp_version:~0,3%
 
     - name: Build
       working-directory: ${{github.workspace}}/build
       shell: cmd
-      run: cmake --build . --config Debug --parallel %NUMBER_OF_PROCESSORS%
+      run: cmake --build . --config ${{matrix.config}} --parallel %NUMBER_OF_PROCESSORS%
 
     - name: Execute Unit Tests
       working-directory: ${{github.workspace}}/build
       shell: cmd
-      run: |
-        debug\test-mayo.exe -o utests-output.txt
-        more utests-output.txt
+      run: ctest --test-dir . -C ${{matrix.config}} --output-on-failure
+
+    - name: Show Unit Tests output
+      if: always()
+      working-directory: ${{github.workspace}}/build
+      shell: cmd
+      run: for %%f in (test-*-results.txt) do ( type "%%f" )

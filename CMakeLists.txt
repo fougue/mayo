@@ -73,7 +73,6 @@ if(WIN32)
         set(Mayo_PostBuildCopyRuntimeDLLs_DefaultValue ON)
     endif()
 
-    message(STATUS "Mayo_PostBuildCopyRuntimeDLLs_DefaultValue=${Mayo_PostBuildCopyRuntimeDLLs_DefaultValue}")
     option(
         Mayo_PostBuildCopyRuntimeDLLs
         "\
@@ -98,6 +97,21 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Mayo_EnableCoverage=${Mayo_EnableCoverage}")
 endif()
 
+if(Mayo_BuildTests)
+    set(Mayo_TestOutputFilenameTemplate ""
+        CACHE STRING "\
+Template for tests output filename. If specified then test output is redirected to a file\n\
+Use specific <test> placeholder to expand the name of test executable. For example :\n\
+    <test>-results.xml -> test-base-results.xml, test-io-results.xml, ...\
+"
+    )
+    set(Mayo_TestOutputFormat "txt" CACHE STRING "Test output format")
+    set_property(CACHE Mayo_TestOutputFormat PROPERTY STRINGS txt xml csv junitxml tap)
+else()
+    unset(Mayo_TestOutputFilenameTemplate CACHE)
+    unset(Mayo_TestOutputFormat CACHE)
+endif()
+
 # TODO
 # option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
 
@@ -119,15 +133,11 @@ if(QT_FOUND)
     endif()
 
     if(Mayo_BuildApp)
-        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Test)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Svg)
         if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
             find_package(Qt5 REQUIRED COMPONENTS WinExtras)
         elseif(QT_VERSION_MAJOR EQUAL 6)
             find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
-        endif()
-
-        if(Mayo_PostBuildCopyRuntimeDLLs)
-            find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg)
         endif()
     endif()
 endif()
@@ -600,51 +610,6 @@ if(Mayo_BuildApp)
             WIN32_EXECUTABLE TRUE
             AUTOMOC ON  AUTOUIC ON  AUTORCC ON
     )
-
-    if(Mayo_PostBuildCopyRuntimeDLLs)
-        # Run "qmake -query QT_INSTALL_PLUGINS" to retrieve base folder of Qt plugins
-        get_target_property(Qt_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
-        execute_process(
-            COMMAND ${Qt_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
-            OUTPUT_VARIABLE QtPluginsDir
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-        # Copy required Qt plugins
-        file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
-        file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
-        file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
-        set(QtPluginsDLLs ${QtPluginIconEnginesDLLs} ${QtPluginImageFormatsDLLs} ${QtPluginPlatformsDLLs})
-        foreach(QtPluginDLL ${QtPluginsDLLs})
-            cmake_path(GET QtPluginDLL PARENT_PATH QtPluginDLL_Path)
-            cmake_path(GET QtPluginDLL_Path FILENAME QtPluginDLL_PathName)
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-            )
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${QtPluginDLL}" "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-            )
-        endforeach()
-
-        # Copy OpenCascade 3rd-party DLLs
-        foreach(Occ3rdDLL ${OpenCASCADE_3RDPARTY_DLLS})
-            add_custom_command(
-                TARGET mayo POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Occ3rdDLL}" $<TARGET_FILE_DIR:mayo>
-            )
-        endforeach()
-
-        # Copy runtime DLLs specified with library IMPORTED_LOCATION property
-        add_custom_command(
-            TARGET mayo POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    $<TARGET_RUNTIME_DLLS:mayo> $<TARGET_FILE_DIR:mayo>
-            COMMAND_EXPAND_LISTS
-        )
-    endif() # Mayo_PostBuildCopyRuntimeDLLs
 endif() # Mayo_BuildApp
 
 ##########
@@ -717,57 +682,19 @@ if(Mayo_BuildConvCli)
 endif() # Mayo_BuildConvCli
 
 ##########
-# Target: test-mayo
+# Targets: test-base, test-io, ...
 ##########
 
 if(Mayo_BuildTests)
-    enable_testing()
+    include(${PROJECT_SOURCE_DIR}/cmake/BuildTests.cmake)
+endif()
 
-    file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
-    file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
-    add_executable(
-        test-mayo
-        ${MayoTests_HeaderFiles}
-        ${MayoTests_SourceFiles}
-        # src/measure
-        ${PROJECT_SOURCE_DIR}/src/measure/measure_display.cpp
-        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool.cpp
-        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool_brep.cpp
-        # src/app
-        ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/brep_meshing.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/document_files_watcher.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/qstring_utils.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/qtgui_utils.cpp
-        ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
-        # src/qtcommon
-        ${PROJECT_SOURCE_DIR}/src/qtcommon/qtcore_utils.cpp
-    )
+##########
+# Handle option Mayo_PostBuildCopyRuntimeDLLs
+##########
 
-    target_compile_definitions(test-mayo PRIVATE ${Mayo_CompileDefinitions})
-    target_compile_options(test-mayo PRIVATE ${Mayo_CompileOptions})
-    target_link_libraries(
-        test-mayo PRIVATE
-        MayoCoreLib
-        MayoIOLib
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Gui
-        Qt${QT_VERSION_MAJOR}::Test
-    )
-
-    set_target_properties(
-        test-mayo PROPERTIES
-            WIN32_EXECUTABLE FALSE
-            AUTOMOC ON
-    )
-
-    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
-    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
-
-    add_test(NAME test-mayo COMMAND test-mayo)
+if(Mayo_PostBuildCopyRuntimeDLLs)
+    include(${PROJECT_SOURCE_DIR}/cmake/PostBuildCopyRuntimeDLLs.cmake)
 endif()
 
 ##########
