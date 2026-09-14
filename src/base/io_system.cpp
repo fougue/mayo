@@ -61,14 +61,12 @@ bool isEntityPostProcessRequired(Format format, const System::ArgsImport& args)
 
 // Executes a callable while safely handling exceptions
 // Invokes the provided callable and returns its result wrapped in a `std::optional`
-// Any exception thrown during execution is caught and reported through the provided `Messenger`
-template<typename Function>
-auto noThrowExec(Messenger* messenger, Function fn)
+// Any exception thrown during execution is caught and reported through the provided `ErrorHandler`
+template<typename Function, typename ErrorHandler>
+auto noThrowExec(Function fn, ErrorHandler onError)
 {
     using FnReturnType = std::invoke_result_t<Function>;
     using ReturnType = std::conditional_t<std::is_void_v<FnReturnType>, std::monostate, FnReturnType>;
-
-    messenger = messenger ? messenger : &Messenger::null();
 
     try {
         if constexpr (std::is_void_v<FnReturnType>) {
@@ -79,21 +77,34 @@ auto noThrowExec(Messenger* messenger, Function fn)
         }
     }
     catch (const Standard_Failure& err) {
-        messenger->emitError(fmt::format(
+        onError(fmt::format(
             System::textIdTr("Exception '{}' : {}"),
             TKernelUtils::errorTypeName(err), TKernelUtils::errorMessage(err)
         ));
     }
     catch (const std::exception& err) {
-        messenger->emitError(fmt::format(System::textIdTr("Exception : {}"), err.what()));
+        onError(fmt::format(System::textIdTr("Exception : {}"), err.what()));
     }
-    catch (...) {
-        messenger->emitError(System::textIdTr("Unknown exception"));
+    catch (...) { // NOSONAR
+        onError(System::textIdTr("Unknown exception"));
     }
 
     return std::optional<ReturnType>{};
 }
 
+// Returns a callable that forwards an error message to messenger's emitError(), or to a null
+// Messenger sink if messenger is null (so the returned lambda is always safe to call)
+// Can be directly passed to noThrowExec()
+auto messengerErrorHandler(Messenger* messenger)
+{
+    messenger = messenger ? messenger : &Messenger::null();
+    return [=](std::string_view msg) { messenger->emitError(msg); };
+}
+
+// Holds the state and results of a single import task
+// Groups the input parameters (reader, file, format), progress/task tracking, and the outcome
+// of an import operation, including the entities transferred into the OCAF document and any
+// collected messages
 struct ImportTaskData {
     std::unique_ptr<Reader> reader;
     FilePath filepath;
@@ -144,9 +155,10 @@ void readFile(ImportTaskData& taskData, const System& ioSystem, const System::Ar
     // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
     [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
 
-    auto readFile = noThrowExec(&taskData.messenger, [&]{
-        return taskData.reader->readFile(taskData.filepath, &progress);
-    });
+    auto readFile = noThrowExec(
+        [&]{ return taskData.reader->readFile(taskData.filepath, &progress); },
+        messengerErrorHandler(&taskData.messenger)
+    );
     if (!readFile.value_or(false))
         return error(System::textIdTr("File read problem"));
 
@@ -167,9 +179,10 @@ void transfer(ImportTaskData& taskData, const System::ArgsImport& args)
         // Enable forwarding of global OCCT messages (eg Message::SendFail()) to the Mayo messenger
         [[maybe_unused]] ThreadMessengerChannel::Scope scopeMsg(&taskData.messenger);
 
-        auto transfer = noThrowExec(&taskData.messenger, [&]{
-            return taskData.reader->transfer(args.targetDocument, &progress);
-        });
+        auto transfer = noThrowExec(
+            [&]{ return taskData.reader->transfer(args.targetDocument, &progress); },
+            messengerErrorHandler(&taskData.messenger)
+        );
         taskData.seqTransferredEntity = transfer.value_or(NCollection_Sequence<TDF_Label>{});
         if (taskData.seqTransferredEntity.IsEmpty())
             taskData.messenger.error() << System::textIdTr("File transfer problem, no entity imported");
@@ -192,7 +205,10 @@ void postProcess(ImportTaskData& taskData, const System::ArgsImport& args)
     const double subPortionSize = 100. / static_cast<double>(taskData.seqTransferredEntity.Size());
     for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
         TaskProgress subProgress(&progress, subPortionSize);
-        noThrowExec(&taskData.messenger, [&]{ args.entityPostProcess(labelEntity, &subProgress); });
+        noThrowExec(
+            [&]{ args.entityPostProcess(labelEntity, &subProgress); },
+            messengerErrorHandler(&taskData.messenger)
+        );
     }
 }
 
@@ -469,18 +485,20 @@ bool System::exportItems(const ArgsExport& args) const
 
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
-        auto transfer = noThrowExec(&msgCollect, [&]{
-            return writer->transfer(args.applicationItems, &transferProgress);
-        });
+        auto transfer = noThrowExec(
+            [&]{ return writer->transfer(args.applicationItems, &transferProgress); },
+            messengerErrorHandler(&msgCollect)
+        );
         if (!transfer.value_or(false))
             return fnError(textIdTr("File transfer problem"));
     }
 
     {
         TaskProgress writeProgress(progress, 60, textIdTr("Write"));
-        auto writeFile = noThrowExec(&msgCollect, [&]{
-            return writer->writeFile(args.targetFilepath, &writeProgress);
-        });
+        auto writeFile = noThrowExec(
+            [&]{ return writer->writeFile(args.targetFilepath, &writeProgress); },
+            messengerErrorHandler(&msgCollect)
+        );
         if (!writeFile.value_or(false))
             return fnError(textIdTr("File write problem"));
     }
