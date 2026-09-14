@@ -25,7 +25,7 @@ set_property(CACHE BUILD_TESTING PROPERTY TYPE INTERNAL)
 
 # Copy common input files into build dir
 file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs)
-file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
+file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
 
 # Helper function
