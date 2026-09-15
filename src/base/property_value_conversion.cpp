@@ -395,7 +395,7 @@ std::string PropertyValueConversion::Variant::toString(bool* ok) const
         return std::to_string(std::get<int>(*this));
     }
     else if (std::holds_alternative<double>(*this)) {
-        return std::to_string(std::get<double>(*this));
+        return Mayo::toString(std::get<double>(*this));
     }
     else if (std::holds_alternative<std::vector<uint8_t>>(*this)) {
         const auto bytes = this->toConstRefByteArray(ok);

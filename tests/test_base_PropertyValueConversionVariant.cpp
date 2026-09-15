@@ -66,14 +66,7 @@ void TestBase::PropertyValueConversionVariant_toString_test()
     QFETCH(std::string, toString);
 
     bool ok = false;
-    if (std::holds_alternative<double>(variant)) {
-        const std::string str = variant.toString(&ok);
-        QCOMPARE(std::stod(str), std::stod(toString));
-    }
-    else {
-        QCOMPARE(variant.toString(&ok), toString);
-    }
-
+    QCOMPARE(variant.toString(&ok), toString);
     QVERIFY(ok);
 }
 
