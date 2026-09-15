@@ -12,6 +12,7 @@
 #include "../src/base/messenger.h"
 #include "../src/base/meta_enum.h"
 #include "../src/base/task_progress.h"
+#include "../src/base/tkernel_utils.h"
 #include "../src/base/thread_messenger_channel.h"
 #include "../src/graphics/graphics_shape_object_driver.h"
 #include "../src/gui/gui_application.h"
@@ -122,16 +123,18 @@ void TestIO::ImageWriter_backgroundGradientFill_test()
     QFETCH(int, gradientFillEnum);
 
     using GradientFill = IO::ImageWriter::GradientFill;
-    if (static_cast<GradientFill>(gradientFillEnum) == GradientFill::Radial
-        && !IO::ImageWriter::isRadialGradientFillSupported())
-    {
+    const auto gradientFill = static_cast<GradientFill>(gradientFillEnum);
+
+    if (TKernelUtils::preferredRgbColorType() == Quantity_TOC_RGB)
+        QSKIP("Requires OpenCascade >= 7.5.0 for stable/comparable gradient rendering (sRGB->linear RGB color space change)");
+
+    if (gradientFill == GradientFill::Radial && !IO::ImageWriter::isRadialGradientFillSupported())
         QSKIP("Gradient fill not supported with this OpenCascade version");
-    }
 
     HelperTestImage helper;
     QVERIFY(m_ioSystem->importInDocument(helper.doc, "tests/inputs/cube.brep"));
 
-    helper.params().backgroundGradientFill = static_cast<GradientFill>(gradientFillEnum);
+    helper.params().backgroundGradientFill = gradientFill;
     helper.params().backgroundColorStart = Quantity_NOC_RED1;
     helper.params().backgroundColorEnd = Quantity_NOC_BLUE1;
     QVERIFY(helper.transferDocument());
@@ -165,6 +168,9 @@ void TestIO::ImageWriter_writeValidPngFile_test()
 {
     QFETCH(int, width);
     QFETCH(int, height);
+
+    if (TKernelUtils::preferredRgbColorType() == Quantity_TOC_RGB)
+        QSKIP("Requires OpenCascade >= 7.5.0 for stable/comparable gradient rendering (sRGB->linear RGB color space change)");
 
     HelperTestImage helper;
     QVERIFY(m_ioSystem->importInDocument(helper.doc, "tests/inputs/cube.brep"));

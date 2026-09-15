@@ -35,9 +35,9 @@ public:
 
     using ReturnType_StartProgressIndicator =
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-                Message_ProgressRange;
+        Message_ProgressRange;
 #else
-                const OccHandle<Message_ProgressIndicator>&;
+        const OccHandle<Message_ProgressIndicator>&;
 #endif
     static ReturnType_StartProgressIndicator start(const OccHandle<Message_ProgressIndicator>& progress);
 
