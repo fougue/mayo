@@ -3,23 +3,16 @@
 ** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
-#ifdef _WIN32
-#  include <windows.h>
-#endif
-
 #include "qtopengl_utils.h"
+
+#include "../graphics/opengl_utils.h"
 
 #include <QtCore/QCoreApplication>
 
-#include <Aspect_NeutralWindow.hxx>
 #include <OpenGl_Caps.hxx>
 #include <OpenGl_Context.hxx>
-#include <OpenGl_FrameBuffer.hxx>
 #include <OpenGl_GlCore20.hxx>
-#include <OpenGl_GraphicDriver.hxx>
 #include <OpenGl_View.hxx>
-#include <OpenGl_Window.hxx>
-#include <Standard_Version.hxx>
 
 #include <cstring>
 
@@ -27,26 +20,11 @@ namespace Mayo::QtOpenGlUtils {
 
 namespace {
 
-//! Class making DevicePixelRatio() configurable
-class OcctNeutralWindow : public Aspect_NeutralWindow {
-public:
-    OcctNeutralWindow() = default;
-
-#if OCC_VERSION_HEX >= 0x070600
-    double DevicePixelRatio() const override { return m_pixelRatio; }
-#endif
-    void SetDevicePixelRatio(double ratio) { m_pixelRatio = ratio; }
-
-private:
-    double m_pixelRatio = 1.;
-};
-
-
 #if OCC_VERSION_HEX >= 0x070600
 // OpenGL FBO subclass for wrapping FBO created by Qt using GL_RGBA8 texture format instead of GL_SRGB8_ALPHA8.
 // This FBO is set to OpenGl_Context::SetDefaultFrameBuffer() as a final target.
-// Subclass calls OpenGl_Context::SetFrameBufferSRGB() with sRGB=false flag,
-// which asks OCCT to disable GL_FRAMEBUFFER_SRGB and apply sRGB gamma correction manually.
+// Subclass calls OpenGl_Context::SetFrameBufferSRGB() with sRGB=false flag, which asks OCCT to
+// disable GL_FRAMEBUFFER_SRGB and apply sRGB gamma correction manually.
 //
 // Note this is using patch https://github.com/gkv311/occt-samples-qopenglwidget/commit/32c997ce281422ce7dcf4f7e1e529fbdf7dc642c
 // See also https://github.com/gkv311/occt-samples-qopenglwidget/issues/3
@@ -201,26 +179,9 @@ void setCapsFromSurfaceFormat(OpenGl_Caps& caps, const QSurfaceFormat& format)
 
 #if OCC_VERSION_HEX >= 0x070600
 
-Aspect_Drawable glNativeWindow(Aspect_Drawable nativeWin)
-{
-#ifdef Q_OS_WIN
-    HDC wglDevCtx = wglGetCurrentDC();
-    HWND wglWin = WindowFromDC(wglDevCtx);
-    nativeWin = (Aspect_Drawable)wglWin;
-#endif
-
-    return nativeWin;
-}
-
-OccHandle<OpenGl_Context> glContext(const OccHandle<V3d_View>& view)
-{
-    auto glView = OccHandle<OpenGl_View>::DownCast(view->View());
-    return glView->GlWindow()->GetGlContext();
-}
-
 void resetGlStateBeforeOcct(const OccHandle<V3d_View>& view)
 {
-    OccHandle<OpenGl_Context> glCtx = QtOpenGlUtils::glContext(view);
+    OccHandle<OpenGl_Context> glCtx = OpenGlUtils::glContext(view);
     if (glCtx.IsNull())
         return;
 
@@ -241,7 +202,7 @@ void resetGlStateBeforeOcct(const OccHandle<V3d_View>& view)
 
 void resetGlStateAfterOcct(const OccHandle<V3d_View>& view)
 {
-    OccHandle<OpenGl_Context> glCtx = QtOpenGlUtils::glContext(view);
+    OccHandle<OpenGl_Context> glCtx = OpenGlUtils::glContext(view);
     if (glCtx.IsNull())
         return;
 
@@ -257,73 +218,13 @@ void resetGlStateAfterOcct(const OccHandle<V3d_View>& view)
     }
 }
 
-bool initializeGlWindow(
-        const OccHandle<V3d_View>& view, Aspect_Drawable nativeWin, const NCollection_Vec2<int>& size, double pixelRatio
-    )
-{
-    auto driver = OccHandle<OpenGl_GraphicDriver>::DownCast(view->Viewer()->Driver());
-    auto glCtx = makeOccHandle<OpenGl_Context>();
-    if (!glCtx->Init(!driver->Options().contextCompatible)) {
-        Message::SendFail() << "Error: OpenGl_Context is unable to wrap OpenGL context";
-        return false;
-    }
-
-    auto window = OccHandle<OcctNeutralWindow>::DownCast(view->Window());
-    if (window.IsNull()) {
-        window = makeOccHandle<OcctNeutralWindow>();
-        window->SetVirtual(true);
-    }
-
-    window->SetNativeHandle(QtOpenGlUtils::glNativeWindow(nativeWin));
-    window->SetSize(size.x(), size.y());
-    window->SetDevicePixelRatio(pixelRatio);
-    view->SetWindow(window, glCtx->RenderingContext());
-    view->MustBeResized();
-    view->Invalidate();
-#if OCC_VERSION_HEX >= 0x070700
-    for (const OccHandle<V3d_View>& subview : view->Subviews()) {
-        subview->MustBeResized();
-        subview->Invalidate();
-    }
-#endif
-
-    return true;
-}
-
 bool initializeGlFramebufferObject(const OccHandle<V3d_View>& view)
 {
-    OccHandle<OpenGl_Context> glCtx = QtOpenGlUtils::glContext(view);
-    OccHandle<OpenGl_FrameBuffer> defaultFbo = glCtx->DefaultFrameBuffer();
-    if (defaultFbo.IsNull()) {
-        defaultFbo = makeOccHandle<OcctQtFrameBuffer>();
-        glCtx->SetDefaultFrameBuffer(defaultFbo);
-    }
-
-    if (!defaultFbo->InitWrapper(glCtx)) {
-        defaultFbo.Nullify();
-        Message::DefaultMessenger()->Send("Default FBO wrapper creation failed", Message_Fail);
-        return false;
-    }
-
-    NCollection_Vec2<int> viewSizeOld;
-    const NCollection_Vec2<int> viewSizeNew = defaultFbo->GetVPSize();
-    auto window = OccHandle<OcctNeutralWindow>::DownCast(view->Window());
-    window->Size(viewSizeOld.x(), viewSizeOld.y());
-    if (viewSizeNew != viewSizeOld) {
-        window->SetSize(viewSizeNew.x(), viewSizeNew.y());
-        view->MustBeResized();
-        view->Invalidate();
-#if OCC_VERSION_HEX >= 0x070700
-        for (const OccHandle<V3d_View>& subview : view->Subviews()) {
-            subview->MustBeResized();
-            subview->Invalidate();
-            defaultFbo->SetupViewport(glCtx);
-        }
-#endif
-    }
-
-    return true;
+    return OpenGlUtils::initializeGlFramebufferObject(
+        view, []{ return makeOccHandle<OcctQtFrameBuffer>(); }
+    );
 }
+
 #endif // OCC_VERSION_HEX >= 0x070600
 
 } // namespace Mayo::QtOpenGlUtils

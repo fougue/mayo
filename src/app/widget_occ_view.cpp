@@ -10,6 +10,7 @@
 
 #include "../base/occ_handle.h"
 #include "../graphics/graphics_utils.h"
+#include "../graphics/opengl_utils.h"
 #include "occt_window.h"
 #include "qtopengl_utils.h"
 #include "widget_occ_view.h"
@@ -89,7 +90,7 @@ void QOpenGLWidgetOccView::initializeGL()
     const QRect wrect = this->rect();
     const NCollection_Vec2<int> viewSize(wrect.right() - wrect.left(), wrect.bottom() - wrect.top());
 
-    if (!QtOpenGlUtils::initializeGlWindow(this->v3dView(), nativeWin, viewSize, this->devicePixelRatioF())) {
+    if (!OpenGlUtils::initializeGlWindow(this->v3dView(), nativeWin, viewSize, this->devicePixelRatioF())) {
         Message::SendFail() << "OpenGl_Context is unable to wrap OpenGL context";
         return;
     }
@@ -113,7 +114,7 @@ void QOpenGLWidgetOccView::paintGL()
 
     const double devPixelRatioOld = this->v3dView()->Window()->DevicePixelRatio();
     auto nativeWin = (Aspect_Drawable)this->effectiveWinId();
-    if (this->v3dView()->Window()->NativeHandle() != QtOpenGlUtils::glNativeWindow(nativeWin)) {
+    if (this->v3dView()->Window()->NativeHandle() != OpenGlUtils::glNativeWindow(nativeWin)) {
         // Workaround window recreation done by Qt on monitor (QScreen) disconnection
         Message::SendWarning() << "Native window handle has changed by QOpenGLWidget!";
         this->initializeGL();
