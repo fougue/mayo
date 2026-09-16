@@ -5,6 +5,7 @@
 
 #include "../base/occ_handle.h"
 #include "../graphics/graphics_utils.h"
+#include "../graphics/opengl_utils.h"
 
 #include <OpenGl_GraphicDriver.hxx>
 
@@ -22,14 +23,12 @@ OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphics
     gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
     // Offscreen FBOs should be always used
     gfxDriver->ChangeOptions().useSystemBuffer = false;
+    // Disable acclerated context if needed
+    const static bool isGpuAccel = OpenGlUtils::isHardwareAccelerationAvailable();
+    gfxDriver->ChangeOptions().contextNoAccel = !isGpuAccel;
 
     return gfxDriver;
 }
 #endif
-
-OccHandle<Graphic3d_GraphicDriver> QWidgetOccView_createCompatibleGraphicsDriver()
-{
-    return new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create());
-}
 
 } // namespace Mayo

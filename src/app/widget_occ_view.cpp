@@ -158,11 +158,12 @@ QWidgetOccView::QWidgetOccView(const OccHandle<V3d_View>& view, QWidget* parent)
     this->setAttribute(Qt::WA_PaintOnScreen);
 }
 
-// Defined in widget_occ_view.cpp
-OccHandle<Graphic3d_GraphicDriver> QWidgetOccView_createCompatibleGraphicsDriver();
+// Defined in graphics_create_driver.cpp
+OccHandle<Graphic3d_GraphicDriver> createDefaultGraphicsDriver();
+
 OccHandle<Graphic3d_GraphicDriver> QWidgetOccView::createCompatibleGraphicsDriver()
 {
-    return QWidgetOccView_createCompatibleGraphicsDriver();
+    return createDefaultGraphicsDriver();
 }
 
 void QWidgetOccView::redraw()

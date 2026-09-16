@@ -20,6 +20,7 @@
 #include "../graphics/graphics_point_cloud_object_driver.h"
 #include "../graphics/graphics_shape_object_driver.h"
 #include "../graphics/graphics_utils.h"
+#include "../graphics/opengl_utils.h"
 #include "../gui/gui_application.h"
 #include "../qtbackend/qt_app_translator.h"
 #include "../qtbackend/qt_signal_thread_helper.h"
@@ -258,6 +259,9 @@ static void initGui(GuiApplication* guiApp)
 {
     if (!guiApp)
         return;
+
+    if (!OpenGlUtils::isHardwareAccelerationAvailable())
+        qWarning() << "Hardware-accelerated OpenGL is not available, 3D rendering performance may be degraded";
 
     // Fallback for OpenGL
     setFunctionCreateGraphicsDriver(&QWidgetOccView::createCompatibleGraphicsDriver);

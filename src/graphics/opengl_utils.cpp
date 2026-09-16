@@ -10,14 +10,16 @@
 #include "../base/global.h"
 #include "opengl_utils.h"
 
-#if OCC_VERSION_HEX >= 0x070600
-
 #include <Aspect_NeutralWindow.hxx>
 #include <OpenGl_Context.hxx>
 #include <OpenGl_FrameBuffer.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <OpenGl_View.hxx>
 #include <OpenGl_Window.hxx>
+
+#if defined(__APPLE__)
+#  include <OpenGL/OpenGL.h>
+#endif
 
 namespace Mayo::OpenGlUtils {
 
@@ -27,7 +29,9 @@ namespace {
 class OcctNeutralWindow : public Aspect_NeutralWindow {
 public:
     OcctNeutralWindow() = default;
+#if OCC_VERSION_HEX >= 0x070600
     double DevicePixelRatio() const override { return m_pixelRatio; }
+#endif
     void SetDevicePixelRatio(double ratio) { m_pixelRatio = ratio; }
 
 private:
@@ -52,6 +56,30 @@ OccHandle<OpenGl_Context> glContext(const OccHandle<V3d_View>& view)
     auto glView = OccHandle<OpenGl_View>::DownCast(view->View());
     return glView->GlWindow()->GetGlContext();
 }
+
+bool isHardwareAccelerationAvailable()
+{
+#if defined(__APPLE__)
+    const CGLPixelFormatAttribute attribs[] = {
+        kCGLPFAAccelerated,
+        (CGLPixelFormatAttribute)0
+    };
+
+    CGLPixelFormatObj pixelFormat = nullptr;
+    GLint numVirtualScreens = 0;
+    const CGLError err = CGLChoosePixelFormat(attribs, &pixelFormat, &numVirtualScreens);
+    const bool ok = (err == kCGLNoError) && (pixelFormat != nullptr);
+
+    if (pixelFormat != nullptr)
+        CGLDestroyPixelFormat(pixelFormat);
+
+    return ok;
+#else
+    return true;
+#endif
+}
+
+#if OCC_VERSION_HEX >= 0x070600
 
 bool initializeGlWindow(
         const OccHandle<V3d_View>& view, Aspect_Drawable nativeWin, const NCollection_Vec2<int>& size, double pixelRatio
@@ -123,7 +151,6 @@ bool initializeGlFramebufferObject(
 
     return true;
 }
+#endif // OCC_VERSION_HEX >= 0x070600
 
 } // namespace Mayo::OpenGlUtils
-
-#endif // OCC_VERSION_HEX >= 0x070600
