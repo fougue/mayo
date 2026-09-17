@@ -39,7 +39,7 @@ Quantity_Color toColor(const QColor& c);
 
 Quantity_Color toPreferredColorSpace(const QColor& c);
 
-// Converts (OCCT)Image_Pixmap -> QPixmap
+// Converts (OCCT)Image_PixMap -> QPixmap
 QPixmap toQPixmap(const Image_PixMap& pixmap);
 
 // Loads QPixmap from a QByteArray object
@@ -48,6 +48,13 @@ QPixmap toQPixmap(const QByteArray& bytes, Qt::ImageConversionFlags flags = Qt::
 
 // Saves QPixmap into a QByteArray object
 QByteArray toQByteArray(const QPixmap& pixmap, const char* format = "PNG");
+
+// Converts QPixmap -> (OCCT)Image_PixMap
+// The image is converted to 32-bit RGBA format before being copied into the destination pixmap.
+// The destination owns its pixel data after this call, so it remains valid independently of the
+// source QPixmap
+// Returns TRUE if the conversion succeeds, FALSE otherwise
+bool toOccPixmap(const QPixmap& pixmap, Image_PixMap& occPixmap);
 
 // Returns linear interpolated color between 'a' and 'b' at parameter 't'
 QColor lerp(const QColor& a, const QColor& b, double t);

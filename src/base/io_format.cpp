@@ -82,7 +82,7 @@ gsl::span<std::string_view> formatFileSuffixes(Format format)
     static std::string_view suffix_gltf[] = { "gltf", "glb" };
     static std::string_view suffix_ifc[]  = { "ifc", "ifczip" };
     static std::string_view suffix_iges[] = { "iges", "igs" };
-    static std::string_view suffix_img[]  = { "bmp", "jpeg", "jpg", "png", "gif", "ppm", "tiff" };
+    static std::string_view suffix_img[]  = { "png", "jpeg", "jpg", "bmp", "tga" };
     static std::string_view suffix_obj[]  = { "obj" };
     static std::string_view suffix_occbrep[]  = { "brep", "rle", "occ", "binbrep", "bbrep" };
     static std::string_view suffix_occxcaf[]  = { "xbf", "xml" };

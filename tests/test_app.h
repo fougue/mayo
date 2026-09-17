@@ -37,6 +37,9 @@ private slots:
     void StringConv_test();
 
     void QtGuiUtils_test();
+    void QtGuiUtils_toOccPixmap_test();
+    void QtGuiUtils_toOccPixmap_nullPixmap_test();
+    void QtGuiUtils_toOccPixmap_copy_test();
 
     void initTestCase();
     void cleanupTestCase();

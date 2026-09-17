@@ -262,4 +262,28 @@ QByteArray toQByteArray(const QPixmap& pixmap, const char* format)
     return bytes;
 }
 
+bool toOccPixmap(const QPixmap& pixmap, Image_PixMap& occPixmap)
+{
+    const QImage image = pixmap.toImage().convertToFormat(QImage::Format_RGBA8888);
+    if (image.isNull())
+        return false;
+
+    Image_PixMap wrapper;
+    const bool initOk = wrapper.InitWrapper(
+        Image_Format_RGBA,
+        const_cast<Standard_Byte*>(image.constBits()),
+        image.width(),
+        image.height(),
+        image.bytesPerLine()
+    );
+    if (!initOk)
+        return false;
+
+    if (!occPixmap.InitCopy(wrapper))
+        return false;
+
+    occPixmap.SetTopDown(true);
+    return true;
+}
+
 } // namespace Mayo::QtGuiUtils
