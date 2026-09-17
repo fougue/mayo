@@ -21,12 +21,16 @@
 
 #include <QtTest/QtTest>
 
-#include <Image_AlienPixMap.hxx>
+#include <Image_PixMap.hxx>
 
 #include <fmt/format.h>
 #include <cmath>
 #include <iostream>
 #include <limits>
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_WINDOWS_UTF8
+#include <stb/stb_image.h>
 
 namespace Mayo {
 
@@ -58,12 +62,29 @@ double imageRmsDiff(const Image_PixMap& lhs, const Image_PixMap& rhs)
     return std::sqrt(sumSq / count);
 }
 
-double imageRmsDiff(const std::filesystem::path& lhs, const std::filesystem::path& rhs)
+bool loadPixmap(const FilePath& filepath, Image_PixMap* pixmap)
 {
-    Image_AlienPixMap pixmap1;
-    Image_AlienPixMap pixmap2;
-    pixmap1.Load(filepathTo<TCollection_AsciiString>(lhs));
-    pixmap2.Load(filepathTo<TCollection_AsciiString>(rhs));
+    // Force 4 components : RGBA8
+    int width, height, channels;
+    unsigned char* src = stbi_load(filepath.u8string().c_str(), &width, &height, &channels, 4);
+    if (!src)
+        return false;
+
+    if (!pixmap->InitTrash(Image_Format_RGBA, width, height))
+        return false;
+
+    const size_t size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
+    std::memcpy(pixmap->ChangeData(), src, size);
+    stbi_image_free(src);
+    return true;
+}
+
+double imageRmsDiff(const FilePath& lhs, const FilePath& rhs)
+{
+    Image_PixMap pixmap1;
+    Image_PixMap pixmap2;
+    loadPixmap(lhs, &pixmap1);
+    loadPixmap(rhs, &pixmap2);
     return imageRmsDiff(pixmap1, pixmap2);
 }
 
