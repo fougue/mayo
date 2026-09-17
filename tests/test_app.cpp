@@ -372,6 +372,59 @@ void TestApp::QtGuiUtils_test()
     QCOMPARE(QtGuiUtils::toQColor(occColorA), qtColorA);
 }
 
+void TestApp::QtGuiUtils_toOccPixmap_test()
+{
+    QImage image(2, 2, QImage::Format_RGBA8888);
+    image.setPixelColor(0, 0, QColor(255, 0, 0, 255));
+    image.setPixelColor(1, 0, QColor(0, 255, 0, 128));
+    image.setPixelColor(0, 1, QColor(0, 0, 255, 64));
+    image.setPixelColor(1, 1, QColor(12, 34, 56, 78));
+
+    const QPixmap pixmap = QPixmap::fromImage(image);
+
+    Image_PixMap occPixmap;
+    QVERIFY(QtGuiUtils::toOccPixmap(pixmap, occPixmap));
+
+    QCOMPARE(occPixmap.Format(), Image_Format_RGBA);
+    QCOMPARE(occPixmap.Width(), Standard_Size(2));
+    QCOMPARE(occPixmap.Height(), Standard_Size(2));
+
+    qDebug() << "pixelColor:"
+             << occPixmap.PixelColor(0, 0).GetRGB().Red()
+             << occPixmap.PixelColor(0, 0).GetRGB().Green()
+             << occPixmap.PixelColor(0, 0).GetRGB().Blue();
+    QCOMPARE(occPixmap.PixelColor(0, 0), Quantity_ColorRGBA(1.f, 0.f, 0.f, 1.f));
+    QCOMPARE(occPixmap.PixelColor(1, 0), Quantity_ColorRGBA(0.f, 1.f, 0.f, 128.f / 255.f));
+    QCOMPARE(occPixmap.PixelColor(0, 1), Quantity_ColorRGBA(0.f, 0.f, 1.f, 64.f / 255.f));
+    QCOMPARE(occPixmap.PixelColor(1, 1), Quantity_ColorRGBA(12.f / 255.f, 34.f / 255.f, 56.f / 255.f, 78.f / 255.f));
+}
+
+void TestApp::QtGuiUtils_toOccPixmap_nullPixmap_test()
+{
+    const QPixmap pixmap;
+    Image_PixMap occPixmap;
+    QVERIFY(!QtGuiUtils::toOccPixmap(pixmap, occPixmap));
+}
+
+void TestApp::QtGuiUtils_toOccPixmap_copy_test()
+{
+    QImage image(1, 1, QImage::Format_RGBA8888);
+    image.setPixelColor(0, 0, QColor(255, 0, 0, 255));
+
+    const QPixmap pixmap = QPixmap::fromImage(image);
+
+    Image_PixMap occPixmap;
+    QVERIFY(QtGuiUtils::toOccPixmap(pixmap, occPixmap));
+
+    // Modify the source after conversion
+    image.setPixelColor(0, 0, QColor(0, 255, 0, 255));
+
+    const Quantity_ColorRGBA color = occPixmap.PixelColor(0, 0);
+    QCOMPARE(color.GetRGB().Red(), 1.f);
+    QCOMPARE(color.GetRGB().Green(), 0.f);
+    QCOMPARE(color.GetRGB().Blue(), 0.f);
+}
+
 void TestApp::initTestCase()
 {
     int argc = 0;

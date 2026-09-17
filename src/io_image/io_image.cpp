@@ -25,12 +25,10 @@
 
 #include <Aspect_Window.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
-#include <Image_AlienPixMap.hxx>
-#include <Standard_Version.hxx>
-#include <V3d_View.hxx>
-
 #include <OpenGl_Context.hxx>
 #include <OpenGl_GraphicDriver.hxx>
+#include <Standard_Version.hxx>
+#include <V3d_View.hxx>
 
 #include <fmt/format.h>
 #include <gsl/util>
@@ -39,7 +37,10 @@
 namespace Mayo {
 
 // Defined in graphics_create_virtual_window.cpp
-OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_GraphicDriver>&, int , int);
+OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_GraphicDriver>&, int, int);
+
+// Defined in save_image_stb.cpp
+bool saveImage_stb(const Image_PixMap&, const FilePath&);
 
 namespace IO {
 
@@ -263,16 +264,16 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     view->Redraw();
     GraphicsUtils::V3dView_fitAll(view);
-    OccHandle<Image_AlienPixMap> pixmap = ImageWriter::createImage(view);
+    OccHandle<Image_PixMap> pixmap = ImageWriter::createImage(view);
     if (!pixmap) {
         this->messenger()->emitError(ImageWriterI18N::textIdTr("Failed to dump 3D view into image"));
         return false;
     }
 
-    const bool okSave = pixmap->Save(filepathTo<TCollection_AsciiString>(filepath));
+    const bool okSave = saveImage_stb(*pixmap, filepath);
     if (!okSave) {
         this->messenger()->emitError(ImageWriterI18N::textIdTr(
-            "Failed to save image file(is the image format supported by the OpenCascade build in use ?"
+            "Failed to save image file(is the image format supported by the OpenCascade build in use ?)"
         ));
     }
 
@@ -305,7 +306,7 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-OccHandle<Image_AlienPixMap> ImageWriter::createImage(GuiDocument* guiDoc, const Parameters& params)
+OccHandle<Image_PixMap> ImageWriter::createImage(GuiDocument* guiDoc, const Parameters& params)
 {
     if (!guiDoc)
         return {};
@@ -330,9 +331,11 @@ OccHandle<Image_AlienPixMap> ImageWriter::createImage(GuiDocument* guiDoc, const
     return ImageWriter::createImage(view);
 }
 
-OccHandle<Image_AlienPixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
+OccHandle<Image_PixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
 {
-    auto pixmap = makeOccHandle<Image_AlienPixMap>();
+    auto pixmap = makeOccHandle<Image_PixMap>();
+    pixmap->SetTopDown(true);
+    pixmap->SetFormat(Image_Format_RGB);
     V3d_ImageDumpOptions dumpOptions;
     dumpOptions.BufferType = Graphic3d_BT_RGB;
     view->Window()->Size(dumpOptions.Width, dumpOptions.Height);
@@ -343,7 +346,6 @@ OccHandle<Image_AlienPixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
     if (!okPixmap)
         return {};
 
-    pixmap->SetFormat(Image_Format_RGB);
     return pixmap;
 }
 
