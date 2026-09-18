@@ -21,6 +21,7 @@
 
 #include <QtTest/QtTest>
 
+#include <Image_Diff.hxx>
 #include <Image_PixMap.hxx>
 
 #include <fmt/format.h>
@@ -47,21 +48,6 @@ public:
     }
 };
 
-// "Root Mean Square" diff of two images
-double imageRmsDiff(const Image_PixMap& lhs, const Image_PixMap& rhs)
-{
-    if (lhs.Width() != rhs.Width() || lhs.Height() != rhs.Height())
-        return std::numeric_limits<double>::infinity();
-
-    double sumSq = 0;
-    const size_t count = lhs.Width() * lhs.Height() * 3;
-    for (size_t i = 0; i < count; ++i) {
-        const double diff = double(lhs.Data()[i]) - double(rhs.Data()[i]);
-        sumSq += diff * diff;
-    }
-    return std::sqrt(sumSq / count);
-}
-
 bool loadPixmap(const FilePath& filepath, Image_PixMap* pixmap)
 {
     // Force 4 components : RGBA8
@@ -79,13 +65,54 @@ bool loadPixmap(const FilePath& filepath, Image_PixMap* pixmap)
     return true;
 }
 
+#if 0
+// "Root Mean Square" diff of two images
 double imageRmsDiff(const FilePath& lhs, const FilePath& rhs)
 {
     Image_PixMap pixmap1;
     Image_PixMap pixmap2;
     loadPixmap(lhs, &pixmap1);
     loadPixmap(rhs, &pixmap2);
-    return imageRmsDiff(pixmap1, pixmap2);
+
+    if (pixmap1.Width() != pixmap2.Width() || pixmap1.Height() != pixmap2.Height())
+        return std::numeric_limits<double>::infinity();
+
+    double sumSq = 0;
+    const size_t count = pixmap1.Width() * pixmap1.Height() * 3;
+    for (size_t i = 0; i < count; ++i) {
+        const double diff = double(pixmap1.Data()[i]) - double(pixmap2.Data()[i]);
+        sumSq += diff * diff;
+    }
+    return std::sqrt(sumSq / count);
+}
+#endif
+
+bool imageCompare(const FilePath& lhs, const FilePath& rhs, bool hasGradientBackground)
+{
+    auto pixmap1 = makeOccHandle<Image_PixMap>();
+    auto pixmap2 = makeOccHandle<Image_PixMap>();
+    loadPixmap(lhs, pixmap1.get());
+    loadPixmap(rhs, pixmap2.get());
+
+    Image_Diff diff;
+    if (!diff.Init(pixmap1, pixmap2))
+        return false;
+
+    if (hasGradientBackground) {
+        // The border filter is designed for a uniform background and may incorrectly discard
+        // differences against a non-uniform background
+        // Allow minor GPU interpolation differences and a few pixels around the silhouette
+        diff.SetColorTolerance(0.02);   // To calibrate ?
+        diff.SetBorderFilterOn(false);
+        return diff.Compare() <= 5;     // Allow up to 5 different pixels
+    }
+    else {
+        // With a uniform background, the border filter effectively handles minor differences caused
+        // by anti-aliasing and GPU-dependent rendering around the silhouette
+        diff.SetColorTolerance(0.);
+        diff.SetBorderFilterOn(true);
+        return diff.Compare() == 0;
+    }
 }
 
 struct HelperTestImage {
@@ -170,7 +197,7 @@ void TestIO::ImageWriter_backgroundGradientFill_test()
     QVERIFY(std::filesystem::exists(outPath));
 
     const std::filesystem::path inputRefPath = "tests/inputs/refs/" + strFileName;
-    QCOMPARE_LT(imageRmsDiff(outPath, inputRefPath), 0.5);
+    QVERIFY(imageCompare(inputRefPath, outPath, gradientFill != GradientFill::None));
 }
 
 void TestIO::ImageWriter_backgroundGradientFill_test_data()
@@ -211,7 +238,7 @@ void TestIO::ImageWriter_writeValidPngFile_test()
     QVERIFY(std::filesystem::file_size(outPath) > 0);
 
     const std::filesystem::path inputRefPath = "tests/inputs/refs/" + strFileName;
-    QCOMPARE_LT(imageRmsDiff(outPath, inputRefPath), 0.5);
+    QVERIFY(imageCompare(inputRefPath, outPath, false/*blackBackground*/));
 }
 
 void TestIO::ImageWriter_writeValidPngFile_test_data()
