@@ -170,7 +170,9 @@ void TestIO::ImageWriter_backgroundGradientFill_test()
     QVERIFY(std::filesystem::exists(outPath));
 
     const std::filesystem::path inputRefPath = "tests/inputs/refs/" + strFileName;
-    QCOMPARE_LT(imageRmsDiff(outPath, inputRefPath), 0.5);
+    const auto diff = imageRmsDiff(outPath, inputRefPath);
+    qDebug() << "imageRmsDiff :" << diff;
+    QCOMPARE_LT(diff, 0.5);
 }
 
 void TestIO::ImageWriter_backgroundGradientFill_test_data()
@@ -211,7 +213,9 @@ void TestIO::ImageWriter_writeValidPngFile_test()
     QVERIFY(std::filesystem::file_size(outPath) > 0);
 
     const std::filesystem::path inputRefPath = "tests/inputs/refs/" + strFileName;
-    QCOMPARE_LT(imageRmsDiff(outPath, inputRefPath), 0.5);
+    const auto diff = imageRmsDiff(outPath, inputRefPath);
+    qDebug() << "imageRmsDiff :" << diff;
+    QCOMPARE_LT(diff, 0.5);
 }
 
 void TestIO::ImageWriter_writeValidPngFile_test_data()
