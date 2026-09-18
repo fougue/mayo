@@ -19,6 +19,7 @@
 
 #include <type_traits>
 
+class QImage;
 class QMouseEvent;
 class QWheelEvent;
 class QScreen;
@@ -31,11 +32,9 @@ QColor toQColor(const Quantity_Color& c);
 QColor toQColor(const Quantity_ColorRGBA& c);
 QColor toQColor(Quantity_NameOfColor c);
 
-template<typename OtherColorType>
-OtherColorType toColor(const QColor& c);
-
-template<Quantity_TypeOfColor OtherColorType>
-Quantity_Color toColor(const QColor& c);
+Quantity_Color toOccColor(const QColor& c, Quantity_TypeOfColor colorType);
+Quantity_ColorRGBA toOccColorRGBA(const QColor& c, Quantity_TypeOfColor colorType);
+Quantity_NameOfColor toOccColorName(const QColor& c, Quantity_TypeOfColor colorType);
 
 Quantity_Color toPreferredColorSpace(const QColor& c);
 
@@ -49,12 +48,12 @@ QPixmap toQPixmap(const QByteArray& bytes, Qt::ImageConversionFlags flags = Qt::
 // Saves QPixmap into a QByteArray object
 QByteArray toQByteArray(const QPixmap& pixmap, const char* format = "PNG");
 
-// Converts QPixmap -> (OCCT)Image_PixMap
+// Converts QImage -> (OCCT)Image_PixMap
 // The image is converted to 32-bit RGBA format before being copied into the destination pixmap.
 // The destination owns its pixel data after this call, so it remains valid independently of the
-// source QPixmap
+// source QImage
 // Returns TRUE if the conversion succeeds, FALSE otherwise
-bool toOccPixmap(const QPixmap& pixmap, Image_PixMap& occPixmap);
+bool toOccPixmap(const QImage& image, Image_PixMap& occPixmap);
 
 // Returns linear interpolated color between 'a' and 'b' at parameter 't'
 QColor lerp(const QColor& a, const QColor& b, double t);
@@ -96,28 +95,5 @@ public:
 private:
     QFont m_font;
 };
-
-// --
-// -- Implementation
-// --
-
-template<typename OtherColorType>
-OtherColorType toColor(const QColor& c) {
-    if constexpr(std::is_same_v<OtherColorType, Quantity_Color>) {
-        return Quantity_Color{c.redF(), c.greenF(), c.blueF(), TKernelUtils::preferredRgbColorType()};
-    }
-    if constexpr(std::is_same_v<OtherColorType, Quantity_ColorRGBA>) {
-        return Quantity_ColorRGBA{toColor<Quantity_Color>(c), static_cast<float>(c.alphaF())};
-    }
-    else if constexpr(std::is_same_v<OtherColorType, Quantity_NameOfColor>) {
-        return QtGuiUtils::toColor<Quantity_Color>(c).Name();
-    }
-}
-
-template<Quantity_TypeOfColor OtherColorType>
-Quantity_Color toColor(const QColor& c)
-{
-    return Quantity_Color{c.redF(), c.greenF(), c.blueF(), OtherColorType};
-}
 
 } // namespace Mayo::QtGuiUtils

@@ -212,9 +212,9 @@ Quantity_Color toPreferredColorSpace(const QColor& c)
 {
     // See https://dev.opencascade.org/content/occt-3d-viewer-becomes-srgb-aware
 #if OCC_VERSION_HEX >= 0x070500
-    return QtGuiUtils::toColor<Quantity_TOC_sRGB>(c);
+    return QtGuiUtils::toOccColor(c, Quantity_TOC_sRGB);
 #else
-    return QtGuiUtils::toColor<Quantity_TOC_RGB>(c);
+    return QtGuiUtils::toOccColor(c, Quantity_TOC_RGB);
 #endif
 }
 
@@ -262,28 +262,46 @@ QByteArray toQByteArray(const QPixmap& pixmap, const char* format)
     return bytes;
 }
 
-bool toOccPixmap(const QPixmap& pixmap, Image_PixMap& occPixmap)
+bool toOccPixmap(const QImage& image, Image_PixMap& occPixmap)
 {
-    const QImage image = pixmap.toImage().convertToFormat(QImage::Format_RGBA8888);
-    if (image.isNull())
+    QImage rgbaImage = image;
+    if (image.format() != QImage::Format_RGBA8888)
+        rgbaImage = image.convertToFormat(QImage::Format_RGBA8888);
+
+    if (rgbaImage.isNull())
         return false;
 
-    Image_PixMap wrapper;
-    const bool initOk = wrapper.InitWrapper(
-        Image_Format_RGBA,
-        const_cast<Standard_Byte*>(image.constBits()),
-        image.width(),
-        image.height(),
-        image.bytesPerLine()
+    const bool initOk = occPixmap.InitTrash(
+        Image_Format_RGBA, static_cast<size_t>(rgbaImage.width()), static_cast<size_t>(rgbaImage.height())
     );
     if (!initOk)
         return false;
 
-    if (!occPixmap.InitCopy(wrapper))
-        return false;
+    const auto srcData = rgbaImage.constBits();
+    const auto srcStride = static_cast<size_t>(rgbaImage.bytesPerLine());
+    auto dstData = occPixmap.ChangeData();
+    const size_t dstStride = occPixmap.SizeRowBytes();
+    const size_t copyBytes = std::min(srcStride, dstStride);
+    for (int row = 0; row < rgbaImage.height(); ++row)
+        std::memcpy(dstData + row * dstStride, srcData + row * srcStride, copyBytes);
 
     occPixmap.SetTopDown(true);
     return true;
+}
+
+Quantity_Color toOccColor(const QColor& c, Quantity_TypeOfColor colorType)
+{
+    return Quantity_Color{c.redF(), c.greenF(), c.blueF(), colorType};
+}
+
+Quantity_ColorRGBA toOccColorRGBA(const QColor& c, Quantity_TypeOfColor colorType)
+{
+    return Quantity_ColorRGBA{ toOccColor(c, colorType), static_cast<float>(c.alphaF()) };
+}
+
+Quantity_NameOfColor toOccColorName(const QColor& c, Quantity_TypeOfColor colorType)
+{
+    return toOccColor(c, colorType).Name();
 }
 
 } // namespace Mayo::QtGuiUtils

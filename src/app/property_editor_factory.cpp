@@ -197,7 +197,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
             auto dlg = new QColorDialog(frame);
             dlg->setCurrentColor(QtGuiUtils::toQColor(property->value()));
             QObject::connect(dlg, &QColorDialog::colorSelected, [=](const QColor& c) {
-                property->setValue(QtGuiUtils::toColor<Quantity_Color>(c));
+                property->setValue(QtGuiUtils::toPreferredColorSpace(c));
                 this->syncWithProperty();
             });
             QtWidgetsUtils::asyncDialogExec(dlg);
