@@ -333,13 +333,13 @@ void WidgetGrid::chooseGridColor(GridColorType colorType)
     dlg->setCurrentColor(QtGuiUtils::toQColor(onEntryGridColor));
 
     QObject::connect(dlg, &QColorDialog::currentColorChanged, this, [=](const QColor& color) {
-        fnApplyGridColor(QtGuiUtils::toColor<Quantity_Color>(color));
+        fnApplyGridColor(QtGuiUtils::toPreferredColorSpace(color));
     });
     QObject::connect(dlg, &QDialog::accepted, this, [=]{
         auto btn = colorType == GridColorType::Base ? m_ui->btn_Color : m_ui->btn_ColorTenth;
         btn->setIcon(colorSquarePixmap(dlg->selectedColor()));
         if (colorType == GridColorType::Tenth)
-            m_gridColorTenth = QtGuiUtils::toColor<Quantity_Color>(dlg->selectedColor());
+            m_gridColorTenth = QtGuiUtils::toPreferredColorSpace(dlg->selectedColor());
     });
     QObject::connect(dlg, &QDialog::rejected, this, [=]{
         auto btn = colorType == GridColorType::Base ? m_ui->btn_Color : m_ui->btn_ColorTenth;

@@ -19,6 +19,7 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/document.h"
+#include "../src/base/tkernel_utils.h"
 #include "../src/qtcommon/filepath_conv.h"
 #include "../src/qtcommon/qstring_conv.h"
 #include "../src/qtcommon/qtcore_utils.h"
@@ -34,6 +35,8 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPixmap>
 #include <QtTest/QSignalSpy>
+
+Q_DECLARE_METATYPE(Quantity_NameOfColor)
 
 namespace Mayo {
 
@@ -366,10 +369,121 @@ void TestApp::QtGuiUtils_test()
 {
     const QColor qtColor(51, 75, 128);
     const QColor qtColorA(51, 75, 128, 87);
-    auto occColor = QtGuiUtils::toColor<Quantity_Color>(qtColor);
-    auto occColorA = QtGuiUtils::toColor<Quantity_ColorRGBA>(qtColorA);
+    auto occColor = QtGuiUtils::toOccColor(qtColor, TKernelUtils::preferredRgbColorType());
+    auto occColorA = QtGuiUtils::toOccColorRGBA(qtColorA, TKernelUtils::preferredRgbColorType());
     QCOMPARE(QtGuiUtils::toQColor(occColor), qtColor);
     QCOMPARE(QtGuiUtils::toQColor(occColorA), qtColorA);
+}
+
+void TestApp::QtGuiUtils_toOccPixmap_test()
+{
+    QImage qtImage(2, 2, QImage::Format_RGBA8888);
+    qtImage.setPixelColor(0, 0, QColor(255, 0, 0, 255));
+    qtImage.setPixelColor(1, 0, QColor(0, 255, 0, 128));
+    qtImage.setPixelColor(0, 1, QColor(0, 0, 255, 64));
+    qtImage.setPixelColor(1, 1, QColor(12, 34, 56, 78));
+
+    Image_PixMap occPixmap;
+    QVERIFY(QtGuiUtils::toOccPixmap(qtImage, occPixmap));
+
+    QCOMPARE(occPixmap.Format(), Image_Format_RGBA);
+    QCOMPARE(occPixmap.Width(), size_t(2));
+    QCOMPARE(occPixmap.Height(), size_t(2));
+
+    QVERIFY(occPixmap.PixelColor(0, 0).IsEqual(
+        QtGuiUtils::toOccColorRGBA(qtImage.pixelColor(0, 0), Quantity_TOC_RGB)
+    ));
+    QVERIFY(occPixmap.PixelColor(1, 0).IsEqual(
+        QtGuiUtils::toOccColorRGBA(qtImage.pixelColor(1, 0), Quantity_TOC_RGB)
+    ));
+    QVERIFY(occPixmap.PixelColor(0, 1).IsEqual(
+        QtGuiUtils::toOccColorRGBA(qtImage.pixelColor(0, 1), Quantity_TOC_RGB)
+    ));
+    QVERIFY(occPixmap.PixelColor(1, 1).IsEqual(
+        QtGuiUtils::toOccColorRGBA(qtImage.pixelColor(1, 1), Quantity_TOC_RGB)
+    ));
+}
+
+void TestApp::QtGuiUtils_toOccPixmap_nullPixmap_test()
+{
+    const QImage qtImage;
+    Image_PixMap occPixmap;
+    QVERIFY(!QtGuiUtils::toOccPixmap(qtImage, occPixmap));
+}
+
+void TestApp::QtGuiUtils_toOccPixmap_copy_test()
+{
+    QImage qtImage(1, 1, QImage::Format_RGBA8888);
+    qtImage.setPixelColor(0, 0, QColor(255, 0, 0, 255));
+
+    Image_PixMap occPixmap;
+    QVERIFY(QtGuiUtils::toOccPixmap(qtImage, occPixmap));
+
+    // Modify the source after conversion
+    qtImage.setPixelColor(0, 0, QColor(0, 255, 0, 255));
+
+    const Quantity_ColorRGBA color = occPixmap.PixelColor(0, 0);
+    QCOMPARE(color.GetRGB().Red(), 1.f);
+    QCOMPARE(color.GetRGB().Green(), 0.f);
+    QCOMPARE(color.GetRGB().Blue(), 0.f);
+}
+
+void TestApp::QtGuiUtils_toColor_test()
+{
+    QFETCH(QColor, input);
+    QFETCH(double, expectedR);
+    QFETCH(double, expectedG);
+    QFETCH(double, expectedB);
+    QFETCH(double, expectedAlpha);
+
+    const auto colorType = TKernelUtils::preferredRgbColorType();
+    const Quantity_Color expectedRgb(expectedR, expectedG, expectedB, colorType);
+
+    // Quantity_Color
+    const auto occColor = QtGuiUtils::toOccColor(input, colorType);
+    QVERIFY(occColor.IsEqual(expectedRgb));
+
+    // Quantity_ColorRGBA
+    const Quantity_ColorRGBA occColorRgba = QtGuiUtils::toOccColorRGBA(input, colorType);
+    QVERIFY(occColorRgba.GetRGB().IsEqual(expectedRgb));
+    QCOMPARE(occColorRgba.Alpha(), static_cast<float>(expectedAlpha));
+}
+
+void TestApp::QtGuiUtils_toColor_test_data()
+{
+    QTest::addColumn<QColor>("input");
+    QTest::addColumn<double>("expectedR");
+    QTest::addColumn<double>("expectedG");
+    QTest::addColumn<double>("expectedB");
+    QTest::addColumn<double>("expectedAlpha");
+
+    QTest::newRow("red")         << QColor(255, 0, 0, 255)   << 1.0  << 0.0  << 0.0  << 1.0;
+    QTest::newRow("green")       << QColor(0, 255, 0, 255)   << 0.0  << 1.0  << 0.0  << 1.0;
+    QTest::newRow("blue")        << QColor(0, 0, 255, 255)   << 0.0  << 0.0  << 1.0  << 1.0;
+    QTest::newRow("black")       << QColor(0, 0, 0, 255)     << 0.0  << 0.0  << 0.0  << 1.0;
+    QTest::newRow("white")       << QColor(255, 255, 255, 255) << 1.0 << 1.0 << 1.0 << 1.0;
+    QTest::newRow("transparent") << QColor(0, 255, 0, 0)     << 0.0  << 1.0  << 0.0  << 0.0;
+    QTest::newRow("half-alpha")  << QColor(0, 0, 255, 128)   << 0.0  << 0.0  << 1.0  << (128 / 255.0);
+    QTest::newRow("arbitrary")   << QColor(12, 34, 56, 78)   << (12 / 255.0) << (34 / 255.0) << (56 / 255.0) << (78 / 255.0);
+}
+
+void TestApp::QtGuiUtils_toColor_NameOfColor_test()
+{
+    QFETCH(QColor, input);
+    QFETCH(Quantity_NameOfColor, expectedName);
+
+    const auto occColorName = QtGuiUtils::toOccColorName(input, Quantity_TOC_RGB);
+    QCOMPARE(occColorName, expectedName);
+}
+
+void TestApp::QtGuiUtils_toColor_NameOfColor_test_data()
+{
+    QTest::addColumn<QColor>("input");
+    QTest::addColumn<Quantity_NameOfColor>("expectedName");
+
+    QTest::newRow("red")   << QColor(255, 0, 0)   << Quantity_NOC_RED;
+    QTest::newRow("black") << QColor(0, 0, 0)     << Quantity_NOC_BLACK;
+    QTest::newRow("white") << QColor(255, 255, 255) << Quantity_NOC_WHITE;
 }
 
 void TestApp::initTestCase()

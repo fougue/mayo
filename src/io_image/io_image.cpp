@@ -25,7 +25,9 @@
 
 #include <Aspect_Window.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
-#include <Image_AlienPixMap.hxx>
+#include <OpenGl_Context.hxx>
+#include <OpenGl_GraphicDriver.hxx>
+#include <Standard_Version.hxx>
 #include <V3d_View.hxx>
 
 #include <fmt/format.h>
@@ -35,7 +37,10 @@
 namespace Mayo {
 
 // Defined in graphics_create_virtual_window.cpp
-OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_GraphicDriver>&, int , int);
+OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_GraphicDriver>&, int, int);
+
+// Defined in save_image_stb.cpp
+bool saveImage_stb(const Image_PixMap&, const FilePath&);
 
 namespace IO {
 
@@ -83,6 +88,12 @@ public:
         ));
         this->cameraProjection.mutableEnumeration().changeTrContext(ImageWriterI18N::textIdContext());
 
+        this->msaaSamples.setDescription(ImageWriterI18N::textIdTr(
+            "Controls the multisample antialiasing (MSAA) level used when rendering the scene.\n"
+            "Antialiasing smooths geometry edges and reduces visible pixel stair‑stepping. "
+            "Higher levels improve image quality but increase rendering cost"
+        ));
+
         if (guiApp) {
             // Create a PropertyEnumeration object for each graphics driver registered in the given
             // GuiApplication object
@@ -119,6 +130,7 @@ public:
         this->backgroundGradientFill.setValue(defaults.backgroundGradientFill);
         this->cameraOrientation.setValue(defaults.cameraOrientation);
         this->cameraProjection.setValue(defaults.cameraProjection);
+        this->msaaSamples.setValue(defaults.msaaSamples);
         for (const auto& [driver, propDisplayMode] : this->mapDriverDisplayMode) {
             if (!driver->displayModes().empty())
                 propDisplayMode->setValue(driver->defaultDisplayMode());
@@ -132,6 +144,7 @@ public:
     PropertyEnum<GradientFill> backgroundGradientFill{ this, ImageWriterI18N::textId("backgroundGradientFill") };
     PropertyOccVec cameraOrientation{ this, ImageWriterI18N::textId("cameraOrientation") };
     PropertyEnum<CameraProjection> cameraProjection{ this, ImageWriterI18N::textId("cameraProjection") };
+    PropertyEnum<MsaaSamples> msaaSamples{ this, ImageWriterI18N::textId("msaaSamples") };
     std::map<GraphicsObjectDriverPtr, std::unique_ptr<PropertyEnumeration>> mapDriverDisplayMode;
 
 private:
@@ -162,6 +175,21 @@ Aspect_GradientFillMethod toOccGradientFill(ImageWriter::GradientFill fill)
     } // endswitch()
 
     return Aspect_GFM_NONE;
+}
+
+void graphicsResetErrors(const OccHandle<Graphic3d_GraphicDriver>& gfxDriver)
+{
+    // A drawable-less virtual context on macOS can leave a pending OpenGL error
+    // OpenCascade may then misinterpret it as an FBO/texture creation failure in ToPixMap()
+    auto glDriver = OccHandle<OpenGl_GraphicDriver>::DownCast(gfxDriver);
+    if (glDriver.IsNull())
+        return;
+
+    // Prefer the context being already current: in the desktop application the graphics driver is
+    // shared with the on-screen view, so avoid stealing "current" from it needlessly
+    const OccHandle<OpenGl_Context>& glContext = glDriver->GetSharedContext();
+    if (glContext && glContext->IsCurrent())
+        glContext->ResetErrors(false/*!ToPrintErrors*/);
 }
 
 } // namespace
@@ -236,11 +264,19 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     view->Redraw();
     GraphicsUtils::V3dView_fitAll(view);
-    OccHandle<Image_AlienPixMap> pixmap = ImageWriter::createImage(view);
-    if (!pixmap)
+    OccHandle<Image_PixMap> pixmap = ImageWriter::createImage(view);
+    if (!pixmap) {
+        this->messenger()->emitError(ImageWriterI18N::textIdTr("Failed to dump 3D view into image"));
         return false;
+    }
 
-    const bool okSave = pixmap->Save(filepathTo<TCollection_AsciiString>(filepath));
+    const bool okSave = saveImage_stb(*pixmap, filepath);
+    if (!okSave) {
+        this->messenger()->emitError(ImageWriterI18N::textIdTr(
+            "Failed to save image file(is the image format supported by the OpenCascade build in use ?)"
+        ));
+    }
+
     return okSave;
 }
 
@@ -262,6 +298,7 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
         m_params.backgroundGradientFill = ptr->backgroundGradientFill;
         m_params.cameraOrientation = ptr->cameraOrientation;
         m_params.cameraProjection = ptr->cameraProjection;
+        m_params.msaaSamples = ptr->msaaSamples;
 
         m_params.m_driverDisplayModes.clear();
         for (const auto& [driver, propDisplayMode] : ptr->mapDriverDisplayMode)
@@ -269,7 +306,7 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-OccHandle<Image_AlienPixMap> ImageWriter::createImage(GuiDocument* guiDoc, const Parameters& params)
+OccHandle<Image_PixMap> ImageWriter::createImage(GuiDocument* guiDoc, const Parameters& params)
 {
     if (!guiDoc)
         return {};
@@ -294,17 +331,21 @@ OccHandle<Image_AlienPixMap> ImageWriter::createImage(GuiDocument* guiDoc, const
     return ImageWriter::createImage(view);
 }
 
-OccHandle<Image_AlienPixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
+OccHandle<Image_PixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
 {
-    auto pixmap = makeOccHandle<Image_AlienPixMap>();
+    auto pixmap = makeOccHandle<Image_PixMap>();
+    pixmap->SetTopDown(true);
+    pixmap->SetFormat(Image_Format_RGB);
     V3d_ImageDumpOptions dumpOptions;
     dumpOptions.BufferType = Graphic3d_BT_RGB;
     view->Window()->Size(dumpOptions.Width, dumpOptions.Height);
+    // Must be called just before dumping : rendering on a virtual window may have left the GL error
+    // state dirty, which would make the dump fail
+    graphicsResetErrors(view->Viewer()->Driver());
     const bool okPixmap = view->ToPixMap(*pixmap.get(), dumpOptions);
     if (!okPixmap)
         return {};
 
-    pixmap->SetFormat(Image_Format_RGB);
     return pixmap;
 }
 
@@ -318,10 +359,20 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
         }
     };
 
+    auto fnMsaaSampleCount = [](MsaaSamples samples) {
+        switch (samples) {
+        case MsaaSamples::Off: return 0;
+        case MsaaSamples::x2:  return 2;
+        case MsaaSamples::x4:  return 4;
+        case MsaaSamples::x8:  return 8;
+        case MsaaSamples::x16: return 16;
+        }
+        return 0;
+    };
+
     // Create 3D view
     OccHandle<V3d_View> view = gfxScene->createV3dView();
-    view->ChangeRenderingParams().IsAntialiasingEnabled = true;
-    view->ChangeRenderingParams().NbMsaaSamples = 4;
+    view->ChangeRenderingParams().NbMsaaSamples = fnMsaaSampleCount(params.msaaSamples);
     if (params.backgroundGradientFill == GradientFill::None) {
         view->SetBackgroundColor(params.backgroundColorStart);
     }
@@ -343,8 +394,14 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
     // Create virtual window
     auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), params.width, params.height);
     view->SetWindow(wnd);
+    graphicsResetErrors(view->Viewer()->Driver());
 
     return view;
+}
+
+bool ImageWriter::isRadialGradientFillSupported()
+{
+    return OCC_VERSION_HEX >= 0x070600;
 }
 
 std::optional<Enumeration::Value>
@@ -363,7 +420,6 @@ void ImageWriter::Parameters::setDisplayMode(const GraphicsObjectDriverPtr& driv
     if (it != m_driverDisplayModes.end())
         it->second = enumValue;
 }
-
 
 ImageFactoryWriter::ImageFactoryWriter(GuiApplication* guiApp)
     : m_guiApp(guiApp)

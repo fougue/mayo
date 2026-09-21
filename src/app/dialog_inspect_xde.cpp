@@ -20,7 +20,6 @@
 #include "qtwidgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
-#include <Image_AlienPixMap.hxx>
 #include <Image_Texture.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
@@ -298,15 +297,7 @@ static void loadLabelMaterialProperties(
 static QPixmap loadPixmap(const FilePath& filePath)
 {
     QPixmap pixmap;
-    bool okLoad = pixmap.load(filepathTo<QString>(filePath));
-    if (!okLoad || pixmap.isNull()) {
-        // QPixmap::load() failed, try with OpenCascade Image_AlienPixMap::Load()
-        Image_AlienPixMap occPixmap;
-        okLoad = occPixmap.Load(filepathTo<TCollection_AsciiString>(filePath));
-        if (okLoad)
-            pixmap = QtGuiUtils::toQPixmap(occPixmap);
-    }
-
+    pixmap.load(filepathTo<QString>(filePath));
     return pixmap;
 }
 
@@ -314,19 +305,7 @@ static QPixmap loadPixmap(const FilePath& filePath)
 static QPixmap loadPixmap(const QByteArray& fileData)
 {
     QPixmap pixmap;
-    bool okLoad = pixmap.loadFromData(fileData);
-    if (!okLoad || pixmap.isNull()) {
-        // QPixmap::loadFromData() failed, try with OpenCascade Image_AlienPixMap::Load()
-        Image_AlienPixMap occPixmap;
-        okLoad = occPixmap.Load(
-            reinterpret_cast<const uint8_t*>(fileData.constData()),
-            fileData.size(),
-            TCollection_AsciiString{}
-        );
-        if (okLoad)
-            pixmap = QtGuiUtils::toQPixmap(occPixmap);
-    }
-
+    pixmap.loadFromData(fileData);
     return pixmap;
 }
 

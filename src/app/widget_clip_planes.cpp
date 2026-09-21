@@ -14,12 +14,13 @@
 #include "../graphics/graphics_utils.h"
 #include "app_module.h"
 #include "app_module_properties.h"
+#include "qtgui_utils.h"
 #include "ui_widget_clip_planes.h"
 
 #include <QtCore/QFile>
 #include <Bnd_Box.hxx>
 #include <Graphic3d_ClipPlane.hxx>
-#include <Image_AlienPixMap.hxx>
+#include <Image_PixMap.hxx>
 #include <V3d_View.hxx>
 #include <cmath>
 
@@ -234,18 +235,19 @@ void WidgetClipPlanes::createPlaneCappingTexture()
     if (!m_textureCapping.IsNull())
         return;
 
-    QFile file(":/images/graphics/opencascade_hatch_1.png");
-    if (file.open(QIODevice::ReadOnly)) {
-        const QByteArray fileContents = file.readAll();
-        const QByteArray filenameUtf8 = file.fileName().toUtf8();
-        auto fileContentsData = reinterpret_cast<const uint8_t*>(fileContents.constData());
-        auto imageCapping = makeOccHandle<Image_AlienPixMap>();
-        imageCapping->Load(fileContentsData, fileContents.size(), filenameUtf8.constData());
-        m_textureCapping = new GraphicsTexture2D(imageCapping);
-        m_textureCapping->EnableModulate();
-        m_textureCapping->EnableRepeat();
-        m_textureCapping->GetParams()->SetScale(NCollection_Vec2<float>(0.05f, -0.05f));
-    }
+    QImage imageQt;
+    if (!imageQt.load(":/images/graphics/opencascade_hatch_1.png", "PNG"))
+        return;
+
+    auto imageOcc = makeOccHandle<Image_PixMap>();
+    if (!QtGuiUtils::toOccPixmap(imageQt, *imageOcc.get()))
+        return;
+
+    imageOcc->SetTopDown(false);
+    m_textureCapping = new GraphicsTexture2D(imageOcc);
+    m_textureCapping->EnableModulate();
+    m_textureCapping->EnableRepeat();
+    m_textureCapping->GetParams()->SetScale(NCollection_Vec2<float>(0.05f, -0.05f));
 }
 
 WidgetClipPlanes::UiClipPlane::UiClipPlane(QCheckBox* checkOn, QWidget* widgetControl)

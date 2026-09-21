@@ -20,6 +20,7 @@
 #include "../graphics/graphics_point_cloud_object_driver.h"
 #include "../graphics/graphics_shape_object_driver.h"
 #include "../graphics/graphics_utils.h"
+#include "../graphics/opengl_utils.h"
 #include "../gui/gui_application.h"
 #include "../qtbackend/qt_app_translator.h"
 #include "../qtbackend/qt_signal_thread_helper.h"
@@ -239,14 +240,14 @@ Thumbnail createGuiDocumentThumbnail(GuiDocument* guiDoc, QSize size)
     params.height = size.height();
     params.backgroundColorStart = QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window));
     params.backgroundColorEnd = params.backgroundColorStart;
-    OccHandle<Image_AlienPixMap> pixmap = IO::ImageWriter::createImage(guiDoc, params);
+    OccHandle<Image_PixMap> pixmap = IO::ImageWriter::createImage(guiDoc, params);
     if (!pixmap) {
         qDebug() << "Empty pixmap returned by IO::ImageWriter::createImage()";
         return thumbnail;
     }
 
-    GraphicsUtils::ImagePixmap_flipY(*pixmap);
-    Image_PixMap::SwapRgbaBgra(*pixmap);
+    //GraphicsUtils::ImagePixmap_flipY(*pixmap);
+    //Image_PixMap::SwapRgbaBgra(*pixmap);
     const QPixmap qPixmap = QtGuiUtils::toQPixmap(*pixmap);
     thumbnail.imageData = QtGuiUtils::toQByteArray(qPixmap);
     thumbnail.imageCacheKey = qPixmap.cacheKey();
@@ -258,6 +259,9 @@ static void initGui(GuiApplication* guiApp)
 {
     if (!guiApp)
         return;
+
+    if (!OpenGlUtils::isHardwareAccelerationAvailable())
+        qWarning() << "Hardware-accelerated OpenGL is not available, 3D rendering performance may be degraded";
 
     // Fallback for OpenGL
     setFunctionCreateGraphicsDriver(&QWidgetOccView::createCompatibleGraphicsDriver);

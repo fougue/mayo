@@ -71,18 +71,11 @@ void DialogSaveImageView::saveFile()
 
     QString selectedFormat;
     const QString fileName = QFileDialog::getSaveFileName(
-        this,
-        tr("Select image file"),
-        QString{},
-        listFormat.join(QLatin1String(";;")),
-        &selectedFormat
+        this, tr("Select image file"), QString{}, listFormat.join(QLatin1String(";;")), &selectedFormat
     );
     if (!fileName.isEmpty()) {
         auto itFound = mapFilterFormat.find(selectedFormat);
-        const char* format =
-                itFound != mapFilterFormat.cend() ?
-                    itFound.value().constData() :
-                    nullptr;
+        const char* format = itFound != mapFilterFormat.cend() ? itFound.value().constData() : nullptr;
 
         Image_PixMap occPix;
         bool saveOk = this->createImageView(&occPix);

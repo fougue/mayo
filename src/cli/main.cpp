@@ -343,9 +343,6 @@ static void initGui(GuiApplication* guiApp)
         return;
 
     guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
-    setFunctionCreateGraphicsDriver([]{
-        return makeOccHandle<OpenGl_GraphicDriver>(GraphicsUtils::AspectDisplayConnection_create());
-    });
     guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsShapeObjectDriver>());
     guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsMeshObjectDriver>());
     guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsPointCloudObjectDriver>());

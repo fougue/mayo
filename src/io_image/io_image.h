@@ -12,7 +12,7 @@
 #include "../graphics/graphics_object_driver.h"
 
 #include <gp_Dir.hxx>
-#include <Image_AlienPixMap.hxx>
+#include <Image_PixMap.hxx>
 #include <Quantity_Color.hxx>
 #include <TDF_Label.hxx>
 #include <V3d_View.hxx>
@@ -31,9 +31,8 @@ class GuiDocument;
 namespace Mayo::IO {
 
 // Provides a writer for image creation
-// Formats are those supported by OpenCascade with Image_AlienPixMap, see:
-//     https://dev.opencascade.org/doc/refman/html/class_image___alien_pix_map.html#details
-// The image format is specified with the extension for the target file path(eg .png, .jpeg, ...)
+// Formats are those supported by the stb_image_writer library : PNG, JPEG, BMP, TGA
+// The image format is specified with the extension for the target file path(eg .png, .jpg, ...)
 class ImageWriter : public Writer {
 public:
     explicit ImageWriter(GuiApplication* guiApp);
@@ -49,6 +48,10 @@ public:
     // Parameters
     enum class CameraProjection {
         Perspective, Orthographic
+    };
+
+    enum class MsaaSamples {
+        Off, x2, x4, x8, x16
     };
 
     enum class GradientFill {
@@ -75,6 +78,7 @@ public:
         GradientFill backgroundGradientFill = GradientFill::None;
         gp_Vec cameraOrientation = gp_Vec{1, -1, 1}; // X+ Y- Z+
         CameraProjection cameraProjection = CameraProjection::Orthographic;
+        MsaaSamples msaaSamples = MsaaSamples::x4;
 
         std::optional<Enumeration::Value> displayMode(const GraphicsObjectDriverPtr& driver) const;
         void setDisplayMode(const GraphicsObjectDriverPtr& driver, Enumeration::Value enumValue);
@@ -88,9 +92,11 @@ public:
     const Parameters& constParameters() const { return m_params; }
 
     // Helper
-    static OccHandle<Image_AlienPixMap> createImage(GuiDocument* guiDoc, const Parameters& params);
-    static OccHandle<Image_AlienPixMap> createImage(OccHandle<V3d_View> view);
+    static OccHandle<Image_PixMap> createImage(GuiDocument* guiDoc, const Parameters& params);
+    static OccHandle<Image_PixMap> createImage(OccHandle<V3d_View> view);
     static OccHandle<V3d_View> createV3dView(GraphicsScene* gfxScene, const Parameters& params);
+
+    static bool isRadialGradientFillSupported();
 
 private:
     class Properties;
