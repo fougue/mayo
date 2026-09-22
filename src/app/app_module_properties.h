@@ -73,6 +73,7 @@ public:
     PropertyEnum<ActionOnDocumentFileChange> actionOnDocumentFileChange{ this, textId("actionOnDocumentFileChange") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
+    PropertyString themeName{ this, textId("themeName") };
     PropertyAppUiState appUiState{ this, textId("appUiState") };
     // Meshing
     PropertyEnum<BRepMeshingOptions::Quality> meshingQuality{ this, textId("meshingQuality") };
