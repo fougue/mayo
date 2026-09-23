@@ -275,7 +275,6 @@ file(
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.h
 )
 
-
 ##########
 # OpenCascade
 ##########
@@ -499,6 +498,23 @@ target_link_libraries(MayoIOLib INTERFACE MayoIO MayoCoreLib ${MayoIO_LinkLibrar
 if(Mayo_EnablePch)
     target_precompile_headers(MayoIO PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
 endif()
+
+##########
+# Target: MayoScripting
+##########
+
+file(GLOB MayoScripting_HeaderFiles ${PROJECT_SOURCE_DIR}/src/scripting/*.h)
+file(GLOB MayoScripting_SourceFiles ${PROJECT_SOURCE_DIR}/src/scripting/*.cpp)
+
+add_library(MayoScripting STATIC ${MayoScripting_HeaderFiles} ${MayoScripting_SourceFiles})
+
+target_include_directories(MayoScripting PRIVATE ${Mayo_IncludeDirectories})
+target_compile_definitions(MayoScripting PRIVATE ${Mayo_CompileDefinitions})
+target_compile_options(MayoScripting PRIVATE ${Mayo_CompileOptions})
+target_link_libraries(MayoScripting PRIVATE MayoCoreLib)
+
+add_library(MayoScriptingLib INTERFACE)
+target_link_libraries(MayoScriptingLib INTERFACE MayoScripting)
 
 ##########
 # Target: MayoApp
