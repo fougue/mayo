@@ -435,6 +435,18 @@ if(assimp_FOUND)
 endif()
 
 ##########
+# QuickJS-ng
+##########
+
+find_package(qjs CONFIG)
+
+if(TARGET qjs)
+    message(STATUS "QuickJS-ng found: scripting ON")
+else()
+    message(STATUS "QuickJS-ng not found: scripting OFF")
+endif()
+
+##########
 # Configure files
 ##########
 
