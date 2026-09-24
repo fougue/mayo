@@ -7,7 +7,6 @@ HEADERS += \
     $$files(../src/gui/*.h) \
     $$files(../src/io_assimp/*.h) \
     $$files(../src/io_dxf/*.h) \
-    $$files(../src/io_gmio/*.h) \    
     $$files(../src/io_image/*.h) \
     $$files(../src/io_occ/*.h) \
     $$files(../src/io_off/*.h) \
@@ -24,7 +23,6 @@ SOURCES += \
     $$files(../src/gui/*.cpp) \
     $$files(../src/io_assimp/*.cpp) \
     $$files(../src/io_dxf/*.cpp) \
-    $$files(../src/io_gmio/*.cpp) \
     $$files(../src/io_image/*.cpp) \
     $$files(../src/io_occ/*.cpp) \
     $$files(../src/io_off/*.cpp) \

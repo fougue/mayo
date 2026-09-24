@@ -3,7 +3,6 @@ double dummy = 0;
 }
 
 #include "src/graphics/graphics_object_driver.h"
-#include "src/io_gmio/io_gmio_amf_writer.cpp"
 #include "src/io_image/io_image.cpp"
 #include "src/io_occ/io_occ_brep.cpp"
 #include "src/io_occ/io_occ_common.h"
@@ -39,10 +38,6 @@ static void messages() {
     Mayo::GraphicsObjectDriverI18N::textId("GraphicsPointCloudObjectDriver");
 
     // I/O
-    Mayo::IO::GmioAmfWriter::Properties::textId("Decimal");
-    Mayo::IO::GmioAmfWriter::Properties::textId("Scientific");
-    Mayo::IO::GmioAmfWriter::Properties::textId("Shortest");
-
     Mayo::IO::OccCommon::textId("Undefined"); // RWMesh_CoordinateSystem_Undefined
     Mayo::IO::OccCommon::textId("posYfwd_posZup"); // RWMesh_CoordinateSystem_Zup
     Mayo::IO::OccCommon::textId("negZfwd_posYup"); // RWMesh_CoordinateSystem_Yup

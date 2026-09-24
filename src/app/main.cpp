@@ -9,7 +9,6 @@
 #include "../base/tkernel_utils.h"
 #include "../io_assimp/io_assimp.h"
 #include "../io_dxf/io_dxf.h"
-#include "../io_gmio/io_gmio.h"
 #include "../io_image/io_image.h"
 #include "../io_occ/io_occ.h"
 #include "../io_off/io_off_reader.h"
@@ -332,9 +331,6 @@ static int runApp(QCoreApplication* qtApp)
     appModule->addLibraryInfo(
         IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
     );
-    appModule->addLibraryInfo(
-        IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
-    );
 
     {
         // Load translation files
@@ -376,7 +372,6 @@ static int runApp(QCoreApplication* qtApp)
     ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
-    ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
     ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp.get()));
     IO::addPredefinedFormatProbes(ioSystem);
     appModule->properties()->IO_bindParameters(ioSystem);

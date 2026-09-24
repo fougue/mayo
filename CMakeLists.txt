@@ -112,9 +112,6 @@ else()
     unset(Mayo_TestOutputFormat CACHE)
 endif()
 
-# TODO
-# option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
-
 ##########
 # Qt
 ##########
@@ -435,24 +432,6 @@ if(assimp_FOUND)
     else()
         message(STATUS "Assimp function aiGetVersionPatch() not available")
     endif()
-endif()
-
-##########
-# gmio
-##########
-
-# TODO Finalize
-if(gmio_FOUND)
-    message(STATUS "gmio version ${gmio_VERSION}")
-    set(MAYO_HAVE_GMIO 1)
-
-    file(GLOB MayoPluginGmio_HeaderFiles ${PROJECT_SOURCE_DIR}/src/io_gmio/*.h)
-    file(GLOB MayoPluginGmio_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_gmio/*.cpp)
-    list(APPEND MayoIO_HeaderFiles ${MayoPluginGmio_HeaderFiles})
-    list(APPEND MayoIO_SourceFiles ${MayoPluginGmio_SourceFiles})
-
-    # Needs -L$$GMIO_ROOT/lib -lgmio_static -lzlibstatic
-    list(APPEND MayoIO_LinkLibraries ${GMIO_LIBRARIES})
 endif()
 
 ##########
