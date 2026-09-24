@@ -275,7 +275,6 @@ file(
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.h
 )
 
-
 ##########
 # OpenCascade
 ##########
@@ -435,18 +434,6 @@ if(assimp_FOUND)
 endif()
 
 ##########
-# QuickJS-ng
-##########
-
-find_package(qjs CONFIG)
-
-if(TARGET qjs)
-    message(STATUS "QuickJS-ng found: scripting ON")
-else()
-    message(STATUS "QuickJS-ng not found: scripting OFF")
-endif()
-
-##########
 # Configure files
 ##########
 
@@ -511,6 +498,32 @@ target_link_libraries(MayoIOLib INTERFACE MayoIO MayoCoreLib ${MayoIO_LinkLibrar
 if(Mayo_EnablePch)
     target_precompile_headers(MayoIO PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
 endif()
+
+##########
+# Target: MayoScripting
+##########
+
+find_package(qjs CONFIG)
+if(TARGET qjs)
+    message(STATUS "QuickJS-ng found: scripting ON")
+else()
+    message(STATUS "QuickJS-ng not found: scripting OFF")
+endif()
+
+file(GLOB MayoScripting_HeaderFiles ${PROJECT_SOURCE_DIR}/src/scripting/*.h)
+file(GLOB MayoScripting_SourceFiles ${PROJECT_SOURCE_DIR}/src/scripting/*.cpp)
+set(MayoScripting_LinkLibraries)
+list(APPEND MayoScripting_LinkLibraries qjs)
+
+add_library(MayoScripting STATIC ${MayoScripting_HeaderFiles} ${MayoScripting_SourceFiles})
+
+target_include_directories(MayoScripting PRIVATE ${Mayo_IncludeDirectories})
+target_compile_definitions(MayoScripting PRIVATE ${Mayo_CompileDefinitions})
+target_compile_options(MayoScripting PRIVATE ${Mayo_CompileOptions})
+target_link_libraries(MayoScripting PRIVATE qjs)
+
+add_library(MayoScriptingLib INTERFACE)
+target_link_libraries(MayoScriptingLib INTERFACE MayoScripting ${MayoScripting_LinkLibraries})
 
 ##########
 # Target: MayoApp
