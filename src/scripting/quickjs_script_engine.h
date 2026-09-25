@@ -24,14 +24,12 @@ public:
     void startEvaluate() override;
     void stopEvaluate() override;
     bool isEvaluateRunning() const override;
-    bool waitForEvaluateEnd(int msecs) override;
+    bool waitForEvaluateEnd(int msecs = -1) override;
+
+    bool isStopRequested() const;
 
 private:
-    void evaluateWorker(const FilePath& scriptFilePath);
-    void emitMessage(
-        MessageType type, std::string_view text, std::string_view contextFile, int contextLine = -1
-    );
-    static int interruptHandler(struct JSRuntime*, void* opaque);
+    void evaluateWorker(const std::string& script, const FilePath& scriptFilePath);
 
     std::thread m_evaluateThread;
     std::atomic_bool m_isEvaluateRunning{false};

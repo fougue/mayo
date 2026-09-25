@@ -7,6 +7,11 @@
 
 namespace Mayo {
 
+void IScriptEngine::setScript(std::string_view contents)
+{
+    m_script = contents;
+}
+
 void IScriptEngine::setScriptFilePath(const FilePath& filePath)
 {
     m_scriptFilePath = filepathCanonical(filePath).make_preferred();
