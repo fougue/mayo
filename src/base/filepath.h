@@ -36,6 +36,15 @@ inline uintmax_t filepathFileSize(const FilePath& fp)
     return ec ? 0u : size;
 }
 
+// Exception-safe version of std::filesystem::absolute()
+inline FilePath filepathAbsolute(const FilePath& fp)
+{
+    // NOTE fs::absolute(fp) might throw on non-existing files, use overload with std::error_code
+    std::error_code ec;
+    const auto afp = std_filesystem::absolute(fp, ec);
+    return ec ? fp : afp;
+}
+
 // Exception-safe version of std::filesystem::canonical()
 inline FilePath filepathCanonical(const FilePath& fp)
 {
