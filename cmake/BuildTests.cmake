@@ -118,6 +118,17 @@ mayo_add_test(
     SOURCES ${MayoTestMeasure_SourceFiles}  LIBRARIES MayoCoreLib MayoIOLib
 )
 
+# test-scripting
+file(
+    GLOB MayoTestScripting_SourceFiles
+    ${PROJECT_SOURCE_DIR}/tests/test_scripting*.h
+    ${PROJECT_SOURCE_DIR}/tests/test_scripting*.cpp
+)
+mayo_add_test(
+    scripting
+    SOURCES ${MayoTestScripting_SourceFiles}  LIBRARIES MayoCoreLib MayoScriptingLib
+)
+
 # test-app
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui)
 

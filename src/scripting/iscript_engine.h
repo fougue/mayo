@@ -19,8 +19,12 @@ class IScriptEngine {
 public:
     virtual ~IScriptEngine() = default;
 
-    // Path to the script file to be executed
-    FilePath scriptFilePath() const { return m_scriptFilePath; }
+    // Script program to be executed
+    const std::string& script() const { return m_script; }
+    void setScript(std::string_view contents);
+
+    // File path associated with the script program, if any
+    const FilePath& scriptFilePath() const { return m_scriptFilePath; }
     void setScriptFilePath(const FilePath& filePath);
 
     // Asynchronous evaluation of script file defined with setScriptFilePath()
@@ -78,7 +82,8 @@ public:
     Signal<Result, EndReason> signalEvaluateEnded;
 
 private:
-    FilePath m_scriptFilePath;
+    std::string m_script;
+    FilePath m_scriptFilePath; // Optional
 };
 
 } // namespace Mayo
