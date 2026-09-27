@@ -210,6 +210,9 @@ void WidgetOccViewController::handleKeyPress(const QKeyEvent* event)
         return;
 
     m_inputSequence.push(event->key());
+    if (m_inputSequence.equal({ Qt::Key_H }))
+        this->signalToggleSelectionVisibilityRequested.send();
+
     if (m_inputSequence.equal({ Qt::Key_Space }))
         this->startInstantZoom(toPosition(m_occView->widget()->mapFromGlobal(QCursor::pos())));
 

@@ -28,6 +28,9 @@
 #include <QtWidgets/QWidgetAction>
 #include <Standard_Version.hxx>
 
+#include <algorithm>
+#include <vector>
+
 namespace Mayo {
 
 namespace {
@@ -69,6 +72,18 @@ private:
 
 // Default margin to be used in widgets
 const int Internal_widgetMargin = 4;
+
+std::vector<TreeNodeId> getSelectedNodeIds(const GuiDocument* guiDoc)
+{
+    std::vector<TreeNodeId> nodeIds;
+    const GuiApplication* guiApp = guiDoc->guiApplication();
+    for (const ApplicationItem& appItem : guiApp->selectionModel()->selectedItems()) {
+        if (appItem.isDocumentTreeNode() && appItem.document() == guiDoc->document())
+            nodeIds.push_back(appItem.documentTreeNode().id());
+    }
+
+    return nodeIds;
+}
 
 } // namespace
 
@@ -138,6 +153,20 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     m_controller->signalMultiSelectionToggled.connectSlot([=](bool on) {
         auto mode = on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single;
         gfxScene->setSelectionMode(mode);
+    });
+    m_controller->signalToggleSelectionVisibilityRequested.connectSlot([=]{
+        const auto vecSelectedNodeId = getSelectedNodeIds(m_guiDoc);
+        if (vecSelectedNodeId.empty())
+            return;
+
+        const bool allSelectedItemVisible = std::all_of(
+            vecSelectedNodeId.cbegin(), vecSelectedNodeId.cend(),
+            [=](TreeNodeId nodeId) { return m_guiDoc->nodeVisibleState(nodeId) == CheckState::On; }
+        );
+        for (TreeNodeId nodeId : vecSelectedNodeId)
+            m_guiDoc->setNodeVisible(nodeId, !allSelectedItemVisible);
+
+        m_guiDoc->graphicsScene()->redraw();
     });
 
     m_guiDoc->viewCameraAnimation()->setBackend(std::make_unique<QtAnimationBackend>(QEasingCurve::OutExpo));
@@ -399,15 +428,7 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
 
     const DocumentPtr doc = m_guiDoc->document();
     // Helper function to get the selected tree nodes(ids) in the document
-    auto fnGetDocSelectedNodeIds = [=]() -> std::vector<TreeNodeId> {
-        std::vector<TreeNodeId> nodeIds;
-        const GuiApplication* guiApp = m_guiDoc->guiApplication();
-        for (const ApplicationItem& appItem : guiApp->selectionModel()->selectedItems()) {
-            if (appItem.isDocumentTreeNode() && appItem.document() == m_guiDoc->document())
-                nodeIds.push_back(appItem.documentTreeNode().id());
-        }
-        return nodeIds;
-    };
+    auto fnGetDocSelectedNodeIds = [=] { return getSelectedNodeIds(m_guiDoc); };
 
     // "Show all" action
     QObject::connect(actionShowAll, &QAction::triggered, this, [=]{
