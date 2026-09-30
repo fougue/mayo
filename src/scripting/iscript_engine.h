@@ -11,6 +11,8 @@
 #include "../base/signal.h"
 
 #include <any>
+#include <string>
+#include <string_view>
 
 namespace Mayo {
 
