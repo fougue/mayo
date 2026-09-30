@@ -7,11 +7,20 @@
 
 #include "../src/scripting/quickjs_script_engine.h"
 
+#include <gsl/util>
 #include <fstream>
+
+// Needed for Q_FECTH()
+Q_DECLARE_METATYPE(std::string)
+Q_DECLARE_METATYPE(std::any)
 
 namespace Mayo {
 
 namespace {
+
+using JsEngineResult = IScriptEngine::Result;
+using JsEngineEndReason = IScriptEngine::EndReason;
+using JsEngineMessage = IScriptEngine::Message;
 
 void writeTextFile(const FilePath& filePath, std::string_view contents)
 {
@@ -21,390 +30,165 @@ void writeTextFile(const FilePath& filePath, std::string_view contents)
     QVERIFY(file.good());
 }
 
-} // namespace
-
-using JsEngineResult = IScriptEngine::Result;
-using JsEngineEndReason = IScriptEngine::EndReason;
-
-void TestScripting::evaluateNumber_test()
-{
-    QuickJsScriptEngine engine;
-    engine.setScript("42");
-
+struct ScriptEvaluation {
     JsEngineResult result;
-    JsEngineEndReason endReason;
-    engine.signalEvaluateEnded.connectSlot([&](const JsEngineResult& res, JsEngineEndReason reason) {
-        result = res;
-        endReason = reason;
+    JsEngineEndReason endReason{JsEngineEndReason::Finished};
+    bool waitEndSuccess{false};
+    std::vector<JsEngineMessage> messages;
+
+    const JsEngineMessage* lastMessage(MessageType msgType) const
+    {
+        for (auto it = this->messages.rbegin(); it != this->messages.rend(); ++it) {
+            if (it->type == msgType)
+                return &(*it);
+        }
+
+        return nullptr;
+    }
+};
+
+ScriptEvaluation evaluateScript(
+        IScriptEngine& engine, std::string_view strScript, const FilePath& scriptFilePath = {}
+    )
+{
+    engine.setScript(strScript);
+    engine.setScriptFilePath(scriptFilePath);
+
+    ScriptEvaluation evaluation;
+    auto conn1 = engine.signalMessage.connectSlot([&](JsEngineMessage message) {
+        evaluation.messages.push_back(std::move(message));
+    });
+    auto conn2 = engine.signalEvaluateEnded.connectSlot(
+        [&](const JsEngineResult& result, JsEngineEndReason endReason) {
+            evaluation.result = result;
+            evaluation.endReason = endReason;
+        }
+    );
+    auto _ = gsl::finally([&]{
+        conn1.disconnect();
+        conn2.disconnect();
     });
 
     engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
+    evaluation.waitEndSuccess = engine.waitForEvaluateEnd();
 
-    QCOMPARE(endReason, JsEngineEndReason::Finished);
-    QVERIFY(result.success);
-    QVERIFY(result.value.has_value());
-    QCOMPARE(std::any_cast<double>(result.value), 42.);
+    auto checkEnd = [&]{
+        QVERIFY(evaluation.waitEndSuccess);
+        QCOMPARE(evaluation.endReason, JsEngineEndReason::Finished);
+    };
+    checkEnd();
+
+    return evaluation;
 }
 
-void TestScripting::evaluateString_test()
+ScriptEvaluation evaluateScript(std::string_view strScript, const FilePath& scriptFilePath = {})
 {
     QuickJsScriptEngine engine;
-    engine.setScript("'Hello Mayo'");
-
-    JsEngineResult result;
-    engine.signalEvaluateEnded.connectSlot([&](const JsEngineResult& res) { result = res; });
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QVERIFY(result.value.has_value());
-    QCOMPARE(std::any_cast<std::string>(result.value), std::string{"Hello Mayo"});
+    return evaluateScript(engine, strScript, scriptFilePath);
 }
 
-void TestScripting::evaluateBoolean_test()
-{
-    QuickJsScriptEngine engine;
-    engine.setScript("true");
-
-    JsEngineResult result;
-    engine.signalEvaluateEnded.connectSlot([&](const JsEngineResult& res) { result = res; });
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QVERIFY(result.value.has_value());
-    QCOMPARE(std::any_cast<bool>(result.value), true);
-}
-
-#if 0
-void TestScripting::evaluateUndefined_test()
-{
-    QuickJsScriptEngine engine;
-    engine.setScript("undefined");
-
-    IScriptEngine::Result result;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QVERIFY(!result.value.has_value());
-}
-
-void TestScripting::evaluateNull_test()
-{
-    QuickJsScriptEngine engine;
-    engine.setScript("null");
-
-    IScriptEngine::Result result;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QVERIFY(!result.value.has_value());
-}
+} // namespace
 
 void TestScripting::evaluateRuntimeError_test()
 {
-    QuickJsScriptEngine engine;
-    engine.setScript("throw new Error('Something went wrong')");
+    auto eval = evaluateScript("throw new Error('Something went wrong')");
 
-    IScriptEngine::Result result;
-    IScriptEngine::Message message;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalMessage,
-        this,
-        [&](const IScriptEngine::Message& m) {
-            if (m.type == IScriptEngine::MessageType::Error)
-                message = m;
-        }
-        );
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(!result.success);
-    QCOMPARE(message.type, IScriptEngine::MessageType::Error);
-    QVERIFY(QString::fromStdString(message.text).contains("Something went wrong"));
+    QVERIFY(!eval.result.success);
+    QVERIFY(eval.lastMessage(MessageType::Error) != nullptr);
+    QVERIFY(eval.lastMessage(MessageType::Error)->text.find("Something went wrong") != std::string::npos);
 }
 
 void TestScripting::evaluateSyntaxError_test()
 {
-    QuickJsScriptEngine engine;
-    engine.setScript("const =");
+    auto eval = evaluateScript("const =");
 
-    IScriptEngine::Result result;
-    IScriptEngine::Message message;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalMessage,
-        this,
-        [&](const IScriptEngine::Message& m) {
-            if (m.type == IScriptEngine::MessageType::Error)
-                message = m;
-        }
-        );
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(!result.success);
-    QCOMPARE(message.type, IScriptEngine::MessageType::Error);
+    QVERIFY(!eval.result.success);
+    QVERIFY(eval.lastMessage(MessageType::Error) != nullptr);
 }
 
 void TestScripting::evaluateScriptFile_test()
 {
-    const FilePath filePath =
-        std::filesystem::temp_directory_path() / "mayo-test-scripting.js";
-
-    writeTextFile(filePath, "21 * 2");
+    const FilePath filePath = std::filesystem::temp_directory_path() / "mayo-test-scripting.js";
+    const std::string strScript = "export default 21 * 2";
 
     QuickJsScriptEngine engine;
-    engine.setScriptFilePath(filePath);
+    auto eval = evaluateScript(engine, strScript, filePath);
 
     QCOMPARE(engine.scriptFilePath(), filePath);
-    QCOMPARE(engine.script(), std::string("21 * 2"));
+    QCOMPARE(engine.script(), strScript);
 
-    IScriptEngine::Result result;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QCOMPARE(std::any_cast<double>(result.value), 42.);
+    QVERIFY(eval.result.success);
+    QCOMPARE(std::any_cast<double>(eval.result.value), 42.);
 
     std::filesystem::remove(filePath);
 }
 
-void TestScripting::evaluateMissingScriptFile_test()
+void TestScripting::consoleMessagesTypes_test()
 {
-    const FilePath filePath =
-        std::filesystem::temp_directory_path() / "mayo-nonexistent-script.js";
+    auto eval = evaluateScript(R"(
+        console.log('log');
+        console.info('info');
+        console.warn('warn');
+        console.error('error');
+    )");
 
-    std::filesystem::remove(filePath);
+    QCOMPARE(eval.messages.size(), size_t(4));
 
-    QuickJsScriptEngine engine;
-    engine.setScriptFilePath(filePath);
+    QCOMPARE(eval.messages[0].type, MessageType::Trace);
+    QCOMPARE(eval.messages[1].type, MessageType::Info);
+    QCOMPARE(eval.messages[2].type, MessageType::Warning);
+    QCOMPARE(eval.messages[3].type, MessageType::Error);
 
-    IScriptEngine::Result result;
-    IScriptEngine::Message message;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalMessage,
-        this,
-        [&](const IScriptEngine::Message& m) {
-            if (m.type == IScriptEngine::MessageType::Error)
-                message = m;
-        }
-        );
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(!result.success);
-    QCOMPARE(message.type, IScriptEngine::MessageType::Error);
-    QCOMPARE(
-        QString::fromStdString(message.contextFile),
-        QString::fromStdString(filePath.u8string())
-        );
-}
-
-void TestScripting::consoleMessages_test()
-{
-    QuickJsScriptEngine engine;
-    engine.setScript("console.log('Hello', 42, true)");
-
-    QList<IScriptEngine::Message> messages;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalMessage,
-        this,
-        [&](const IScriptEngine::Message& message) {
-            messages.append(message);
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QCOMPARE(messages.size(), 1);
-    QCOMPARE(messages[0].type, IScriptEngine::MessageType::Trace);
-    QCOMPARE(
-        QString::fromStdString(messages[0].text),
-        QString("Hello 42 true")
-        );
+    QCOMPARE(eval.messages[0].text, std::string{"log"});
+    QCOMPARE(eval.messages[1].text, std::string{"info"});
+    QCOMPARE(eval.messages[2].text, std::string{"warn"});
+    QCOMPARE(eval.messages[3].text, std::string{"error"});
 }
 
 void TestScripting::evaluateImportedModule_test()
 {
-    const FilePath directory =
-        std::filesystem::temp_directory_path() / "mayo-test-scripting";
-
+    const FilePath directory = std::filesystem::temp_directory_path() / "mayo-test-scripting";
     std::filesystem::create_directories(directory);
-
     const FilePath modulePath = directory / "foo.js";
+    writeTextFile(modulePath, "export const value = 42");
 
-    writeTextFile(modulePath, "export const value = 42;");
+    std::string_view strScript = R"(
+        import { value } from './foo.js';
+        export default value;
+    )";
+    auto eval = evaluateScript(strScript, directory / "main.js");
 
-    QuickJsScriptEngine engine;
-    engine.setScript(
-        "import { value } from './foo.js';\n"
-        "value;",
-        directory / "main.js"
-        );
-
-    IScriptEngine::Result result;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QCOMPARE(std::any_cast<double>(result.value), 42.);
+    QVERIFY(eval.result.success);
+    QCOMPARE(std::any_cast<double>(eval.result.value), 42.);
 
     std::filesystem::remove_all(directory);
 }
 
 void TestScripting::evaluateImportedModuleConsoleContext_test()
 {
-    const FilePath directory =
-        std::filesystem::temp_directory_path() / "mayo-test-scripting";
-
+    const FilePath directory = std::filesystem::temp_directory_path() / "mayo-test-scripting";
     std::filesystem::create_directories(directory);
 
     const FilePath modulePath = directory / "foo.js";
+    writeTextFile(modulePath, "console.log('Hello from foo')");
 
-    writeTextFile(modulePath, "console.log('Hello from foo');");
+    auto eval = evaluateScript("import './foo.js'", directory / "main.js");
 
-    QuickJsScriptEngine engine;
-    engine.setScript(
-        "import './foo.js';",
-        directory / "main.js"
-        );
-
-    IScriptEngine::Message message;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalMessage,
-        this,
-        [&](const IScriptEngine::Message& m) {
-            if (m.type == IScriptEngine::MessageType::Trace)
-                message = m;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QCOMPARE(
-        QString::fromStdString(message.contextFile),
-        QString::fromStdString(modulePath.u8string())
-        );
+    QVERIFY(eval.result.success);
+    QVERIFY(eval.lastMessage(MessageType::Trace) != nullptr);
+    QCOMPARE(eval.lastMessage(MessageType::Trace)->contextFile, modulePath.u8string());
 
     std::filesystem::remove_all(directory);
 }
 
 void TestScripting::evaluateMissingModule_test()
 {
-    const FilePath directory =
-        std::filesystem::temp_directory_path() / "mayo-test-scripting";
-
+    const FilePath directory = std::filesystem::temp_directory_path() / "mayo-test-scripting";
     std::filesystem::create_directories(directory);
 
-    QuickJsScriptEngine engine;
-    engine.setScript(
-        "import './missing.js';",
-        directory / "main.js"
-        );
+    auto eval = evaluateScript("import './missing.js'", directory / "main.js");
 
-    IScriptEngine::Result result;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(!result.success);
-
+    QVERIFY(!eval.result.success);
     std::filesystem::remove_all(directory);
 }
 
@@ -413,94 +197,229 @@ void TestScripting::stopEvaluate_test()
     QuickJsScriptEngine engine;
     engine.setScript("while (true) {}");
 
-    IScriptEngine::Result result;
-    IScriptEngine::EndReason endReason = IScriptEngine::EndReason::Finished;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason reason) {
-            result = r;
-            endReason = reason;
-        }
-        );
+    JsEngineResult result;
+    JsEngineEndReason endReason = JsEngineEndReason::Finished;
+    engine.signalEvaluateEnded.connectSlot([&](const JsEngineResult& res, JsEngineEndReason reason) {
+        result = res;
+        endReason = reason;
+    });
 
     engine.startEvaluate();
-
     QTRY_VERIFY(engine.isEvaluateRunning());
 
     engine.stopEvaluate();
-
     QVERIFY(engine.waitForEvaluateEnd());
 
-    QCOMPARE(endReason, IScriptEngine::EndReason::Stopped);
+    QCOMPARE(endReason, JsEngineEndReason::Stopped);
     QVERIFY(!result.success);
 }
 
-void TestScripting::evaluateTwice_test()
+void TestScripting::evaluateAwait_test()
 {
-    QuickJsScriptEngine engine;
-
-    IScriptEngine::Result result;
-
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.setScript("21");
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QCOMPARE(std::any_cast<double>(result.value), 21.);
-
-    engine.setScript("42");
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QCOMPARE(std::any_cast<double>(result.value), 42.);
+    auto eval = evaluateScript("const value = await Promise.resolve(42)");
+    QVERIFY(eval.result.success);
 }
 
 void TestScripting::evaluateRuntimeIsolation_test()
 {
     QuickJsScriptEngine engine;
 
-    IScriptEngine::Result result;
+    {
+        auto eval = evaluateScript(engine, "globalThis.testValue = 42");
+        QVERIFY(eval.result.success);
+    }
 
-    QObject::connect(
-        &engine,
-        &QuickJsScriptEngine::signalEvaluateEnded,
-        this,
-        [&](const IScriptEngine::Result& r, IScriptEngine::EndReason) {
-            result = r;
-        }
-        );
-
-    engine.setScript("globalThis.testValue = 42;");
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-
-    engine.setScript("typeof globalThis.testValue");
-    engine.startEvaluate();
-    QVERIFY(engine.waitForEvaluateEnd());
-
-    QVERIFY(result.success);
-    QCOMPARE(
-        std::any_cast<std::string>(result.value),
-        std::string("undefined")
-        );
+    {
+        auto eval = evaluateScript(engine, "export default typeof globalThis.testValue");
+        QVERIFY(eval.result.success);
+        QCOMPARE(std::any_cast<std::string>(eval.result.value), std::string{"undefined"});
+    }
 }
-#endif
+
+void TestScripting::evaluateConsoleContext_test()
+{
+    const FilePath filePath = std::filesystem::temp_directory_path() / "main.js";
+
+    auto eval = evaluateScript("console.log('Hello')", filePath);
+
+    QVERIFY(eval.lastMessage(MessageType::Trace) != nullptr);
+    QCOMPARE(eval.lastMessage(MessageType::Trace)->contextFile, filePath.u8string());
+}
+
+void TestScripting::consoleContextWithoutScriptFile_test()
+{
+    auto eval = evaluateScript("console.log('Hello')");
+
+    QVERIFY(eval.lastMessage(MessageType::Trace) != nullptr);
+    QCOMPARE(eval.lastMessage(MessageType::Trace)->contextFile, std::string{});
+}
+
+void TestScripting::evaluateAsyncException_test()
+{
+    auto eval = evaluateScript("await Promise.reject(new Error('Async failure'))");
+
+    QVERIFY(!eval.result.success);
+    QVERIFY(eval.lastMessage(MessageType::Error) != nullptr);
+    QVERIFY(eval.lastMessage(MessageType::Error)->text.find("Async failure") != std::string::npos);
+}
+
+void TestScripting::destroyWhileEvaluateRunning_test()
+{
+    {
+        QuickJsScriptEngine engine;
+        engine.setScript("while (true) {}");
+
+        engine.startEvaluate();
+        QTRY_VERIFY(engine.isEvaluateRunning());
+    }
+
+    // Reaching this point means the destructor successfully stopped and joined the evaluation thread
+    QVERIFY(true);
+}
+
+void TestScripting::evaluateModuleSyntaxError_test()
+{
+    const FilePath directory = std::filesystem::temp_directory_path() / "mayo-test-scripting";
+    std::filesystem::create_directories(directory);
+
+    const FilePath modulePath = directory / "foo.js";
+    writeTextFile(modulePath, "export const = 42;");
+
+    auto eval = evaluateScript("import './foo.js'", directory / "main.js");
+
+    QVERIFY(!eval.result.success);
+    QVERIFY(eval.lastMessage(MessageType::Error) != nullptr);
+    QVERIFY(!eval.lastMessage(MessageType::Error)->text.empty());
+
+    std::filesystem::remove_all(directory);
+}
+
+void TestScripting::evaluateModuleRuntimeError_test()
+{
+    const FilePath directory = std::filesystem::temp_directory_path() / "mayo-test-scripting";
+    std::filesystem::create_directories(directory);
+
+    const FilePath modulePath = directory / "foo.js";
+    writeTextFile(modulePath, "throw new Error('Module failure');");
+
+    auto eval = evaluateScript("import './foo.js'", directory / "main.js");
+
+    QVERIFY(!eval.result.success);
+    QVERIFY(eval.lastMessage(MessageType::Error) != nullptr);
+    QVERIFY(eval.lastMessage(MessageType::Error)->text.find("Module failure") != std::string::npos);
+
+    std::filesystem::remove_all(directory);
+}
+
+void TestScripting::evaluateNestedModules_test()
+{
+    const FilePath directory = std::filesystem::temp_directory_path() / "mayo-test-scripting";
+
+    const FilePath subDirectory = directory / "sub";
+    std::filesystem::create_directories(subDirectory);
+
+    const FilePath mainPath = directory / "main.js";
+    const FilePath fooPath = subDirectory / "foo.js";
+    const FilePath barPath = directory / "bar.js";
+
+    writeTextFile(barPath, "export default 42;");
+    writeTextFile(fooPath, R"(
+        import value from '../bar.js';
+        export default value;
+    )");
+
+    std::string_view strScript = R"(
+        import value from './sub/foo.js';
+        export default value;
+    )";
+    auto eval = evaluateScript(strScript, mainPath);
+
+    QVERIFY(eval.result.success);
+    QCOMPARE(std::any_cast<double>(eval.result.value), 42.);
+
+    std::filesystem::remove_all(directory);
+}
+
+void TestScripting::evaluateTwice_test()
+{
+    QuickJsScriptEngine engine;
+
+    {
+        auto eval = evaluateScript(engine, "export default 21");
+        QVERIFY(eval.result.success);
+        QCOMPARE(std::any_cast<double>(eval.result.value), 21.);
+    }
+
+    {
+        auto eval = evaluateScript(engine, "export default 42");
+        QVERIFY(eval.result.success);
+        QCOMPARE(std::any_cast<double>(eval.result.value), 42.);
+    }
+}
+
+void TestScripting::startEvaluateWhileRunning_test()
+{
+    QuickJsScriptEngine engine;
+    engine.setScript("while (true) {}");
+
+    int evaluateStartedCount = 0;
+    engine.signalEvaluateStarted.connectSlot([&]{ ++evaluateStartedCount; });
+
+    engine.startEvaluate();
+
+    QTRY_COMPARE(evaluateStartedCount, 1);
+
+    engine.startEvaluate(); // Must be ignored
+
+    QCOMPARE(evaluateStartedCount, 1);
+
+    engine.stopEvaluate();
+    QVERIFY(engine.waitForEvaluateEnd());
+}
+
+void TestScripting::evaluateValue_test()
+{
+    QFETCH(std::string, strScriptValue);
+    QFETCH(std::any, expectedAny);
+
+    auto eval = evaluateScript("export default " + strScriptValue);
+
+    QVERIFY(eval.result.success);
+    QCOMPARE(eval.result.value.has_value(), expectedAny.has_value());
+    QCOMPARE(eval.result.value.type(), expectedAny.type());
+
+    if (!expectedAny.has_value())
+        return;
+
+    if (expectedAny.type() == typeid(double))
+        QCOMPARE(std::any_cast<double>(eval.result.value), std::any_cast<double>(expectedAny));
+    else if (expectedAny.type() == typeid(std::string))
+        QCOMPARE(std::any_cast<std::string>(eval.result.value), std::any_cast<std::string>(expectedAny));
+    else if (expectedAny.type() == typeid(bool))
+        QCOMPARE(std::any_cast<bool>(eval.result.value), std::any_cast<bool>(expectedAny));
+    else
+        QFAIL("Unsupported expected std::any type");
+}
+
+void TestScripting::evaluateValue_test_data()
+{
+    QTest::addColumn<std::string>("strScriptValue");
+    QTest::addColumn<std::any>("expectedAny");
+
+    using namespace std::string_literals;
+    QTest::newRow("int(42)") << "42"s << std::any{42.};
+    QTest::newRow("int(-42)") << "-42"s << std::any{-42.};
+    QTest::newRow("double(3.14159)") << "3.14159"s << std::any{3.14159};
+    QTest::newRow("string('Hello Mayo')") << "'Hello Mayo'"s << std::any{"Hello Mayo"s};
+    QTest::newRow("string('')") << "''"s << std::any{""s};
+    QTest::newRow("bool(true)") << "true"s << std::any{true};
+    QTest::newRow("bool(false)") << "false"s << std::any{false};
+    QTest::newRow("undefined") << "undefined"s << std::any{};
+    QTest::newRow("null") << "null"s << std::any{};
+}
 
 } // namespace Mayo
 
-QTEST_APPLESS_MAIN(Mayo::TestScripting)
+// Qt application needed for QTRY_VERIFY(), QTRY_COMPARE(), ...
+QTEST_MAIN(Mayo::TestScripting)
+//QTEST_APPLESS_MAIN(Mayo::TestScripting)
