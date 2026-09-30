@@ -24,38 +24,7 @@ std::string readAll(std::istream& inputStream)
     return stream.str();
 }
 
-std::any jsValueToAny(JSContext* ctx, JSValueConst value)
-{
-    if (JS_IsUndefined(value) || JS_IsNull(value))
-        return {};
-
-    if (JS_IsBool(value))
-        return bool(JS_ToBool(ctx, value));
-
-    if (JS_IsNumber(value)) {
-        double number = 0.;
-        if (JS_ToFloat64(ctx, &number, value) == 0)
-            return number;
-
-        return {};
-    }
-
-    if (JS_IsString(value)) {
-        const char* str = JS_ToCString(ctx, value);
-        if (!str)
-            return {};
-
-        std::string result(str);
-        JS_FreeCString(ctx, str);
-        return result;
-    }
-
-    // Objects, arrays, functions, etc. are deliberately not exposed through std::any yet
-    // A dedicated ScriptValue can be introduced later
-    return {};
-}
-
-std::string toStdString(JSContext* context, JSValueConst value, std::string_view strDefaultIfNull)
+std::string getJsValueString(JSContext* context, JSValueConst value, std::string_view strDefaultIfNull = {})
 {
     const char* cstr = JS_ToCString(context, value);
     if (cstr) {
@@ -73,19 +42,45 @@ std::string getJsExceptionString(JSContext* context, JSValueConst value)
         return {};
 
     JSValue exception = JS_GetException(context);
-    const std::string strText = toStdString(context, exception, "JavaScript unknown exception");
+    const std::string strText = getJsValueString(context, exception, "Unknown JavaScript exception");
     JS_FreeValue(context, exception);
     return strText;
 }
 
+std::any jsValueToAny(JSContext* ctx, JSValueConst value)
+{
+    if (JS_IsUndefined(value) || JS_IsNull(value))
+        return {};
+
+    if (JS_IsBool(value))
+        return bool(JS_ToBool(ctx, value));
+
+    if (JS_IsNumber(value)) {
+        double number = 0.;
+        if (JS_ToFloat64(ctx, &number, value) == 0)
+            return number;
+
+        return {};
+    }
+
+    if (JS_IsString(value))
+        return getJsValueString(ctx, value);
+
+    // Objects, arrays, functions, etc. are deliberately not exposed through std::any yet
+    // A dedicated ScriptValue can be introduced later
+    return {};
+}
+
 std::string currentScriptFile(JSContext* context)
 {
-    const JSAtom atom = JS_GetScriptOrModuleName(context, 0);
+    // Skip the native function implementing console.log() and get the JavaScript caller's
+    // script/module filename
+    const JSAtom atom = JS_GetScriptOrModuleName(context, 1);
     if (atom == JS_ATOM_NULL)
         return {};
 
     const char* cstr = JS_AtomToCString(context, atom);
-    const std::string str = cstr ? cstr : "";
+    const std::string str = cstr ? cstr : std::string{};
     JS_FreeCString(context, cstr);
 
     JS_FreeAtom(context, atom);
@@ -103,7 +98,7 @@ JSValue jsConsoleWrite(JSContext* context, int argc, JSValueConst* argv, Message
         if (i > 0)
             text += ' ';
 
-        text += toStdString(context, argv[i], "<unprintable>");
+        text += getJsValueString(context, argv[i], "<unprintable>");
     }
 
     IScriptEngine::Message message;
@@ -169,7 +164,7 @@ char* moduleNormalize(JSContext* context, const char* moduleBaseName, const char
 // Used with JS_SetModuleLoaderFunc()
 JSModuleDef* moduleLoader(JSContext* context, const char* moduleName, void*)
 {
-    std::ifstream file(moduleName, std::ios::binary);
+    std::ifstream file(std::filesystem::u8path(moduleName), std::ios::binary);
     if (!file) {
         JS_ThrowReferenceError(context, "Failed to load module '%s'", moduleName);
         return nullptr;
@@ -205,20 +200,26 @@ QuickJsScriptEngine::~QuickJsScriptEngine()
 
 void QuickJsScriptEngine::startEvaluate()
 {
-    bool expected = false;
-    if (!m_isEvaluateRunning.compare_exchange_strong(expected, true))
-        return; // Already running
+    std::thread previousThread;
 
-    // The previous worker may have finished but its std::thread may still be joinable. It must be
-    // joined before assigning a new thread
-    if (m_evaluateThread.joinable())
-        m_evaluateThread.join();
+    {
+        std::lock_guard lock(m_mutex);
 
-    const FilePath filePath = this->scriptFilePath();
-    const std::string script = this->script();
+        if (m_isEvaluateRunning)
+            return;
 
-    m_stopRequested.store(false);
-    m_evaluateThread = std::thread([=]{ this->evaluateWorker(script, filePath); });
+        previousThread = std::move(m_evaluateThread);
+
+        const std::string script = this->script();
+        const FilePath filePath = this->scriptFilePath();
+
+        m_stopRequested.store(false);
+        m_isEvaluateRunning = true;
+        m_evaluateThread = std::thread([=]{this->evaluateWorker(script, filePath); });
+    }
+
+    if (previousThread.joinable())
+        previousThread.join();
 }
 
 void QuickJsScriptEngine::stopEvaluate()
@@ -228,17 +229,14 @@ void QuickJsScriptEngine::stopEvaluate()
 
 bool QuickJsScriptEngine::isEvaluateRunning() const
 {
-    return m_isEvaluateRunning.load();
+    [[maybe_unused]] std::lock_guard lock(m_mutex);
+    return m_isEvaluateRunning;
 }
 
 bool QuickJsScriptEngine::waitForEvaluateEnd(int msecs)
 {
-    if (!m_isEvaluateRunning.load())
-        return true;
-
-    std::unique_lock lock(m_evaluateEndMutex);
-
-    const auto predicate = [=]{ return !m_isEvaluateRunning.load(); };
+    std::unique_lock lock(m_mutex);
+    const auto predicate = [=]{ return !m_isEvaluateRunning; };
 
     if (msecs < 0) {
         m_evaluateEndCondition.wait(lock, predicate);
@@ -267,6 +265,7 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
     JSContext* context = nullptr;
     JSValue moduleValue = JS_UNDEFINED;
     JSValue value = JS_UNDEFINED;
+    JSModuleDef* mainModule = nullptr;
 
     // Final action executed when function exits
     [[maybe_unused]] auto onExit = gsl::finally([&]{
@@ -275,10 +274,15 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
             JS_FreeValue(context, moduleValue);
             JS_FreeContext(context);
         }
+
         if (runtime) {
             JS_FreeRuntime(runtime);
         }
-        m_isEvaluateRunning.store(false);
+
+        {
+            std::lock_guard lock(m_mutex);
+            m_isEvaluateRunning = false;
+        }
         m_evaluateEndCondition.notify_all();
         this->signalEvaluateEnded.send(result, endReason);
     });
@@ -293,7 +297,9 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
         this->signalMessage.send(message);
     };
 
-    // Create JS runtine
+    auto acknowledgeStop = [&]{ endReason = EndReason::Stopped; };
+
+    // Create JS runtime
     runtime = JS_NewRuntime();
     if (!runtime)
         return error("Failed to create QuickJS runtime");
@@ -315,22 +321,79 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
     if (JS_IsException(moduleValue))
         return error(getJsExceptionString(context, moduleValue));
 
+    mainModule = static_cast<JSModuleDef*>(JS_VALUE_GET_PTR(moduleValue));
+
     value = JS_EvalFunction(context, moduleValue);
     moduleValue = JS_UNDEFINED; // Consumed by JS_EvalFunction()
 
-    // Handle stop request (if any)
-    if (this->isStopRequested()) {
-        endReason = EndReason::Stopped;
-        return;
+    if (JS_IsException(value)) {
+        // The exception may have been caused by an interruption requested by the caller
+        if (this->isStopRequested())
+            return acknowledgeStop();
+
+        return error(getJsExceptionString(context, value));
     }
 
-    // Handle exception that eventually occured during script execution
-    if (JS_IsException(value))
-        return error(getJsExceptionString(context, value));
+    // Execute pending JavaScript jobs until the module evaluation promise is settled
+    while (JS_PromiseState(context, value) == JS_PROMISE_PENDING) {
+        JSContext* jobContext = nullptr;
+        const int jobResult = JS_ExecutePendingJob(runtime, &jobContext);
+
+        // A JavaScript exception occurred while executing the job
+        if (jobResult < 0) {
+            // The exception may have been caused by an interruption requested by the caller
+            if (this->isStopRequested())
+                return acknowledgeStop();
+
+            JSValue exception = JS_GetException(jobContext);
+            const std::string message = getJsValueString(jobContext, exception, "Unknown JavaScript exception");
+            JS_FreeValue(jobContext, exception);
+            return error(message);
+        }
+
+        // No job is pending while the module evaluation promise is still pending
+        if (jobResult == 0)
+            return error("Module evaluation did not complete");
+
+        // Stop the evaluation if requested by the caller
+        if (this->isStopRequested())
+            return acknowledgeStop();
+    }
+
+    // Check the final state of the module evaluation promise
+    const JSPromiseStateEnum promiseState = JS_PromiseState(context, value);
+
+    if (promiseState == JS_PROMISE_REJECTED) {
+        JSValue exception = JS_PromiseResult(context, value);
+        if (this->isStopRequested()) {
+            JS_FreeValue(context, exception);
+            return acknowledgeStop();
+        }
+
+        const std::string message = getJsValueString(context, exception, "Unknown JavaScript exception");
+        JS_FreeValue(context, exception);
+        return error(message);
+    }
+    else if (promiseState != JS_PROMISE_FULFILLED) {
+        return error("Invalid module evaluation state");
+    }
 
     // Success
     result.success = true;
-    result.value = jsValueToAny(context, value);
+
+    if (mainModule) {
+        // Retrieve the default export from the module namespace as the script result
+        JSValue namespaceValue = JS_GetModuleNamespace(context, mainModule);
+        if (!JS_IsException(namespaceValue)) {
+            JSValue defaultValue = JS_GetPropertyStr(context, namespaceValue, "default");
+            if (!JS_IsException(defaultValue))
+                result.value = jsValueToAny(context, defaultValue);
+
+            JS_FreeValue(context, defaultValue);
+        }
+
+        JS_FreeValue(context, namespaceValue);
+    }
 }
 
 } // namespace Mayo

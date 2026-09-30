@@ -13,8 +13,6 @@
 #include <string_view>
 #include <thread>
 
-struct JSRuntime;
-
 namespace Mayo {
 
 class QuickJsScriptEngine : public IScriptEngine {
@@ -31,11 +29,11 @@ public:
 private:
     void evaluateWorker(const std::string& script, const FilePath& scriptFilePath);
 
-    std::thread m_evaluateThread;
-    std::atomic_bool m_isEvaluateRunning{false};
-    std::atomic_bool m_stopRequested{false};
+    mutable std::mutex m_mutex; // Protects m_isEvaluateRunning and m_evaluateThread
     std::condition_variable m_evaluateEndCondition;
-    std::mutex m_evaluateEndMutex;
+    std::thread m_evaluateThread;
+    bool m_isEvaluateRunning{false};
+    std::atomic_bool m_stopRequested{false};
 };
 
 } // namespace Mayo
