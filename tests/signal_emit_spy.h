@@ -15,7 +15,7 @@ namespace Mayo {
 // Equivalent of QSignalSpy for KDBindings signals
 struct SignalEmitSpy {
     struct UnknownType {};
-    using ArgValue = std::variant<UnknownType, std::int64_t, std::uint64_t>;
+    using ArgValue = std::variant<UnknownType, int64_t, uint64_t>;
     using SignalArguments = std::vector<ArgValue>;
 
     template<typename... Args>
@@ -43,10 +43,20 @@ struct SignalEmitSpy {
     {
         if constexpr (std::is_integral_v<Arg>) {
             if constexpr (std::is_signed_v<Arg>) {
-                ptr->push_back(static_cast<std::int64_t>(arg));
+                ptr->push_back(static_cast<int64_t>(arg));
             }
             else {
-                ptr->push_back(static_cast<std::uint64_t>(arg));
+                ptr->push_back(static_cast<uint64_t>(arg));
+            }
+        }
+        else if constexpr (std::is_enum_v<Arg>) {
+            using UnderlyingType = std::underlying_type_t<Arg>;
+
+            if constexpr (std::is_signed_v<UnderlyingType>) {
+                ptr->push_back(static_cast<int64_t>(static_cast<UnderlyingType>(arg)));
+            }
+            else {
+                ptr->push_back(static_cast<uint64_t>(static_cast<UnderlyingType>(arg)));
             }
         }
         else {
@@ -54,6 +64,25 @@ struct SignalEmitSpy {
         }
 
         SignalEmitSpy::recordArgs(ptr, args...);
+    }
+
+    template<typename T>
+    T getArgAs(size_t signalIndex, size_t argIndex) const
+    {
+        const ArgValue& arg = this->vecSignals.at(signalIndex).at(argIndex);
+
+        if constexpr (std::is_enum_v<T>) {
+            using UnderlyingType = std::underlying_type_t<T>;
+            using ValueType = std::conditional_t<std::is_signed_v<UnderlyingType>, int64_t, uint64_t>;
+            return static_cast<T>(std::get<ValueType>(arg));
+        }
+        else if constexpr (std::is_integral_v<T>) {
+            using ValueType = std::conditional_t<std::is_signed_v<T>, int64_t, uint64_t>;
+            return static_cast<T>(std::get<ValueType>(arg));
+        }
+        else {
+            return std::get<T>(arg);
+        }
     }
 
     int count = 0;

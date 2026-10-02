@@ -10,6 +10,7 @@
 #include "signal_emit_spy.h"
 
 #include <stdexcept>
+#include <thread>
 
 namespace Mayo {
 
@@ -59,7 +60,6 @@ void TestBase::LibTask_runAndTrackProgress_test()
 void TestBase::LibTask_runJobException_test()
 {
     TaskManager taskMgr;
-
     const TaskId taskId = taskMgr.newTask([](TaskProgress*) {
         throw std::runtime_error("Test exception");
     });
@@ -73,6 +73,68 @@ void TestBase::LibTask_runJobException_test()
 
     QCOMPARE(sigStarted.count, 1);
     QCOMPARE(sigEnded.count, 1);
+}
+
+void TestBase::LibTask_taskCompleted_test()
+{
+    TaskManager taskMgr;
+    const TaskId taskId = taskMgr.newTask([](TaskProgress* progress) {
+        progress->setValue(50.);
+    });
+
+    SignalEmitSpy spy(&taskMgr.signalEnded);
+    taskMgr.run(taskId, TaskAutoDestroy::Off);
+
+    QVERIFY(taskMgr.waitForDone(taskId));
+
+    QCOMPARE(spy.count, 1);
+    QCOMPARE(spy.getArgAs<TaskId>(0, 0), taskId);
+    QCOMPARE(spy.getArgAs<TaskEndReason>(0, 1), TaskEndReason::Completed);
+    QCOMPARE(taskMgr.progress(taskId), 100.);
+}
+
+void TestBase::LibTask_taskAborted_test()
+{
+    TaskManager taskMgr;
+    const TaskId taskId = taskMgr.newTask([](TaskProgress* progress) {
+        progress->setValue(0.);
+        progress->setValue(42.);
+        while (!progress->isAbortRequested())
+            std::this_thread::yield();
+    });
+    taskMgr.signalProgressChanged.connectSlot([&taskMgr](TaskId taskId, double progress) {
+        if (progress > 0.)
+            taskMgr.requestAbort(taskId);
+    });
+
+    SignalEmitSpy spy(&taskMgr.signalEnded);
+    taskMgr.run(taskId, TaskAutoDestroy::Off);
+
+    QVERIFY(taskMgr.waitForDone(taskId));
+
+    QCOMPARE(spy.count, 1);
+    QCOMPARE(spy.getArgAs<TaskId>(0, 0), taskId);
+    QCOMPARE(spy.getArgAs<TaskEndReason>(0, 1), TaskEndReason::Aborted);
+    QCOMPARE(taskMgr.progress(taskId), 42.);
+}
+
+void TestBase::LibTask_taskFailed_test()
+{
+    TaskManager taskMgr;
+    const TaskId taskId = taskMgr.newTask([](TaskProgress*) {
+        throw std::runtime_error("Unexpected failure");
+    });
+
+    SignalEmitSpy spy(&taskMgr.signalEnded);
+    taskMgr.run(taskId, TaskAutoDestroy::Off);
+
+    // The exception must not escape from the task execution function
+    QVERIFY(taskMgr.waitForDone(taskId));
+
+    // signalEnded() must still be emitted
+    QCOMPARE(spy.count, 1);
+    QCOMPARE(spy.getArgAs<TaskId>(0, 0), taskId);
+    QCOMPARE(spy.getArgAs<TaskEndReason>(0, 1), TaskEndReason::Failed);
 }
 
 } // namespace Mayo

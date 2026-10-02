@@ -83,7 +83,7 @@ public:
 
     // Signal emitted when some task execution has just ended(whatever stop condition: finished
     // or aborted)
-    Signal<TaskId> signalEnded;
+    Signal<TaskId, TaskEndReason> signalEnded;
 
 private:
     struct Entity;
