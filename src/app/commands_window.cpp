@@ -13,6 +13,8 @@
 
 #include <cassert>
 
+
+
 namespace Mayo {
 
 CommandMainWidgetToggleFullscreen::CommandMainWidgetToggleFullscreen(IAppContext* context)

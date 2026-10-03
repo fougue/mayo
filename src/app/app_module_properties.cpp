@@ -67,7 +67,9 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->actionOnDocumentFileChange, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
     settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
+    settings->addSetting(&this->themeName, groupId_application);
     settings->addSetting(&this->appUiState, groupId_application);
+    
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
@@ -113,6 +115,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->linkWithDocumentSelector.setValue(true);
         this->appUiState.setValue({});
         this->forceOpenGlFallbackWidget.setValue(false);
+        this->themeName.setValue("dark");
     });
     settings->addResetFunction(groupId_graphics, [this]{
         this->navigationStyle.setValue(View3dNavigationStyle::Mayo);
@@ -187,6 +190,9 @@ void AppModuleProperties::retranslate()
     // Application
     this->language.setDescription(
         textIdTr("Language used for the application. Change will take effect after application restart")
+    );
+    this->themeName.setDescription(
+        textIdTr("Theme for the application UI(classic|dark). Change will take effect after application restart")
     );
     const auto& enumActionOnDocumentFileChange = this->actionOnDocumentFileChange.enumeration();
     this->actionOnDocumentFileChange.setDescription(
