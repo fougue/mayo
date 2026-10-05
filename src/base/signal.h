@@ -21,6 +21,7 @@
 namespace Mayo {
 
 using SignalConnectionHandle = KDBindings::ConnectionHandle;
+using ScopedSignalConnection = KDBindings::ScopedConnection;
 
 // Provides an interface to deal with signal/slot thread mismatch
 //
