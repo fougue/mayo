@@ -5,13 +5,18 @@
 
 #include "quickjs_script_engine.h"
 
-#include <quickjs.h>
+#include "quickjs_context.h"
+#include "quickjs_promise.h"
+#include "quickjs_value.h"
 
 #include <gsl/util>
 #include <fmt/format.h>
+#include <quickjs.h>
+
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 namespace Mayo {
 
@@ -19,9 +24,10 @@ namespace {
 
 std::string readAll(std::istream& inputStream)
 {
-    std::ostringstream stream;
-    stream << inputStream.rdbuf();
-    return stream.str();
+    return std::string{
+        std::istreambuf_iterator<char>(inputStream),
+        std::istreambuf_iterator<char>()
+    };
 }
 
 std::string getJsValueString(JSContext* context, JSValueConst value, std::string_view strDefaultIfNull = {})
@@ -34,17 +40,6 @@ std::string getJsValueString(JSContext* context, JSValueConst value, std::string
     }
 
     return std::string{strDefaultIfNull};
-}
-
-std::string getJsExceptionString(JSContext* context, JSValueConst value)
-{
-    if (!JS_IsException(value))
-        return {};
-
-    JSValue exception = JS_GetException(context);
-    const std::string strText = getJsValueString(context, exception, "Unknown JavaScript exception");
-    JS_FreeValue(context, exception);
-    return strText;
 }
 
 std::any jsValueToAny(JSContext* ctx, JSValueConst value)
@@ -191,6 +186,60 @@ int interruptHandler(JSRuntime*, void* opaque)
 
 } // namespace
 
+struct QuickJsScriptEvaluation::Private {
+    using PendingTasks = std::unordered_map<TaskId, QuickJsPromise>;
+
+    JSContext* context{nullptr};
+    TaskManager* taskMgr{nullptr};
+    PendingTasks pendingTasks;
+};
+
+QuickJsScriptEvaluation::QuickJsScriptEvaluation()
+    : d(new QuickJsScriptEvaluation::Private)
+{
+}
+
+QuickJsScriptEvaluation::~QuickJsScriptEvaluation()
+{
+    delete d;
+}
+
+QuickJsValue QuickJsScriptEvaluation::startTask(TaskJob job)
+{
+    QuickJsPromise promise(d->context);
+    QuickJsValue promiseValue = promise.get();
+
+    const auto taskId = d->taskMgr->newTask(std::move(job));
+    d->pendingTasks.emplace(taskId, std::move(promise));
+    d->taskMgr->run(taskId, TaskAutoDestroy::Off);
+
+    return promiseValue;
+}
+
+void QuickJsScriptEvaluation::completeTask(TaskId taskId, TaskEndReason reason)
+{
+    auto it = d->pendingTasks.find(taskId);
+    if (it == d->pendingTasks.end())
+        return;
+
+    auto promise = std::move(it->second);
+    d->pendingTasks.erase(it);
+
+    switch (reason) {
+    case TaskEndReason::Completed:
+        promise.resolve(JS_UNDEFINED);
+        break;
+    case TaskEndReason::Aborted:
+        promise.reject("Task aborted");
+        break;
+    case TaskEndReason::Failed:
+        promise.reject("Task failed");
+        break;
+    }
+
+    d->taskMgr->destroy(taskId);
+}
+
 QuickJsScriptEngine::~QuickJsScriptEngine()
 {
     QuickJsScriptEngine::stopEvaluate();
@@ -225,6 +274,7 @@ void QuickJsScriptEngine::startEvaluate()
 void QuickJsScriptEngine::stopEvaluate()
 {
     m_stopRequested.store(true);
+    m_jobCondition.notify_all();
 }
 
 bool QuickJsScriptEngine::isEvaluateRunning() const
@@ -251,34 +301,45 @@ bool QuickJsScriptEngine::isStopRequested() const
     return m_stopRequested.load();
 }
 
+void QuickJsScriptEngine::postJob(Job job)
+{
+    {
+        std::lock_guard lock(m_mutex);
+
+        if (!m_isEvaluateRunning || m_stopRequested)
+            return;
+
+        m_jobQueue.push(std::move(job));
+    }
+
+    m_jobCondition.notify_one();
+}
+
+void QuickJsScriptEngine::processJobs()
+{
+    std::queue<Job> jobs;
+    {
+        std::lock_guard lock(m_mutex);
+        jobs.swap(m_jobQueue);
+    }
+
+    while (!jobs.empty()) {
+        Job job = std::move(jobs.front());
+        jobs.pop();
+        job();
+    }
+}
+
 void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePath& scriptFilePath)
 {
     this->signalEvaluateStarted.send();
 
-    const auto strScriptFilePath = scriptFilePath.u8string();
-
     // Variables used for exit status/result
     Result result;
     EndReason endReason = EndReason::Finished;
-    // Variables used for script execution
-    JSRuntime* runtime = nullptr;
-    JSContext* context = nullptr;
-    JSValue moduleValue = JS_UNDEFINED;
-    JSValue value = JS_UNDEFINED;
-    JSModuleDef* mainModule = nullptr;
 
     // Final action executed when function exits
     [[maybe_unused]] auto onExit = gsl::finally([&]{
-        if (context) {
-            JS_FreeValue(context, value);
-            JS_FreeValue(context, moduleValue);
-            JS_FreeContext(context);
-        }
-
-        if (runtime) {
-            JS_FreeRuntime(runtime);
-        }
-
         {
             std::lock_guard lock(m_mutex);
             m_isEvaluateRunning = false;
@@ -293,86 +354,105 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
         Message message;
         message.type = MessageType::Error;
         message.text = strMessage;
-        message.contextFile = !strScriptFilePath.empty() ? strScriptFilePath : std::string{"<script>"};
+        message.contextFile = !scriptFilePath.empty() ? scriptFilePath.u8string() : std::string{"<script>"};
         this->signalMessage.send(message);
     };
 
-    auto acknowledgeStop = [&]{ endReason = EndReason::Stopped; };
+    auto acknowledgeStop = [&](JSContext* jsContext) {
+        QuickJsContext::takeException(jsContext);
+        endReason = EndReason::Stopped;
+    };
 
     // Create JS runtime
-    runtime = JS_NewRuntime();
+    QuickJsRuntime runtime{JS_NewRuntime()};
     if (!runtime)
         return error("Failed to create QuickJS runtime");
 
-    JS_SetInterruptHandler(runtime, &interruptHandler, this);
-    JS_SetModuleLoaderFunc(runtime, &moduleNormalize, &moduleLoader, this);
+    JS_SetInterruptHandler(runtime.get(), &interruptHandler, this);
+    JS_SetModuleLoaderFunc(runtime.get(), &moduleNormalize, &moduleLoader, this);
 
     // Create JS context
-    context = JS_NewContext(runtime);
+    QuickJsContext context{JS_NewContext(runtime.get())};
     if (!context)
         return error("Failed to create QuickJS context");
 
-    JS_SetContextOpaque(context, this);
-    installConsole(context);
+    JS_SetContextOpaque(context.get(), this);
+    installConsole(context.get());
+
+    QuickJsScriptEvaluation evalState;
+    evalState.d->context = context.get();
+    evalState.d->taskMgr = &m_taskMgr;
+
+    ScopedSignalConnection taskConn = m_taskMgr.signalEnded.connectSlot(
+        [&](TaskId taskId, TaskEndReason reason) {
+            this->postJob([&, taskId, reason] { evalState.completeTask(taskId, reason); });
+        }
+    );
 
     // Evaluate JS program
-    const auto jsEvalFlags = JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY;
-    moduleValue = JS_Eval(context, script.c_str(), script.size(), strScriptFilePath.c_str(), jsEvalFlags);
-    if (JS_IsException(moduleValue))
-        return error(getJsExceptionString(context, moduleValue));
+    auto moduleValue = context.eval(script, scriptFilePath, JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+    if (moduleValue.isException())
+        return error(context.takeException().toStdString().value_or("Unknown JavaScript exception"));
 
-    mainModule = static_cast<JSModuleDef*>(JS_VALUE_GET_PTR(moduleValue));
+    // Keep the module definition pointer for retrieving its namespace after evaluation.
+    // The JSValue reference is consumed by evalFunction(), but the module definition remains owned
+    // by the QuickJS runtime
+    auto mainModule = static_cast<JSModuleDef*>(moduleValue.ptr());
 
-    value = JS_EvalFunction(context, moduleValue);
-    moduleValue = JS_UNDEFINED; // Consumed by JS_EvalFunction()
+    auto value = context.evalFunction(std::move(moduleValue)); // Consumed by evalFunction()
 
-    if (JS_IsException(value)) {
+    if (value.isException()) {
         // The exception may have been caused by an interruption requested by the caller
         if (this->isStopRequested())
-            return acknowledgeStop();
+            return acknowledgeStop(context.get());
 
-        return error(getJsExceptionString(context, value));
+        return error(context.takeException().toStdString().value_or("Unknown JavaScript exception"));
     }
 
     // Execute pending JavaScript jobs until the module evaluation promise is settled
-    while (JS_PromiseState(context, value) == JS_PROMISE_PENDING) {
+    while (value.promiseState() == JS_PROMISE_PENDING) {
+        // Process jobs posted from outside the QuickJS thread
+        this->processJobs();
+
+        if (this->isStopRequested())
+            return acknowledgeStop(context.get());
+
+        // Execute one pending QuickJS job
         JSContext* jobContext = nullptr;
-        const int jobResult = JS_ExecutePendingJob(runtime, &jobContext);
+        const int jobResult = JS_ExecutePendingJob(runtime.get(), &jobContext);
 
         // A JavaScript exception occurred while executing the job
         if (jobResult < 0) {
-            // The exception may have been caused by an interruption requested by the caller
             if (this->isStopRequested())
-                return acknowledgeStop();
+                return acknowledgeStop(jobContext);
 
-            JSValue exception = JS_GetException(jobContext);
-            const std::string message = getJsValueString(jobContext, exception, "Unknown JavaScript exception");
-            JS_FreeValue(jobContext, exception);
-            return error(message);
+            auto exception = QuickJsContext::takeException(jobContext);
+            return error(exception.toStdString().value_or("Unknown JavaScript exception"));
         }
 
-        // No job is pending while the module evaluation promise is still pending
-        if (jobResult == 0)
-            return error("Module evaluation did not complete");
+        // No QuickJS job is currently pending
+        if (jobResult == 0) {
+            if (this->isStopRequested())
+                return acknowledgeStop(context.get());
 
-        // Stop the evaluation if requested by the caller
+            std::unique_lock lock(m_mutex);
+            m_jobCondition.wait(lock, [this]{ return !m_jobQueue.empty() || this->isStopRequested(); });
+            continue;
+        }
+
+        // A QuickJS job was executed
         if (this->isStopRequested())
-            return acknowledgeStop();
+            return acknowledgeStop(jobContext);
     }
 
     // Check the final state of the module evaluation promise
-    const JSPromiseStateEnum promiseState = JS_PromiseState(context, value);
+    const JSPromiseStateEnum promiseState = value.promiseState();
 
     if (promiseState == JS_PROMISE_REJECTED) {
-        JSValue exception = JS_PromiseResult(context, value);
-        if (this->isStopRequested()) {
-            JS_FreeValue(context, exception);
-            return acknowledgeStop();
-        }
-
-        const std::string message = getJsValueString(context, exception, "Unknown JavaScript exception");
-        JS_FreeValue(context, exception);
-        return error(message);
+        if (this->isStopRequested())
+            return acknowledgeStop(context.get());
+        else
+            return error(value.promiseResult().toStdString().value_or("Unknown JavaScript exception"));
     }
     else if (promiseState != JS_PROMISE_FULFILLED) {
         return error("Invalid module evaluation state");
@@ -383,16 +463,12 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
 
     if (mainModule) {
         // Retrieve the default export from the module namespace as the script result
-        JSValue namespaceValue = JS_GetModuleNamespace(context, mainModule);
-        if (!JS_IsException(namespaceValue)) {
-            JSValue defaultValue = JS_GetPropertyStr(context, namespaceValue, "default");
-            if (!JS_IsException(defaultValue))
-                result.value = jsValueToAny(context, defaultValue);
-
-            JS_FreeValue(context, defaultValue);
+        auto namespaceValue = context.getModuleNamespace(mainModule);
+        if (!namespaceValue.isException()) {
+            auto defaultValue = namespaceValue.getProperty("default");
+            if (!defaultValue.isException())
+                result.value = jsValueToAny(context.get(), defaultValue.get());
         }
-
-        JS_FreeValue(context, namespaceValue);
     }
 }
 
