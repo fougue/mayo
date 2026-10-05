@@ -7,6 +7,7 @@
 
 #include "cpp_utils.h"
 #include "math_utils.h"
+#include "task_progress.h"
 
 #include <atomic>
 #include <cassert>
@@ -72,7 +73,7 @@ TaskManager::~TaskManager()
 TaskId TaskManager::newTask(TaskJob fn)
 {
     const TaskId taskId = d->taskIdSeq.fetch_add(1);
-    std::unique_ptr<Entity> ptrEntity(new Entity);
+    auto ptrEntity = std::make_unique<Entity>();
     ptrEntity->taskId = taskId;
     ptrEntity->taskJob = std::move(fn);
     ptrEntity->taskProgress.setTaskId(taskId);
@@ -134,6 +135,23 @@ void TaskManager::requestAbort(TaskId id)
         this->signalAbortRequested.send(id);
         entity->taskProgress.requestAbort();
     }
+}
+
+bool TaskManager::destroy(TaskId id)
+{
+    const auto it = d->mapEntity.find(id);
+    if (it == d->mapEntity.end())
+        return false;
+
+    const Entity* entity = it->second.get();
+    if (!entity || !entity->isFinished)
+        return false;
+
+    if (entity->control.valid())
+        entity->control.wait();
+
+    d->mapEntity.erase(it);
+    return true;
 }
 
 void TaskManager::foreachTask(const std::function<void(TaskId)>& fn)
@@ -216,8 +234,8 @@ void TaskManager::Private::execEntity(Entity* entity)
         endReason = TaskEndReason::Failed;
     }
 
-    this->taskMgr->signalEnded.send(entity->taskId, endReason);
     entity->isFinished = true;
+    this->taskMgr->signalEnded.send(entity->taskId, endReason);
 }
 
 void TaskManager::Private::cleanGarbage()

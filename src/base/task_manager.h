@@ -6,7 +6,7 @@
 #pragma once
 
 #include "signal.h"
-#include "task_progress.h"
+#include "task_common.h"
 
 #include <functional>
 #include <string>
@@ -14,10 +14,21 @@
 
 namespace Mayo {
 
+class TaskProgress;
+
 // Piece of code to be executed as a task(ie with TaskManager::run/exec())
 using TaskJob = std::function<void(TaskProgress*)>;
 
 // Central class providing creation/execution/deletion of Task objects
+//
+// TaskManager is thread-affine. All operations that access or modify the tasks (such as newTask(),
+// run(), exec(), destroy(), and task queries) must be performed from the thread that owns
+// the TaskManager instance
+// Task jobs themselves may execute on worker threads. A task job must therefore not directly access
+// or modify the TaskManager. Results or completion notifications that need to interact with the
+// TaskManager must be posted back to its owning thread
+// This design intentionally avoids locking the task collection. The thread-affinity requirement is
+// part of the TaskManager contract and must be respected by its callers
 class TaskManager {
 public:
     // Ctor & dtor
@@ -65,6 +76,10 @@ public:
     // Task interruption relies on the task job for this: it has to check regularly the
     // TaskProgress::isAbortRequested() flag and interrupt consequently
     void requestAbort(TaskId id);
+
+    // Destroys a finished task
+    // Does nothing if the task does not exist or is still running
+    bool destroy(TaskId id);
 
     // Applies function 'fn' to each task
     void foreachTask(const std::function<void(TaskId)>& fn);
