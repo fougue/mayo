@@ -58,9 +58,9 @@ private:
     TaskManager* m_taskMgr{nullptr};
     TaskId m_taskId{TaskId_null};
     double m_portionSize{-1.};
-    std::atomic<double> m_value = 0.;
+    std::atomic<double> m_value{0.};
     std::string m_step;
-    bool m_isAbortRequested{false};
+    std::atomic<bool> m_isAbortRequested{false};
 };
 
 } // namespace Mayo

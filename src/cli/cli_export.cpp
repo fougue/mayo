@@ -14,6 +14,7 @@
 #include "../base/io_system.h"
 #include "../base/message_collecter.h"
 #include "../base/task_manager.h"
+#include "../base/task_progress.h"
 #include "../base/thread_messenger_channel.h"
 #include "../qtcommon/qstring_conv.h"
 
