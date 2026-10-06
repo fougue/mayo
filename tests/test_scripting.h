@@ -5,8 +5,12 @@
 
 #pragma once
 
+#include "../src/scripting/iscript_engine.h"
+
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
+
+#include <vector>
 
 namespace Mayo {
 
@@ -45,6 +49,33 @@ private slots:
     void QuickJsPromise_resolveThenReject_test();
     void QuickJsPromise_rejectThenResolve_test();
     void QuickJsPromise_duplicatedPromiseReference_test();
+
+    void QuickJsScriptEvaluation_startTaskResolvesPromise_test();
+    void QuickJsScriptEvaluation_failingTaskReportsError_test();
+    void QuickJsScriptEvaluation_startTaskSupportsMultiplePendingTasks_test();
+    void QuickJsScriptEvaluation_startTaskRejectsPromiseOnTaskFailure_test();
+    void QuickJsScriptEvaluation_startTaskReturnsPromise_test();
+
+private:
+    using JsEngineResult = IScriptEngine::Result;
+    using JsEngineEndReason = IScriptEngine::EndReason;
+    using JsEngineMessage = IScriptEngine::Message;
+
+    struct ScriptEvaluation {
+        JsEngineResult result;
+        JsEngineEndReason endReason{JsEngineEndReason::Finished};
+        bool waitEndSuccess{false};
+        std::vector<JsEngineMessage> messages;
+
+        const JsEngineMessage* lastMessage(MessageType msgType) const;
+    };
+
+    ScriptEvaluation evaluateScript(
+        IScriptEngine& engine, std::string_view strScript, const FilePath& scriptFilePath = {}
+    );
+    ScriptEvaluation evaluateScript(
+        std::string_view strScript, const FilePath& scriptFilePath = {}
+    );
 };
 
 } // namespace Mayo
