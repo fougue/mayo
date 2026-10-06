@@ -7,17 +7,13 @@
 
 #include "signal.h"
 #include "task_common.h"
+#include "task_job.h"
 
 #include <functional>
 #include <string>
 #include <string_view>
 
 namespace Mayo {
-
-class TaskProgress;
-
-// Piece of code to be executed as a task(ie with TaskManager::run/exec())
-using TaskJob = std::function<void(TaskProgress*)>;
 
 // Central class providing creation/execution/deletion of Task objects
 //
