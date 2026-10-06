@@ -18,73 +18,12 @@ namespace Mayo {
 
 namespace {
 
-using JsEngineResult = IScriptEngine::Result;
-using JsEngineEndReason = IScriptEngine::EndReason;
-using JsEngineMessage = IScriptEngine::Message;
-
 void writeTextFile(const FilePath& filePath, std::string_view contents)
 {
     std::ofstream file(filePath, std::ios::binary);
     QVERIFY(file);
     file.write(contents.data(), static_cast<std::streamsize>(contents.size()));
     QVERIFY(file.good());
-}
-
-struct ScriptEvaluation {
-    JsEngineResult result;
-    JsEngineEndReason endReason{JsEngineEndReason::Finished};
-    bool waitEndSuccess{false};
-    std::vector<JsEngineMessage> messages;
-
-    const JsEngineMessage* lastMessage(MessageType msgType) const
-    {
-        for (auto it = this->messages.rbegin(); it != this->messages.rend(); ++it) {
-            if (it->type == msgType)
-                return &(*it);
-        }
-
-        return nullptr;
-    }
-};
-
-ScriptEvaluation evaluateScript(
-        IScriptEngine& engine, std::string_view strScript, const FilePath& scriptFilePath = {}
-    )
-{
-    engine.setScript(strScript);
-    engine.setScriptFilePath(scriptFilePath);
-
-    ScriptEvaluation evaluation;
-    auto conn1 = engine.signalMessage.connectSlot([&](JsEngineMessage message) {
-        evaluation.messages.push_back(std::move(message));
-    });
-    auto conn2 = engine.signalEvaluateEnded.connectSlot(
-        [&](const JsEngineResult& result, JsEngineEndReason endReason) {
-            evaluation.result = result;
-            evaluation.endReason = endReason;
-        }
-        );
-    auto _ = gsl::finally([&]{
-        conn1.disconnect();
-        conn2.disconnect();
-    });
-
-    engine.startEvaluate();
-    evaluation.waitEndSuccess = engine.waitForEvaluateEnd();
-
-    auto checkEnd = [&]{
-        QVERIFY(evaluation.waitEndSuccess);
-        QCOMPARE(evaluation.endReason, JsEngineEndReason::Finished);
-    };
-    checkEnd();
-
-    return evaluation;
-}
-
-ScriptEvaluation evaluateScript(std::string_view strScript, const FilePath& scriptFilePath = {})
-{
-    QuickJsScriptEngine engine;
-    return evaluateScript(engine, strScript, scriptFilePath);
 }
 
 } // namespace
@@ -139,10 +78,10 @@ void TestScripting::QuickJsScriptEngine_consoleMessagesTypes_test()
     QCOMPARE(eval.messages[2].type, MessageType::Warning);
     QCOMPARE(eval.messages[3].type, MessageType::Error);
 
-    QCOMPARE(eval.messages[0].text, std::string{"log"});
-    QCOMPARE(eval.messages[1].text, std::string{"info"});
-    QCOMPARE(eval.messages[2].text, std::string{"warn"});
-    QCOMPARE(eval.messages[3].text, std::string{"error"});
+    QCOMPARE(eval.messages[0].text, "log");
+    QCOMPARE(eval.messages[1].text, "info");
+    QCOMPARE(eval.messages[2].text, "warn");
+    QCOMPARE(eval.messages[3].text, "error");
 }
 
 void TestScripting::QuickJsScriptEngine_evaluateImportedModule_test()
@@ -232,7 +171,7 @@ void TestScripting::QuickJsScriptEngine_evaluateRuntimeIsolation_test()
     {
         auto eval = evaluateScript(engine, "export default typeof globalThis.testValue");
         QVERIFY(eval.result.success);
-        QCOMPARE(std::any_cast<std::string>(eval.result.value), std::string{"undefined"});
+        QCOMPARE(std::any_cast<std::string>(eval.result.value), "undefined");
     }
 }
 

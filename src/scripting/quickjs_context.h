@@ -41,6 +41,7 @@ public:
     static QuickJsValue takeException(JSContext* context);
 
     QuickJsValue getModuleNamespace(JSModuleDef* module) const;
+    QuickJsValue getModuleDefaultExport(JSModuleDef* module) const;
 };
 
 } // namespace Mayo

@@ -61,21 +61,10 @@ bool QuickJsPromise::reject(std::string_view strMessage)
     if (!m_reject)
         return false;
 
-    const auto reason = QuickJsValue::newError(m_context);
+    const auto reason = QuickJsValue::newError(m_context, strMessage);
     if (reason.isException())
         return false;
 
-    auto message = QuickJsValue::newString(m_context, strMessage);
-    if (message.isException())
-        return false;
-
-    const int result = JS_DefinePropertyValueStr(
-        m_context, reason.get(), "message", message.get(), JS_PROP_C_W_E
-    );
-    if (result < 0)
-        return false;
-
-    message.release();
     return this->reject(reason.get());
 }
 

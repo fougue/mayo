@@ -55,14 +55,22 @@ public:
     QuickJsValue promiseResult() const;
 
     QuickJsValue getProperty(const char* name) const;
+    bool setProperty(const char* name, QuickJsValue value);
+    bool setProperty(const char* name, JSValue value);
 
     std::optional<int32_t> toInt32() const;
     std::optional<std::string> toStdString() const;
 
     static QuickJsValue dup(JSContext* context, JSValueConst value);
-    static QuickJsValue newError(JSContext* context);
+    static QuickJsValue newError(JSContext* context, std::string_view message = {});
     static QuickJsValue newString(JSContext* context, std::string_view str);
     static QuickJsValue newInt32(JSContext* context, int32_t val);
+
+    static QuickJsValue newObject(JSContext* context);
+
+    static QuickJsValue newFunction(
+        JSContext* context, JSCFunction* func, const char* name, int length = 0
+    );
 };
 
 } // namespace Mayo

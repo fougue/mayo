@@ -4,6 +4,7 @@
 ****************************************************************************/
 
 #include "quickjs_value.h"
+#include "quickjs_context.h"
 
 namespace Mayo {
 
@@ -67,6 +68,16 @@ QuickJsValue QuickJsValue::getProperty(const char* name) const
     return { this->context(), JS_GetPropertyStr(this->context(), this->get(), name) };
 }
 
+bool QuickJsValue::setProperty(const char* name, QuickJsValue value)
+{
+    return QuickJsValue::setProperty(name, value.release());
+}
+
+bool QuickJsValue::setProperty(const char* name, JSValue value)
+{
+    return JS_SetPropertyStr(this->context(), this->get(), name, value) >= 0;
+}
+
 std::optional<int32_t> QuickJsValue::toInt32() const
 {
     if (!this->context())
@@ -99,9 +110,20 @@ QuickJsValue QuickJsValue::dup(JSContext* context, JSValueConst value)
     return { context, JS_DupValue(context, value) };
 }
 
-QuickJsValue QuickJsValue::newError(JSContext* context)
+QuickJsValue QuickJsValue::newError(JSContext* context, std::string_view message)
 {
-    return { context, JS_NewError(context) };
+    QuickJsValue jsError{context, JS_NewError(context)};
+    if (jsError.isException())
+        return jsError;
+
+    QuickJsValue jsMessage = QuickJsValue::newString(context, message);
+    if (jsMessage.isException())
+        return jsMessage;
+
+    if (!jsError.setProperty("message", std::move(jsMessage)))
+        return QuickJsContext::takeException(context);
+
+    return jsError;
 }
 
 QuickJsValue QuickJsValue::newString(JSContext* context, std::string_view str)
@@ -112,6 +134,18 @@ QuickJsValue QuickJsValue::newString(JSContext* context, std::string_view str)
 QuickJsValue QuickJsValue::newInt32(JSContext* context, int32_t val)
 {
     return { context, JS_NewInt32(context, val) };
+}
+
+QuickJsValue QuickJsValue::newObject(JSContext* context)
+{
+    return { context, JS_NewObject(context) };
+}
+
+QuickJsValue QuickJsValue::newFunction(
+        JSContext* context, JSCFunction* func, const char* name, int length
+    )
+{
+    return { context, JS_NewCFunction(context, func, name, length) };
 }
 
 } // namespace Mayo
