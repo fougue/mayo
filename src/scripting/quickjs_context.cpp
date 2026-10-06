@@ -35,4 +35,20 @@ QuickJsValue QuickJsContext::getModuleNamespace(JSModuleDef* module) const
     return { this->get(), JS_GetModuleNamespace(this->get(), module) };
 }
 
+QuickJsValue QuickJsContext::getModuleDefaultExport(JSModuleDef* module) const
+{
+    if (!module)
+        return {};
+
+    auto namespaceValue = this->getModuleNamespace(module);
+    if (namespaceValue.isException())
+        return {};
+
+    auto defaultValue = namespaceValue.getProperty("default");
+    if (defaultValue.isException())
+        return {};
+
+    return defaultValue;
+}
+
 } // namespace Mayo
