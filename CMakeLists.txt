@@ -314,6 +314,10 @@ else()
         if(OpenCASCADE_TKernel_INCLUDE_DIR_IsSet EQUAL -1)
             list(APPEND Mayo_IncludeDirectories ${OpenCASCADE_INCLUDE_DIR})
         endif()
+
+        if(NOT DEFINED OpenCASCADE_CMAKE_DIR OR OpenCASCADE_CMAKE_DIR STREQUAL "")
+            set(OpenCASCADE_CMAKE_DIR "${OpenCASCADE_DIR}")
+        endif()
     endif()
 endif()
 
@@ -326,6 +330,13 @@ if(OpenCASCADE_FOUND)
     message(STATUS "OpenCascade version ${OpenCASCADE_VERSION}")
     if(OpenCASCADE_VERSION VERSION_LESS 7.4.0)
         message(FATAL_ERROR "OpenCascade >= 7.4.0 is required")
+    endif()
+
+    include(cmake/DetectOcctCompileFlag.cmake)
+    #Mayo_DetectOcctDefinition(HAVE_FREEIMAGE OCCT_HAVE_FREEIMAGE)
+    Mayo_DetectOcctDefinition(HAVE_RAPIDJSON OCCT_HAVE_RAPIDJSON)
+    if(UNIX AND NOT APPLE)
+        Mayo_DetectOcctDefinition(HAVE_XLIB OCCT_HAVE_XLIB)
     endif()
 
     # std::iterator class template(used as a base class to provide typedefs) is deprecated in C++17

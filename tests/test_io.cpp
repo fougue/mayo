@@ -116,7 +116,7 @@ void TestIO::Regression_bugGitHub166_test_data()
 
     QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
     QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj"s << "tests/outputs/cube.stl"s << IO::Format_STL;
-#ifdef OPENCASCADE_HAVE_RAPIDJSON
+#ifdef OCCT_HAVE_RAPIDJSON
     QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.ply"s << IO::Format_PLY;
     QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.stl"s << IO::Format_STL;
 #endif
@@ -124,7 +124,7 @@ void TestIO::Regression_bugGitHub166_test_data()
 #if OCC_VERSION_HEX >= 0x070600
     QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
     QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
-#  ifdef OPENCASCADE_HAVE_RAPIDJSON
+#  ifdef OCCT_HAVE_RAPIDJSON
     QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf"s << "tests/outputs/cube.obj"s << IO::Format_OBJ;
     QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj"s << "tests/outputs/cube.glTF"s << IO::Format_GLTF;
 #  endif
