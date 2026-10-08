@@ -4,7 +4,6 @@
 ****************************************************************************/
 
 #include "graphics_utils.h"
-#include "../base/global.h"
 #include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
 
@@ -200,15 +199,6 @@ NCollection_Vec2<int> GraphicsUtils::AspectWindow_size(const OccHandle<Aspect_Wi
     NCollection_Vec2<int> size;
     wnd->Size(size.x(), size.y());
     return size;
-}
-
-OccHandle<Aspect_DisplayConnection> GraphicsUtils::AspectDisplayConnection_create()
-{
-#if (!defined(MAYO_OS_WINDOWS) && (!defined(MAYO_OS_MAC) || defined(MACOSX_USE_GLX)))
-    return new Aspect_DisplayConnection(std::getenv("DISPLAY"));
-#else
-    return new Aspect_DisplayConnection;
-#endif
 }
 
 void GraphicsUtils::Gfx3dClipPlane_setCappingHatch(

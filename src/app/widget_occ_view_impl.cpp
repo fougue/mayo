@@ -4,9 +4,9 @@
 ****************************************************************************/
 
 #include "../base/occ_handle.h"
-#include "../graphics/graphics_utils.h"
 #include "../graphics/opengl_utils.h"
 
+#include <Aspect_DisplayConnection.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 
 namespace Mayo {
@@ -15,7 +15,7 @@ namespace Mayo {
 OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphicsDriver()
 {
     auto gfxDriver = makeOccHandle<OpenGl_GraphicDriver>(
-        GraphicsUtils::AspectDisplayConnection_create(), false/*dontInit*/
+        makeOccHandle<Aspect_DisplayConnection>(), false/*dontInit*/
     );
     // Let QOpenGLWidget manage buffer swap
     gfxDriver->ChangeOptions().buffersNoSwap = true;

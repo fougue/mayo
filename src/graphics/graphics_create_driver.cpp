@@ -10,7 +10,6 @@
 // --
 
 #include "../base/occ_handle.h"
-#include "../graphics/graphics_utils.h"
 #include "../graphics/opengl_utils.h"
 
 #include <Aspect_DisplayConnection.hxx>
@@ -24,7 +23,7 @@ using FunctionCreateGraphicsDriver = std::function<OccHandle<Graphic3d_GraphicDr
 OccHandle<Graphic3d_GraphicDriver> createDefaultGraphicsDriver()
 {
     auto driver = makeOccHandle<OpenGl_GraphicDriver>(
-        GraphicsUtils::AspectDisplayConnection_create(), false/*dontInit*/
+        makeOccHandle<Aspect_DisplayConnection>(), false/*dontInit*/
     );
     const static bool isGpuAccel = OpenGlUtils::isHardwareAccelerationAvailable();
     driver->ChangeOptions().contextNoAccel = !isGpuAccel;

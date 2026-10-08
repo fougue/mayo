@@ -18,15 +18,17 @@
 
 #include "../base/occ_handle.h"
 
+#include <common/mayo_config.h>
+
 #include <Aspect_DisplayConnection.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #if defined(MAYO_OS_WINDOWS)
 #  include <WNT_WClass.hxx>
 #  include <WNT_Window.hxx>
-#elif defined(MAYO_OS_MAC) || defined(MAYO_OS_ANDROID)
-#  include <Aspect_NeutralWindow.hxx>
-#else
+#elif defined(OCCT_HAVE_XLIB)
 #  include <Xw_Window.hxx>
+#else
+#  include <Aspect_NeutralWindow.hxx>
 #endif
 
 namespace Mayo {
@@ -41,7 +43,14 @@ OccHandle<Aspect_Window> graphicsCreateVirtualWindow(
         "GW3D_Class", nullptr, CS_VREDRAW | CS_HREDRAW, 0, 0, LoadCursor(nullptr, IDC_ARROW)
     );
     auto wnd = new WNT_Window("", wClass, WS_POPUP, 0, 0, wndWidth, wndHeight, Quantity_NOC_BLACK);
-#elif defined(MAYO_OS_MAC) || defined(MAYO_OS_ANDROID)
+#elif defined(OCCT_HAVE_XLIB)
+    #pragma message("Mayo: OCCT_HAVE_XLIB is defined -> using Xw_Window")
+
+    auto displayConn = gfxDriver->GetDisplayConnection();
+    auto wnd = makeOccHandle<Xw_Window>(displayConn, "", 0, 0, wndWidth, wndHeight);
+#else
+    #pragma message("Mayo: OCCT_HAVE_XLIB is NOT defined -> using Aspect_NeutralWindow")
+
     // Don't use Cocoa_Window on macOS: its constructor allocates a real on-screen NSWindow, which
     //   * throws Aspect_WindowDefinitionError when NSApp == nullptr (this may happen with mayo-conv
     //     being a QCoreApplication and never instantiates NSApplication)
@@ -50,11 +59,8 @@ OccHandle<Aspect_Window> graphicsCreateVirtualWindow(
     // Use a neutral window for offscreen rendering : no native window is created
     // This is important on macOS, where Cocoa_Window woud create an NSWindow and require
     // NSApplication/main-thread usage
-    auto wnd = new Aspect_NeutralWindow;
+    auto wnd = makeOccHandle<Aspect_NeutralWindow>();
     wnd->SetSize(wndWidth, wndHeight);
-#else
-    auto displayConn = gfxDriver->GetDisplayConnection();
-    auto wnd = new Xw_Window(displayConn, "", 0, 0, wndWidth, wndHeight);
 #endif
 
     wnd->SetVirtual(true);

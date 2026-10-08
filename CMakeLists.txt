@@ -332,7 +332,7 @@ if(OpenCASCADE_FOUND)
         message(FATAL_ERROR "OpenCascade >= 7.4.0 is required")
     endif()
 
-    include(cmake/DetectOcctCompileFlag.cmake)
+    include(${PROJECT_SOURCE_DIR}/cmake/DetectOcctCompileFlag.cmake)
     #Mayo_DetectOcctDefinition(HAVE_FREEIMAGE OCCT_HAVE_FREEIMAGE)
     Mayo_DetectOcctDefinition(HAVE_RAPIDJSON OCCT_HAVE_RAPIDJSON)
     if(UNIX AND NOT APPLE)
