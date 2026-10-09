@@ -28,8 +28,12 @@
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
 #include "../qtcommon/qstring_conv.h"
+
 #include "cli_export.h"
 #include "console.h"
+#include "egl_offscreen_graphic_driver.h"
+
+#include <common/mayo_config.h>
 #include <common/mayo_version.h>
 
 #include <QtCore/QtDebug>
@@ -345,6 +349,10 @@ static void initGui(GuiApplication* guiApp)
     guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsShapeObjectDriver>());
     guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsMeshObjectDriver>());
     guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsPointCloudObjectDriver>());
+
+#ifdef OCCT_USE_EGL
+    setFunctionCreateGraphicsDriver([]{ return makeOccHandle<EglOffscreenGraphicDriver>(); });
+#endif
 }
 
 // Initializes and runs Mayo application

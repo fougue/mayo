@@ -332,12 +332,20 @@ if(OpenCASCADE_FOUND)
         message(FATAL_ERROR "OpenCascade >= 7.4.0 is required")
     endif()
 
+    set(OCCT_USE_EGL OFF)
+
     include(${PROJECT_SOURCE_DIR}/cmake/DetectOcctCompileFlag.cmake)
     #Mayo_DetectOcctDefinition(HAVE_FREEIMAGE OCCT_HAVE_FREEIMAGE)
     Mayo_DetectOcctDefinition(HAVE_RAPIDJSON OCCT_HAVE_RAPIDJSON)
+
     if(UNIX AND NOT APPLE)
         Mayo_DetectOcctDefinition(HAVE_XLIB OCCT_HAVE_XLIB)
+        if (NOT OCCT_HAVE_XLIB)
+            set(OCCT_USE_EGL ON)
+        endif()
     endif()
+
+    message(STATUS "OCCT_USE_EGL=${OCCT_USE_EGL}")
 
     # std::iterator class template(used as a base class to provide typedefs) is deprecated in C++17
     # OpenCascade < 7.7.0 uses std::iterator for NCollection_StlIterator and this is causing many
@@ -644,6 +652,11 @@ if(WIN32)
     list(APPEND MayoConv_SourceFiles ${CMAKE_BINARY_DIR}/version_MayoConv.rc)
 endif()
 
+if (NOT OCCT_USE_EGL)
+    list(REMOVE_ITEM MayoConv_HeaderFiles ${PROJECT_SOURCE_DIR}/src/cli/egl_offscreen_graphic_driver.h)
+    list(REMOVE_ITEM MayoConv_SourceFiles ${PROJECT_SOURCE_DIR}/src/cli/egl_offscreen_graphic_driver.cpp)
+endif()
+
 if(Mayo_BuildConvCli)
     add_executable(
         mayo-conv
@@ -663,6 +676,11 @@ if(Mayo_BuildConvCli)
         MayoIOLib
         Qt${QT_VERSION_MAJOR}::Core
     )
+
+    if(OCCT_USE_EGL)
+        find_package(OpenGL REQUIRED COMPONENTS EGL)
+        target_link_libraries(mayo-conv PRIVATE OpenGL::EGL)
+    endif()
 
     if(Mayo_EnablePch)
         target_precompile_headers(mayo-conv PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")

@@ -10,3 +10,4 @@
 
 #cmakedefine OCCT_HAVE_RAPIDJSON
 #cmakedefine OCCT_HAVE_XLIB
+#cmakedefine OCCT_USE_EGL
