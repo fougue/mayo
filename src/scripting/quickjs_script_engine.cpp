@@ -7,6 +7,7 @@
 
 #include "quickjs_context.h"
 #include "quickjs_promise.h"
+#include "quickjs_script_evaluation.h"
 #include "quickjs_value.h"
 #include "../base/task_manager.h"
 
@@ -17,7 +18,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 
 namespace Mayo {
 
@@ -192,71 +192,6 @@ int interruptHandler(JSRuntime*, void* opaque)
 
 } // namespace
 
-struct QuickJsScriptEvaluation::Private {
-    using PendingTasks = std::unordered_map<TaskId, QuickJsPromise>;
-
-    QuickJsScriptEngine* engine{nullptr};
-    JSContext* context{nullptr};
-
-    TaskManager taskMgr;
-    ScopedSignalConnection connTaskEnded;
-    PendingTasks pendingTasks;
-
-    // Completes a pending task and settles its associated JS Promise
-    void completeTask(TaskId taskId, TaskEndReason reason);
-};
-
-QuickJsScriptEvaluation::QuickJsScriptEvaluation()
-    : d(new QuickJsScriptEvaluation::Private)
-{
-}
-
-QuickJsScriptEvaluation::~QuickJsScriptEvaluation()
-{
-    delete d;
-}
-
-Signal<IScriptEngine::Message>& QuickJsScriptEvaluation::signalMessage() const
-{
-    return d->engine->signalMessage;
-}
-
-QuickJsValue QuickJsScriptEvaluation::startTask(TaskJob job)
-{
-    QuickJsPromise promise(d->context);
-    QuickJsValue promiseValue = promise.get();
-
-    const auto taskId = d->taskMgr.newTask(std::move(job));
-    d->pendingTasks.emplace(taskId, std::move(promise));
-    d->taskMgr.run(taskId, TaskAutoDestroy::Off);
-
-    return promiseValue;
-}
-
-void QuickJsScriptEvaluation::Private::completeTask(TaskId taskId, TaskEndReason reason)
-{
-    auto it = this->pendingTasks.find(taskId);
-    if (it == this->pendingTasks.end())
-        return;
-
-    auto promise = std::move(it->second);
-    this->pendingTasks.erase(it);
-
-    switch (reason) {
-    case TaskEndReason::Completed:
-        promise.resolve(JS_UNDEFINED);
-        break;
-    case TaskEndReason::Aborted:
-        promise.reject("Task aborted");
-        break;
-    case TaskEndReason::Failed:
-        promise.reject("Task failed");
-        break;
-    }
-
-    this->taskMgr.destroy(taskId);
-}
-
 QuickJsScriptEngine::~QuickJsScriptEngine()
 {
     QuickJsScriptEngine::stopEvaluate();
@@ -281,7 +216,8 @@ void QuickJsScriptEngine::startEvaluate()
 
         m_stopRequested.store(false);
         m_isEvaluateRunning = true;
-        m_evaluateThread = std::thread([=]{this->evaluateWorker(script, filePath); });
+        m_isEvaluateShuttingDown = false;
+        m_evaluateThread = std::thread([=]{ this->evaluateWorker(script, filePath); });
     }
 
     if (previousThread.joinable())
@@ -329,7 +265,7 @@ void QuickJsScriptEngine::postJob(Job job)
     {
         std::lock_guard lock(m_mutex);
 
-        if (!m_isEvaluateRunning || m_stopRequested)
+        if (!m_isEvaluateRunning || m_stopRequested || m_isEvaluateShuttingDown)
             return;
 
         m_jobQueue.push(std::move(job));
@@ -351,6 +287,13 @@ void QuickJsScriptEngine::processJobs()
         jobs.pop();
         job();
     }
+}
+
+void QuickJsScriptEngine::discardJobs()
+{
+    std::lock_guard lock(m_mutex);
+    while (!m_jobQueue.empty())
+        m_jobQueue.pop();
 }
 
 void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePath& scriptFilePath)
@@ -391,7 +334,13 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
 
     QuickJsScriptEvaluation evalState;
     this->initEvaluationState(evalState, context.get());
-    auto gc = gsl::finally([&]{ JS_RunGC(runtime.get()); });
+    auto evaluationShutDown = gsl::finally([&]{
+        {
+            std::lock_guard lock(m_mutex);
+            m_isEvaluateShuttingDown = true;
+        }
+        JS_RunGC(runtime.get());
+    });
 
     JS_SetContextOpaque(context.get(), &evalState);
     installConsole(context.get());
@@ -439,12 +388,14 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
 
 void QuickJsScriptEngine::initEvaluationState(EvaluationState& state, JSContext *context)
 {
-    state.d->engine = this;
-    state.d->context = context;
-    state.d->connTaskEnded = state.d->taskMgr.signalEnded.connectSlot(
+    state.m_engine = this;
+    state.m_context = context;
+    // Use Signal::connect() instead of connectSlot() to avoid event-queueing
+    // postJob() is thread-safe and schedules the job for the evaluation thread
+    state.m_connTaskEnded = state.m_taskMgr.signalEnded.connect(
         [&](TaskId taskId, TaskEndReason reason) {
             this->postJob([&state, taskId, reason] {
-                state.d->completeTask(taskId, reason);
+                state.completeTask(taskId, reason);
             });
         }
     );
@@ -482,6 +433,9 @@ QuickJsScriptEngine::execPendingJobs(const QuickJsValue& promise, JSRuntime* run
     };
 
     while (promise.promiseState() == JS_PROMISE_PENDING) {
+        if (this->isStopRequested())
+            return stopRequestResult(promise.context());
+
         // Process jobs posted from outside the QuickJS thread
         this->processJobs();
 

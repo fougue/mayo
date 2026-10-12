@@ -5,7 +5,9 @@
 
 #include "test_scripting.h"
 
+#include "../src/base/task_progress.h"
 #include "../src/scripting/quickjs_script_engine.h"
+#include "../src/scripting/quickjs_script_evaluation.h"
 
 #include <gsl/util>
 #include <fstream>
@@ -24,6 +26,69 @@ void writeTextFile(const FilePath& filePath, std::string_view contents)
     QVERIFY(file);
     file.write(contents.data(), static_cast<std::streamsize>(contents.size()));
     QVERIFY(file.good());
+}
+
+struct ShutdownTestState {
+    std::mutex mutex;
+    std::condition_variable condition;
+    int tasksStarted{0};
+    int tasksExited{0};
+    int abortsObserved{0};
+    bool startupTimedOut{false};
+};
+
+bool waitForTasksStarted(ShutdownTestState& state, int count)
+{
+    std::unique_lock lock(state.mutex);
+    const auto timeout = std::chrono::seconds(2);
+    return state.condition.wait_for(lock, timeout, [&]{ return state.tasksStarted >= count; });
+}
+
+void runCooperativeTask(ShutdownTestState& state, TaskProgress* progress)
+{
+    {
+        std::lock_guard lock(state.mutex);
+        ++state.tasksStarted;
+    }
+    state.condition.notify_all();
+
+    // Avoid blocking test due to a cancel problem
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+    while (!progress->isAbortRequested() && std::chrono::steady_clock::now() < deadline)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    const bool abortObserved = progress->isAbortRequested();
+    {
+        std::lock_guard lock(state.mutex);
+        ++state.tasksExited;
+        if (abortObserved)
+            ++state.abortsObserved;
+    }
+
+    state.condition.notify_all();
+}
+
+void startCooperativeTasks(QuickJsScriptEvaluation& evaluation, ShutdownTestState& state, int count)
+{
+    for (int i = 0; i < count; ++i) {
+        evaluation.startTask(
+            [&state](TaskProgress* progress) { runCooperativeTask(state, progress); }
+        );
+    }
+
+    if (!waitForTasksStarted(state, count)) {
+        std::lock_guard lock(state.mutex);
+        state.startupTimedOut = true;
+    }
+}
+
+void verifyTasksStopped(ShutdownTestState& state, int expectedCount)
+{
+    std::lock_guard lock(state.mutex);
+    QCOMPARE(state.tasksStarted, expectedCount);
+    QCOMPARE(state.tasksExited, expectedCount);
+    QCOMPARE(state.abortsObserved, expectedCount);
+    QVERIFY(!state.startupTimedOut);
 }
 
 } // namespace
@@ -355,6 +420,190 @@ void TestScripting::QuickJsScriptEngine_evaluateValue_test_data()
     QTest::newRow("bool(false)") << "false"s << std::any{false};
     QTest::newRow("undefined") << "undefined"s << std::any{};
     QTest::newRow("null") << "null"s << std::any{};
+}
+
+void TestScripting::QuickJsScriptEngine_shutdownWaitsForRunningTask_test()
+{
+    struct State {
+        std::mutex mutex;
+        std::condition_variable condition;
+        std::atomic<bool> taskStarted{false};
+        std::atomic<bool> taskExited{false};
+    } state;
+
+    QuickJsScriptEngine engine;
+    engine.setScript("42");
+
+    engine.addPreEvaluateCallback(
+        [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
+            evaluation.startTask([&state](TaskProgress* progress) {
+                state.taskStarted.store(true);
+                state.condition.notify_all();
+
+                while (!progress->isAbortRequested())
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+                state.taskExited.store(true);
+                state.condition.notify_all();
+            });
+
+            // Don't let the script execute before work had started
+            std::unique_lock lock(state.mutex);
+            state.condition.wait(lock, [&]{ return state.taskStarted.load(); });
+        }
+    );
+
+    engine.startEvaluate();
+
+    QVERIFY(engine.waitForEvaluateEnd(5000));
+
+    QVERIFY(state.taskStarted.load());
+    QVERIFY(state.taskExited.load());
+}
+
+void TestScripting::QuickJsScriptEngine_shutdownAbortsAllRunningTasks_test()
+{
+    constexpr int taskCount = 3;
+
+    ShutdownTestState state;
+    QuickJsScriptEngine engine;
+    engine.setScript("42");
+
+    engine.addPreEvaluateCallback(
+        [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
+            startCooperativeTasks(evaluation, state, taskCount);
+        }
+    );
+
+    engine.startEvaluate();
+
+    QVERIFY(engine.waitForEvaluateEnd(5000));
+    verifyTasksStopped(state, taskCount);
+}
+
+void TestScripting::QuickJsScriptEngine_shutdownWithPendingCompletionJob_test()
+{
+    ShutdownTestState state;
+    QuickJsScriptEngine engine;
+    engine.setScript("42");
+
+    engine.addPreEvaluateCallback(
+        [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
+            startCooperativeTasks(evaluation, state, 1);
+        }
+    );
+
+    engine.startEvaluate();
+
+    QVERIFY(engine.waitForEvaluateEnd(5000));
+    verifyTasksStopped(state, 1);
+}
+
+void TestScripting::QuickJsScriptEngine_stopEvaluateAbortsPendingTasks_test()
+{
+    ShutdownTestState state;
+    QuickJsScriptEngine engine;
+    engine.setScript("while (true) {}");
+
+    engine.addPreEvaluateCallback(
+        [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
+            startCooperativeTasks(evaluation, state, 1);
+        }
+    );
+
+    engine.startEvaluate();
+    QVERIFY(waitForTasksStarted(state, 1));
+    engine.stopEvaluate();
+
+    QVERIFY(engine.waitForEvaluateEnd(5000));
+    verifyTasksStopped(state, 1);
+}
+
+void TestScripting::QuickJsScriptEngine_shutdownStress_test()
+{
+    constexpr int iterationCount = 100;
+    constexpr int taskCount = 2;
+
+    for (int i = 0; i < iterationCount; ++i) {
+        ShutdownTestState state;
+        QuickJsScriptEngine engine;
+        engine.setScript("42");
+
+        engine.addPreEvaluateCallback(
+            [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
+                startCooperativeTasks(evaluation, state, taskCount);
+            }
+        );
+
+        engine.startEvaluate();
+
+        QVERIFY2(
+            engine.waitForEvaluateEnd(5000),
+            ("Shutdown blocked at iteration " + std::to_string(i)).c_str()
+        );
+
+        verifyTasksStopped(state, taskCount);
+    }
+}
+
+void TestScripting::QuickJsScriptEngine_shutdownWhileTaskIsFinishing_test()
+{
+    ShutdownTestState state;
+    std::mutex mutex;
+    std::condition_variable condition;
+    bool abortObserved = false;
+    bool allowTaskToFinish = false;
+
+    QuickJsScriptEngine engine;
+    engine.setScript("42");
+
+    engine.addPreEvaluateCallback(
+        [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
+            evaluation.startTask([&](TaskProgress* progress) {
+                {
+                    std::lock_guard lock(state.mutex);
+                    ++state.tasksStarted;
+                }
+                state.condition.notify_all();
+
+                while (!progress->isAbortRequested())
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+                {
+                    std::lock_guard lock(mutex);
+                    abortObserved = true;
+                }
+                condition.notify_all();
+
+                {
+                    std::unique_lock lock(mutex);
+                    condition.wait(lock, [&] { return allowTaskToFinish; });
+                }
+
+                {
+                    std::lock_guard lock(state.mutex);
+                    ++state.tasksExited;
+                    ++state.abortsObserved;
+                }
+                state.condition.notify_all();
+            });
+        }
+    );
+
+    engine.startEvaluate();
+    QVERIFY(waitForTasksStarted(state, 1));
+
+    engine.stopEvaluate();
+
+    {
+        std::unique_lock lock(mutex);
+        QVERIFY(condition.wait_for(lock, std::chrono::seconds(2), [&]{ return abortObserved; }));
+        allowTaskToFinish = true;
+    }
+    condition.notify_all();
+
+    QVERIFY(engine.waitForEvaluateEnd(5000));
+    verifyTasksStopped(state, 1);
 }
 
 } // namespace Mayo

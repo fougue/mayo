@@ -6,6 +6,7 @@
 #include "test_scripting.h"
 
 #include "../scripting/quickjs_script_engine.h"
+#include "../scripting/quickjs_script_evaluation.h"
 
 #include <quickjs.h>
 
@@ -139,7 +140,6 @@ void TestScripting::QuickJsScriptEvaluation_startTaskReturnsPromise_test()
     QVERIFY(eval.result.success);
     QVERIFY(eval.result.value.has_value());
     QCOMPARE(std::any_cast<bool>(eval.result.value), true);
-
 }
 
 } // namespace Mayo
