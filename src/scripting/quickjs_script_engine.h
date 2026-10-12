@@ -7,7 +7,6 @@
 
 #include "iscript_engine.h"
 #include "quickjs_value.h"
-#include "../base/task_job.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -20,35 +19,9 @@
 
 namespace Mayo {
 
-// Represents the state and resources associated with a script evaluation
-//
-// QuickJsScriptEvaluation is created for the duration of a script evaluation (with
-// QuickJsScriptEngine::startEvaluate()) and provides the context required to start and track
-// asynchronous tasks associated with the evaluation
-// The evaluation must remain alive until all tasks started through this object have completed
-class QuickJsScriptEvaluation {
-public:
-    ~QuickJsScriptEvaluation();
+class QuickJsScriptEvaluation;
 
-    // Not copyable
-    QuickJsScriptEvaluation(const QuickJsScriptEvaluation&) = delete;
-    QuickJsScriptEvaluation& operator=(const QuickJsScriptEvaluation&) = delete;
-    QuickJsScriptEvaluation(QuickJsScriptEvaluation&&) = delete;
-    QuickJsScriptEvaluation& operator=(QuickJsScriptEvaluation&&) = delete;
-
-    Signal<IScriptEngine::Message>& signalMessage() const;
-
-    // Starts an asynchronous task and returns a JS Promise that is settled when the task completes
-    QuickJsValue startTask(TaskJob job);
-
-private:
-    QuickJsScriptEvaluation();
-
-    friend class QuickJsScriptEngine;
-    struct Private;
-    Private* const d{nullptr};
-};
-
+// Provides script engine based on QuickJS
 class QuickJsScriptEngine : public IScriptEngine {
 public:
     using EvaluationState = QuickJsScriptEvaluation;
@@ -66,9 +39,12 @@ public:
     void addPreEvaluateCallback(EvaluateCallback callback);
 
 private:
+    friend class QuickJsScriptEvaluation;
+
     using Job = std::function<void()>;
     void postJob(Job job);
     void processJobs();
+    void discardJobs();
 
     void evaluateWorker(const std::string& script, const FilePath& scriptFilePath);
 
@@ -103,6 +79,7 @@ private:
     std::condition_variable m_evaluateEndCondition;
     std::thread m_evaluateThread;
     bool m_isEvaluateRunning{false};
+    bool m_isEvaluateShuttingDown{false};
     std::atomic<bool> m_stopRequested{false};
 
     std::vector<EvaluateCallback> m_preEvaluateCallbacks;
