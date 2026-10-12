@@ -40,6 +40,12 @@ private slots:
     void QuickJsScriptEngine_startEvaluateWhileRunning_test();
     void QuickJsScriptEngine_stopEvaluate_test();
     void QuickJsScriptEngine_destroyWhileEvaluateRunning_test();
+    void QuickJsScriptEngine_shutdownWaitsForRunningTask_test();
+    void QuickJsScriptEngine_shutdownAbortsAllRunningTasks_test();
+    void QuickJsScriptEngine_shutdownWithPendingCompletionJob_test();
+    void QuickJsScriptEngine_stopEvaluateAbortsPendingTasks_test();
+    void QuickJsScriptEngine_shutdownStress_test();
+    void QuickJsScriptEngine_shutdownWhileTaskIsFinishing_test();
 
     void QuickJsPromise_promise_test();
     void QuickJsPromise_resolve_test();
