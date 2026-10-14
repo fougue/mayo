@@ -127,7 +127,8 @@ void QuickJsScriptEvaluation::notifyTaskProgress(TaskId taskId, double value)
             IScriptEngine::Message errMsg;
             errMsg.type = MessageType::Error;
             errMsg.text = exception.getProperty("message").toStdString().value_or(std::string{});
-            // TODO Assign IScriptEngine::Message::contextFile
+            // TODO Assign IScriptEngine::Message::contextFile by parsing stacktrace
+            // Use exception.getProperty("stack")
             this->signalMessage().send(errMsg);
             continue; // Continue notifying the remaining callbacks
         }

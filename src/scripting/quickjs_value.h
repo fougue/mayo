@@ -77,6 +77,7 @@ public:
     static QuickJsValue newFloat64(JSContext* context, double val);
 
     static QuickJsValue newObject(JSContext* context);
+    static QuickJsValue newObjectClass(JSContext* context, JSClassID classId);
 
     static QuickJsValue newFunction(
         JSContext* context, JSCFunction* func, const char* name, int length = 0

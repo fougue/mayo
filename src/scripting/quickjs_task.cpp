@@ -5,6 +5,7 @@
 
 #include "quickjs_task.h"
 
+#include "quickjs_context.h"
 #include "quickjs_runtime.h"
 #include "quickjs_script_engine.h"
 #include "quickjs_script_evaluation.h"
@@ -38,32 +39,28 @@ QuickJsValue QuickJsTask::create(QuickJsScriptEvaluation& evaluation, TaskId tas
 {
     JSContext* context = evaluation.context();
 
-    auto jsThrowError = [=](const char* msg) {
-        return QuickJsValue{ context, JS_ThrowInternalError(context, msg) };
-    };
-
     auto classId = QuickJsScriptEngine::findClassId(JS_GetRuntime(context), className);
     if (classId == JS_INVALID_CLASS_ID)
-        return jsThrowError("No class ID defined for QuickJsTask");
+        return QuickJsContext::throwInternalError(context, "No class ID defined for QuickJsTask");
 
-    QuickJsValue object{context, JS_NewObjectClass(context, classId)};
+    auto object = QuickJsValue::newObjectClass(context, classId);
     if (object.isException())
         return object;
 
-    auto* taskEntry = evaluation.findTaskEntry(taskId);
+    auto taskEntry = evaluation.findTaskEntry(taskId);
     if (!taskEntry)
-        return jsThrowError("Task no longer exists");
+        return QuickJsContext::throwInternalError(context, "Task no longer exists");
 
     // Read-only property
     if (!object.defineProperty("promise", taskEntry->promise.get(), JS_PROP_ENUMERABLE))
-        return jsThrowError("Failed to install task promise");
+        return QuickJsContext::throwInternalError(context, "Failed to install task promise");
 
     if (!(object.setFunction("onProgress", &QuickJsTask::onProgress, 1)
           && object.setFunction("cancel", &QuickJsTask::cancel, 0)
           && object.setFunction("then", &QuickJsTask::then, 2)
         ))
     {
-        return jsThrowError("Failed to initialize MayoTask");
+        return QuickJsContext::throwInternalError(context, "Failed to initialize MayoTask");
     }
 
     auto handle = std::make_unique<TaskHandle>(&evaluation, taskId);
@@ -93,7 +90,7 @@ JSValue QuickJsTask::onProgress(JSContext* context, JSValueConst thisValue, int 
     if (!taskEntry)
         return JS_ThrowInternalError(context, "Task no longer exists");
 
-    QuickJsValue funcValue = QuickJsValue::dup(context, argv[0]);
+    auto funcValue = QuickJsValue::dup(context, argv[0]);
     if (!funcValue.isFunction())
         return JS_ThrowTypeError(context, "Expected a callback function");
 
