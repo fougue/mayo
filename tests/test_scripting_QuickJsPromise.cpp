@@ -7,6 +7,7 @@
 
 #include "../scripting/quickjs_context.h"
 #include "../scripting/quickjs_promise.h"
+#include "../scripting/quickjs_runtime.h"
 
 namespace Mayo {
 

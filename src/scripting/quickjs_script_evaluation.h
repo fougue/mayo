@@ -12,6 +12,7 @@
 #include "../base/task_manager.h"
 
 #include <unordered_map>
+#include <vector>
 
 struct JSContext;
 
@@ -35,6 +36,8 @@ public:
     QuickJsScriptEvaluation(QuickJsScriptEvaluation&&) = delete;
     QuickJsScriptEvaluation& operator=(QuickJsScriptEvaluation&&) = delete;
 
+    JSContext* context() const { return m_context; }
+
     Signal<IScriptEngine::Message>& signalMessage() const;
 
     // Starts an asynchronous task and returns a JS Promise that is settled when the task completes
@@ -42,20 +45,32 @@ public:
 
 private:
     friend class QuickJsScriptEngine;
+    friend class QuickJsTask;
+
+    struct TaskEntry {
+        explicit TaskEntry(JSContext* context) : promise(context) {}
+        QuickJsPromise promise;
+        std::vector<QuickJsValue> progressCallbacks;
+    };
+
+    using PendingTasks = std::unordered_map<TaskId, TaskEntry>;
 
     // Constructible by QuickJsScriptEngine only
     QuickJsScriptEvaluation();
 
+    TaskEntry* findTaskEntry(TaskId taskId);
+
     // Completes a pending task and settles its associated JS Promise
     void completeTask(TaskId taskId, TaskEndReason reason);
 
-    using PendingTasks = std::unordered_map<TaskId, QuickJsPromise>;
+    void notifyTaskProgress(TaskId taskId, double value);
 
     QuickJsScriptEngine* m_engine{nullptr};
     JSContext* m_context{nullptr};
 
     TaskManager m_taskMgr;
     SignalConnectionHandle m_connTaskEnded;
+    SignalConnectionHandle m_connTaskProgressChanged;
     PendingTasks m_pendingTasks;
 };
 
