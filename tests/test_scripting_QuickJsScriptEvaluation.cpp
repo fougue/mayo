@@ -268,4 +268,24 @@ void TestScripting::QuickJsScriptEvaluation_taskOnProgressCallbackThrows_test()
     QCOMPARE(eval.lastMessage(MessageType::Error)->text.c_str(), "progress callback failure");
 }
 
+void TestScripting::QuickJsScriptEvaluation_taskCancelAfterCompletion_test()
+{
+    QuickJsScriptEngine engine;
+    engine.addPreEvaluateCallback(&installTestApi);
+
+    auto eval = evaluateScript(engine, R"(
+        const task = test.doSomething();
+        const result = await task;
+
+        // Task finished, calling cancel() must not alter result
+        task.cancel();
+
+        export default result;
+    )");
+
+    QVERIFY(eval.result.success);
+    QVERIFY(eval.result.value.has_value());
+    QVERIFY(std::any_cast<bool>(eval.result.value));
+}
+
 } // namespace Mayo

@@ -33,6 +33,8 @@ public:
     QuickJsValue takeException() const;
     static QuickJsValue takeException(JSContext* context);
 
+    static QuickJsValue throwInternalError(JSContext* context, const char* message);
+
     QuickJsValue getModuleNamespace(JSModuleDef* module) const;
     QuickJsValue getModuleDefaultExport(JSModuleDef* module) const;
 };

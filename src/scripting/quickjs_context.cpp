@@ -30,6 +30,10 @@ QuickJsValue QuickJsContext::takeException(JSContext* context)
     return { context, JS_GetException(context) };
 }
 
+QuickJsValue QuickJsContext::throwInternalError(JSContext* context, const char* message)
+{
+    return { context, JS_ThrowInternalError(context, "%s", message) };
+}
 QuickJsValue QuickJsContext::getModuleNamespace(JSModuleDef* module) const
 {
     return { this->get(), JS_GetModuleNamespace(this->get(), module) };
