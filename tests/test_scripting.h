@@ -65,6 +65,7 @@ private slots:
     void QuickJsScriptEvaluation_taskOnProgressRegisterDuringCallback_test();
     void QuickJsScriptEvaluation_taskCancelRejectsPromise_test();
     void QuickJsScriptEvaluation_taskOnProgressCallbackThrows_test();
+    void QuickJsScriptEvaluation_taskCancelAfterCompletion_test();
 
 private:
     using JsEngineResult = IScriptEngine::Result;

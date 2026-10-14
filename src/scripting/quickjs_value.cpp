@@ -190,6 +190,11 @@ QuickJsValue QuickJsValue::newObject(JSContext* context)
     return { context, JS_NewObject(context) };
 }
 
+QuickJsValue QuickJsValue::newObjectClass(JSContext* context, JSClassID classId)
+{
+    return { context, JS_NewObjectClass(context, classId) };
+}
+
 QuickJsValue QuickJsValue::newFunction(
         JSContext* context, JSCFunction* func, const char* name, int length
     )
