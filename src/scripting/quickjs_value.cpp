@@ -31,6 +31,11 @@ QuickJsValue QuickJsValue::dup() const
     return QuickJsValue::dup(this->context(), this->get());
 }
 
+QuickJsValue QuickJsValue::call(JSValue thisVal, int argc, JSValueConst* argv) const
+{
+    return { this->context(), JS_Call(this->context(), this->get(), thisVal, argc, argv) };
+}
+
 QuickJsValue QuickJsValue::call(JSValueConst thisVal, std::initializer_list<JSValueConst> args) const
 {
     const int argCount = static_cast<int>(args.size());
@@ -53,6 +58,26 @@ bool QuickJsValue::isError() const
     return JS_IsError(this->get());
 }
 
+bool QuickJsValue::isFunction() const
+{
+    return JS_IsFunction(this->context(), this->get());
+}
+
+void* QuickJsValue::getOpaquePtr(JSClassID classId) const
+{
+    return JS_GetOpaque(this->get(), classId);
+}
+
+void* QuickJsValue::getOpaquePtrOrThrow(JSClassID classId) const
+{
+    return JS_GetOpaque2(this->context(), this->get(), classId);
+}
+
+void QuickJsValue::setOpaquePtr(void* ptr)
+{
+    JS_SetOpaque(this->get(), ptr);
+}
+
 JSPromiseStateEnum QuickJsValue::promiseState() const
 {
     return JS_PromiseState(this->context(), this->get());
@@ -68,6 +93,16 @@ QuickJsValue QuickJsValue::getProperty(const char* name) const
     return { this->context(), JS_GetPropertyStr(this->context(), this->get(), name) };
 }
 
+bool QuickJsValue::defineProperty(const char* name, QuickJsValue value, int flags)
+{
+    return QuickJsValue::defineProperty(name, value.release(), flags);
+}
+
+bool QuickJsValue::defineProperty(const char* name, JSValue value, int flags)
+{
+    return JS_DefinePropertyValueStr(this->context(), this->get(), name, value, flags) >= 0;
+}
+
 bool QuickJsValue::setProperty(const char* name, QuickJsValue value)
 {
     return QuickJsValue::setProperty(name, value.release());
@@ -76,6 +111,15 @@ bool QuickJsValue::setProperty(const char* name, QuickJsValue value)
 bool QuickJsValue::setProperty(const char* name, JSValue value)
 {
     return JS_SetPropertyStr(this->context(), this->get(), name, value) >= 0;
+}
+
+bool QuickJsValue::setFunction(const char* name, JSCFunction* func, int length)
+{
+    auto funcValue = QuickJsValue::newFunction(this->context(), func, name, length);
+    if (funcValue.isException())
+        return false;
+
+    return this->setProperty(name, std::move(funcValue));
 }
 
 std::optional<int32_t> QuickJsValue::toInt32() const
@@ -134,6 +178,11 @@ QuickJsValue QuickJsValue::newString(JSContext* context, std::string_view str)
 QuickJsValue QuickJsValue::newInt32(JSContext* context, int32_t val)
 {
     return { context, JS_NewInt32(context, val) };
+}
+
+QuickJsValue QuickJsValue::newFloat64(JSContext* context, double val)
+{
+    return { context, JS_NewFloat64(context, val) };
 }
 
 QuickJsValue QuickJsValue::newObject(JSContext* context)

@@ -38,7 +38,7 @@ TestScripting::ScriptEvaluation TestScripting::evaluateScript(
             evaluation.result = result;
             evaluation.endReason = endReason;
         }
-        );
+    );
     auto _ = gsl::finally([&]{
         conn1.disconnect();
         conn2.disconnect();

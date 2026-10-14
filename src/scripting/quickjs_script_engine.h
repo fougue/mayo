@@ -19,6 +19,7 @@
 
 namespace Mayo {
 
+class QuickJsClassRegistry;
 class QuickJsScriptEvaluation;
 
 // Provides script engine based on QuickJS
@@ -37,6 +38,11 @@ public:
     bool isStopRequested() const;
 
     void addPreEvaluateCallback(EvaluateCallback callback);
+
+    static const QuickJsClassRegistry* getClassRegistry(JSRuntime* runtime);
+    static JSClassID findClassId(JSRuntime* runtime, const char* className);
+
+    static EvaluationState* getEvaluationState(JSContext* context);
 
 private:
     friend class QuickJsScriptEvaluation;

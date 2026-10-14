@@ -7,7 +7,10 @@
 
 #include "quickjs_context.h"
 #include "quickjs_promise.h"
+#include "quickjs_runtime.h"
+#include "quickjs_class_registry.h"
 #include "quickjs_script_evaluation.h"
+#include "quickjs_task.h"
 #include "quickjs_value.h"
 #include "../base/task_manager.h"
 
@@ -90,7 +93,7 @@ std::string currentScriptFile(JSContext* context)
 
 JSValue jsConsoleWrite(JSContext* context, int argc, JSValueConst* argv, MessageType type)
 {
-    auto evalState = static_cast<QuickJsScriptEvaluation*>(JS_GetContextOpaque(context));
+    auto evalState = QuickJsScriptEngine::getEvaluationState(context);
     if (!evalState)
         return JS_UNDEFINED;
 
@@ -260,6 +263,22 @@ void QuickJsScriptEngine::addPreEvaluateCallback(EvaluateCallback callback)
         m_preEvaluateCallbacks.push_back(std::move(callback));
 }
 
+const QuickJsClassRegistry* QuickJsScriptEngine::getClassRegistry(JSRuntime* runtime)
+{
+    return static_cast<const QuickJsClassRegistry*>(JS_GetRuntimeOpaque(runtime));
+}
+
+JSClassID QuickJsScriptEngine::findClassId(JSRuntime* runtime, const char* className)
+{
+    auto classRegistry = getClassRegistry(runtime);
+    return classRegistry ? classRegistry->findClassId(className) : JS_INVALID_CLASS_ID;
+}
+
+QuickJsScriptEngine::EvaluationState* QuickJsScriptEngine::getEvaluationState(JSContext* context)
+{
+    return static_cast<QuickJsScriptEngine::EvaluationState*>(JS_GetContextOpaque(context));
+}
+
 void QuickJsScriptEngine::postJob(Job job)
 {
     {
@@ -327,6 +346,10 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
     JS_SetInterruptHandler(runtime.get(), &interruptHandler, this);
     JS_SetModuleLoaderFunc(runtime.get(), &moduleNormalize, &moduleLoader, this);
 
+    QuickJsClassRegistry classRegistry(runtime.get());
+    JS_SetRuntimeOpaque(runtime.get(), &classRegistry);
+    classRegistry.newClass(QuickJsTask::className);
+
     // Create JS context
     QuickJsContext context{JS_NewContext(runtime.get())};
     if (!context)
@@ -386,7 +409,7 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
     result.value = jsValueToAny(defaultValue);
 }
 
-void QuickJsScriptEngine::initEvaluationState(EvaluationState& state, JSContext *context)
+void QuickJsScriptEngine::initEvaluationState(EvaluationState& state, JSContext* context)
 {
     state.m_engine = this;
     state.m_context = context;
@@ -394,9 +417,12 @@ void QuickJsScriptEngine::initEvaluationState(EvaluationState& state, JSContext 
     // postJob() is thread-safe and schedules the job for the evaluation thread
     state.m_connTaskEnded = state.m_taskMgr.signalEnded.connect(
         [&](TaskId taskId, TaskEndReason reason) {
-            this->postJob([&state, taskId, reason] {
-                state.completeTask(taskId, reason);
-            });
+            this->postJob([&state, taskId, reason] { state.completeTask(taskId, reason); });
+        }
+    );
+    state.m_connTaskProgressChanged = state.m_taskMgr.signalProgressChanged.connect(
+        [&](TaskId taskId, double value) {
+            this->postJob([&state, taskId, value] { state.notifyTaskProgress(taskId, value); });
         }
     );
 }

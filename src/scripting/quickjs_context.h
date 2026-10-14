@@ -14,23 +14,16 @@
 
 namespace Mayo {
 
-struct QuickJsRuntimeTraits {
-    static constexpr JSRuntime* empty() noexcept { return nullptr; }
-    bool isEmpty(JSRuntime* runtime) const noexcept { return runtime == nullptr; }
-    void destroy(JSRuntime* runtime) const { JS_FreeRuntime(runtime); }
-};
-
 struct QuickJsContextTraits {
     static constexpr JSContext* empty() noexcept { return nullptr; }
     bool isEmpty(JSContext* context) const noexcept { return context == nullptr; }
     void destroy(JSContext* context) const { JS_FreeContext(context); }
 };
 
-using QuickJsRuntime = QuickJsBaseHandle<JSRuntime*, QuickJsRuntimeTraits>;
-
 class QuickJsContext : public QuickJsBaseHandle<JSContext*, QuickJsContextTraits> {
 private:
     using Base = QuickJsBaseHandle<JSContext*, QuickJsContextTraits>;
+
 public:
     using Base::Base;
 

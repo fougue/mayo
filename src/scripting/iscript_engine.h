@@ -71,7 +71,8 @@ public:
     // Result of a script evaluation, emitted by signalEvaluateEnded
     struct Result {
         bool success{false};
-        std::any value; // TODO Replace by ScriptValue ? std::variant<monostate, bool, double, ...>
+        // Available conversions : std::any_cast<bool|double|std::string>
+        std::any value;
     };
 
     // Signal emitted when a JS console API function is called, such as `console.log()`

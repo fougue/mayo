@@ -45,18 +45,27 @@ public:
 
     QuickJsValue dup() const;
 
+    QuickJsValue call(JSValueConst thisVal, int argc, JSValueConst* argv) const;
     QuickJsValue call(JSValueConst thisVal, std::initializer_list<JSValueConst> args = {}) const;
 
     bool isUndefined() const;
     bool isException() const;
     bool isError() const;
+    bool isFunction() const;
+
+    void* getOpaquePtr(JSClassID classId) const;
+    void* getOpaquePtrOrThrow(JSClassID classId) const;
+    void setOpaquePtr(void* ptr);
 
     JSPromiseStateEnum promiseState() const;
     QuickJsValue promiseResult() const;
 
     QuickJsValue getProperty(const char* name) const;
+    bool defineProperty(const char* name, QuickJsValue value, int flags);
+    bool defineProperty(const char* name, JSValue value, int flags);
     bool setProperty(const char* name, QuickJsValue value);
     bool setProperty(const char* name, JSValue value);
+    bool setFunction(const char* name, JSCFunction* func, int length = 0);
 
     std::optional<int32_t> toInt32() const;
     std::optional<std::string> toStdString() const;
@@ -65,6 +74,7 @@ public:
     static QuickJsValue newError(JSContext* context, std::string_view message = {});
     static QuickJsValue newString(JSContext* context, std::string_view str);
     static QuickJsValue newInt32(JSContext* context, int32_t val);
+    static QuickJsValue newFloat64(JSContext* context, double val);
 
     static QuickJsValue newObject(JSContext* context);
 

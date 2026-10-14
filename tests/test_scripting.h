@@ -61,6 +61,10 @@ private slots:
     void QuickJsScriptEvaluation_startTaskSupportsMultiplePendingTasks_test();
     void QuickJsScriptEvaluation_startTaskRejectsPromiseOnTaskFailure_test();
     void QuickJsScriptEvaluation_startTaskReturnsPromise_test();
+    void QuickJsScriptEvaluation_taskThenPropagatesValue_test();
+    void QuickJsScriptEvaluation_taskOnProgressRegisterDuringCallback_test();
+    void QuickJsScriptEvaluation_taskCancelRejectsPromise_test();
+    void QuickJsScriptEvaluation_taskOnProgressCallbackThrows_test();
 
 private:
     using JsEngineResult = IScriptEngine::Result;

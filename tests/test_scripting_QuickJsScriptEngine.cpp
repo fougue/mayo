@@ -6,6 +6,7 @@
 #include "test_scripting.h"
 
 #include "../src/base/task_progress.h"
+#include "../src/scripting/quickjs_context.h"
 #include "../src/scripting/quickjs_script_engine.h"
 #include "../src/scripting/quickjs_script_evaluation.h"
 
@@ -71,9 +72,13 @@ void runCooperativeTask(ShutdownTestState& state, TaskProgress* progress)
 void startCooperativeTasks(QuickJsScriptEvaluation& evaluation, ShutdownTestState& state, int count)
 {
     for (int i = 0; i < count; ++i) {
-        evaluation.startTask(
+        auto task = evaluation.startTask(
             [&state](TaskProgress* progress) { runCooperativeTask(state, progress); }
         );
+        if (task.isException()) {
+            auto exception = QuickJsContext::takeException(evaluation.context());
+            QFAIL(exception.toStdString().value_or(std::string{}).c_str());
+        }
     }
 
     if (!waitForTasksStarted(state, count)) {
@@ -424,41 +429,22 @@ void TestScripting::QuickJsScriptEngine_evaluateValue_test_data()
 
 void TestScripting::QuickJsScriptEngine_shutdownWaitsForRunningTask_test()
 {
-    struct State {
-        std::mutex mutex;
-        std::condition_variable condition;
-        std::atomic<bool> taskStarted{false};
-        std::atomic<bool> taskExited{false};
-    } state;
-
+    ShutdownTestState state;
     QuickJsScriptEngine engine;
     engine.setScript("42");
 
     engine.addPreEvaluateCallback(
         [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
-            evaluation.startTask([&state](TaskProgress* progress) {
-                state.taskStarted.store(true);
-                state.condition.notify_all();
-
-                while (!progress->isAbortRequested())
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-                state.taskExited.store(true);
-                state.condition.notify_all();
-            });
-
+            startCooperativeTasks(evaluation, state, 1);
             // Don't let the script execute before work had started
-            std::unique_lock lock(state.mutex);
-            state.condition.wait(lock, [&]{ return state.taskStarted.load(); });
+            waitForTasksStarted(state, 1);
         }
     );
 
     engine.startEvaluate();
 
     QVERIFY(engine.waitForEvaluateEnd(5000));
-
-    QVERIFY(state.taskStarted.load());
-    QVERIFY(state.taskExited.load());
+    verifyTasksStopped(state, 1);
 }
 
 void TestScripting::QuickJsScriptEngine_shutdownAbortsAllRunningTasks_test()
