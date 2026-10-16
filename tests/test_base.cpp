@@ -235,6 +235,8 @@ void TestBase::XCaf_userDefinedAttributes_test()
     auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
 
+    auto closeDoc = gsl::finally([=]{ app->closeDocument(doc); });
+
     // Must not crash for null labels
     QVERIFY(doc->xcaf().shapeUserDefinedAttributes(TDF_Label{}).IsNull());
 
