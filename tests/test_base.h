@@ -61,6 +61,8 @@ private slots:
 
     void MathUtils_intRound_test();
     void MathUtils_intRound_test_data();
+    void MathUtils_mappedValue_test();
+    void MathUtils_mappedValue_test_data();
 
     void DocumentRefCount_test();
 

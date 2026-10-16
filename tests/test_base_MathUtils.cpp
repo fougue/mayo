@@ -39,4 +39,35 @@ void TestBase::MathUtils_intRound_test_data()
     QTest::newRow("negative-infinity") << -std::numeric_limits<double>::infinity() << INT_MIN;
 }
 
+void TestBase::MathUtils_mappedValue_test()
+{
+    QFETCH(double, value);
+    QFETCH(double, oldMin);
+    QFETCH(double, oldMax);
+    QFETCH(double, newMin);
+    QFETCH(double, newMax);
+    QFETCH(double, expected);
+
+    QCOMPARE(MathUtils::mappedValue(value, oldMin, oldMax, newMin, newMax), expected);
+}
+
+void TestBase::MathUtils_mappedValue_test_data()
+{
+    QTest::addColumn<double>("value");
+    QTest::addColumn<double>("oldMin");
+    QTest::addColumn<double>("oldMax");
+    QTest::addColumn<double>("newMin");
+    QTest::addColumn<double>("newMax");
+    QTest::addColumn<double>("expected");
+
+    QTest::newRow("map-minimum") << 0. << 0. << 10. << 0. << 100. << 0.;
+    QTest::newRow("map-midpoint") << 5. << 0. << 10. << 0. << 100. << 50.;
+    QTest::newRow("map-maximum") << 10. << 0. << 10. << 0. << 100. << 100.;
+    QTest::newRow("map-offset-output-range") << 2.5 << 0. << 10. << -10. << 10. << -5.;
+    QTest::newRow("reversed-input-range") << 2.5 << 10. << 0. << 0. << 100. << 75.;
+    QTest::newRow("reversed-output-range") << 2.5 << 0. << 10. << 100. << 0. << 75.;
+    QTest::newRow("extrapolate-below-input-range") << -5. << 0. << 10. << 0. << 100. << -50.;
+    QTest::newRow("extrapolate-above-input-range") << 15. << 0. << 10. << 0. << 100. << 150.;
+}
+
 } // namespace Mayo
