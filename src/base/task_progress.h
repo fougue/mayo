@@ -34,7 +34,7 @@ public:
     const std::string& step() const { return m_step; }
     void setStep(std::string_view title);
 
-    bool isRoot() const { return m_parent != nullptr; }
+    bool isRoot() const { return !m_parent; }
     const TaskProgress* parent() const { return m_parent; }
     TaskProgress* parent() { return m_parent; }
 

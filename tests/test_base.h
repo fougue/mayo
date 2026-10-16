@@ -136,6 +136,7 @@ private slots:
     void LibTask_taskCompleted_test();
     void LibTask_taskAborted_test();
     void LibTask_taskFailed_test();
+    void LibTask_TaskProgress_isRoot_test();
 
     void LibTree_test();
     void LibTree_nodeRoot_test();

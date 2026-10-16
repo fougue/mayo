@@ -137,4 +137,16 @@ void TestBase::LibTask_taskFailed_test()
     QCOMPARE(spy.getArgAs<TaskEndReason>(0, 1), TaskEndReason::Failed);
 }
 
+void TestBase::LibTask_TaskProgress_isRoot_test()
+{
+    TaskProgress rootProgress;
+    QVERIFY(rootProgress.isRoot());
+
+    TaskProgress childProgress(&rootProgress, 50.);
+    QVERIFY(!childProgress.isRoot());
+
+    TaskProgress grandchildProgress(&childProgress, 50.);
+    QVERIFY(!grandchildProgress.isRoot());
+}
+
 } // namespace Mayo
