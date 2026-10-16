@@ -65,9 +65,15 @@ void TestBase::LibTree_test()
 void TestBase::LibTree_nodeRoot_test()
 {
     Tree<int> tree;
-    tree.appendChild(0, -1);
-    tree.appendChild(0, -2);
+    const TreeNodeId root1 = tree.appendChild(0, -1);
+    const TreeNodeId child = tree.appendChild(root1, -2);
+    const TreeNodeId root2 = tree.appendChild(0, -3);
+
     QCOMPARE(tree.nodeRoot(0), 0);
+    QCOMPARE(tree.nodeRoot(root1), root1);
+    QCOMPARE(tree.nodeRoot(child), root1);
+    QCOMPARE(tree.nodeRoot(root2), root2);
+    QCOMPARE(tree.nodeRoot(777), 0);
 }
 
 void TestBase::LibTree_removeRoot_test()
