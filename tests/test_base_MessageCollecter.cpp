@@ -74,4 +74,21 @@ void TestBase::MessageCollecter_asStringFiltered_test()
     QCOMPARE(msgCollect.asString(" | ", MessageType::Trace), std::string{});
 }
 
+void TestBase::MessageCollecter_messageCount_test()
+{
+    MessageCollecter msgCollect;
+    msgCollect.emitMessage(MessageType::Error, "error 1");
+    msgCollect.emitMessage(MessageType::Warning, "warning");
+    msgCollect.emitMessage(MessageType::Error, "error 2");
+    msgCollect.emitMessage(MessageType::Info, "info");
+
+    QCOMPARE(msgCollect.messageCount(MessageType::Error), 2u);
+    QCOMPARE(msgCollect.messageCount(MessageType::Warning), 1u);
+    QCOMPARE(msgCollect.messageCount(MessageType::Info), 1u);
+    QCOMPARE(msgCollect.messageCount(MessageType::Trace), 0u);
+
+    msgCollect.clear();
+    QCOMPARE(msgCollect.messageCount(MessageType::Error), 0u);
+}
+
 } // namespace Mayo

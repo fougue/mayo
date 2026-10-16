@@ -104,6 +104,7 @@ private slots:
     void MessageCollecter_only_test();
     void MessageCollecter_only_test_data();
     void MessageCollecter_asStringFiltered_test();
+    void MessageCollecter_messageCount_test();
 
     // PropertyValueConversion
     void PropertyValueConversionVariant_toInt_test();

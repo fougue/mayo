@@ -81,7 +81,7 @@ unsigned MessageCollecter::messageCount(MessageType msgType) const
     return std::count_if(
         m_vecMessage.cbegin(),
         m_vecMessage.cend(),
-        [](const Message& msg) { return msg.type == MessageType::Error; }
+        [=](const Message& msg) { return msg.type == msgType; }
     );
 }
 
