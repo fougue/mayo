@@ -17,7 +17,9 @@
 
 #include <fmt/format.h>
 #include <algorithm>
+#include <cctype>
 #include <charconv>
+#include <locale>
 #include <iostream>
 #include <stdexcept>
 
@@ -377,12 +379,24 @@ int PropertyValueConversion::Variant::toInt(bool* ok) const
 double PropertyValueConversion::Variant::toDouble(bool* ok) const
 {
     assignBoolPtr(ok, true);
-    if (std::holds_alternative<int>(*this))
+    if (std::holds_alternative<int>(*this)) {
         return std::get<int>(*this);
-    else if (std::holds_alternative<double>(*this))
+    }
+    else if (std::holds_alternative<double>(*this)) {
         return std::get<double>(*this);
-    else if (std::holds_alternative<std::string>(*this))
-        return std::stod(std::get<std::string>(*this));
+    }
+    else if (std::holds_alternative<std::string>(*this)) {
+        try {
+            const std::string& str = std::get<std::string>(*this);
+            size_t charsProcessed = 0;
+            double res = std::stod(str, &charsProcessed);
+            auto isSpaceChar = [](char c) { return std::isspace(c, std::locale::classic()); };
+            if (std::all_of(str.cbegin() + charsProcessed, str.cend(), isSpaceChar))
+                return res;
+        }
+        catch (const std::exception&) {
+        }
+    }
 
     assignBoolPtr(ok, false);
     return 0.;

@@ -87,6 +87,48 @@ void TestBase::PropertyValueConversionVariant_toString_test_data()
     QTest::newRow("bytes") << Variant{gsl::span<const uint8_t>(bytes)} << std::string{"0A"};
 }
 
+void TestBase::PropertyValueConversionVariant_toDouble_test()
+{
+    using Variant = PropertyValueConversion::Variant;
+    QFETCH(Variant, variant);
+    QFETCH(double, expectedValue);
+    QFETCH(bool, expectedOk);
+
+    bool ok = false;
+    QCOMPARE(variant.toDouble(&ok), expectedValue);
+    QCOMPARE(ok, expectedOk);
+}
+
+void TestBase::PropertyValueConversionVariant_toDouble_test_data()
+{
+    using Variant = PropertyValueConversion::Variant;
+    QTest::addColumn<Variant>("variant");
+    QTest::addColumn<double>("expectedValue");
+    QTest::addColumn<bool>("expectedOk");
+
+    // Numeric strings with and without surrounding whitespace
+    QTest::newRow("integer-string") << Variant{"42"} << 42. << true;
+    QTest::newRow("decimal-string") << Variant{"3.5"} << 3.5 << true;
+    QTest::newRow("negative-string") << Variant{"-12.75"} << -12.75 << true;
+    QTest::newRow("leading-whitespace") << Variant{"  3.5"} << 3.5 << true;
+    QTest::newRow("trailing-whitespace") << Variant{"3.5   "} << 3.5 << true;
+    QTest::newRow("surrounding-whitespace") << Variant{"  3.5   "} << 3.5 << true;
+    QTest::newRow("tab-and-newline-whitespace") << Variant{"\t3.5\n"} << 3.5 << true;
+
+    // The suffix may contain whitespace only
+    QTest::newRow("trailing-letters") << Variant{"3.5abc"} << 0. << false;
+    QTest::newRow("whitespace-then-letters") << Variant{"3.5  abc"} << 0. << false;
+    QTest::newRow("second-number") << Variant{"3.5 2"} << 0. << false;
+
+    // Strings without a valid numeric value
+    QTest::newRow("empty-string") << Variant{""} << 0. << false;
+    QTest::newRow("whitespace-only") << Variant{"   \t\n"} << 0. << false;
+    QTest::newRow("letters-only") << Variant{"abc"} << 0. << false;
+
+    // Values outside the representable range of a double
+    QTest::newRow("out-of-range") << Variant{"1e9999"} << 0. << false;
+}
+
 void TestBase::PropertyValueConversion_test()
 {
     QFETCH(std::shared_ptr<Property>, ptrProperty);

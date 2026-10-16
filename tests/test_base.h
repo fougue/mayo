@@ -72,16 +72,25 @@ private slots:
 
     void OccHandle_test();
 
+    // PropertyValueConversion
     void PropertyValueConversionVariant_toInt_test();
     void PropertyValueConversionVariant_toInt_test_data();
+
     void PropertyValueConversionVariant_toString_test();
     void PropertyValueConversionVariant_toString_test_data();
+
+    void PropertyValueConversionVariant_toDouble_test();
+    void PropertyValueConversionVariant_toDouble_test_data();
+
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
+
     void PropertyValueConversion_bugGitHub219_test();
+
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 
+    // StringConv
     void StringConv_DoubleToString_test();
     void StringConv_test();
 
