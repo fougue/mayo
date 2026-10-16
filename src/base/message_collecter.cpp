@@ -50,11 +50,14 @@ gsl::span<const Messenger::Message> MessageCollecter::messages() const
 std::string MessageCollecter::asString(std::string_view separator, MessageType msgType) const
 {
     std::string str;
+    bool hasMessage = false;
     for (const auto& msg : m_vecMessage) {
         if (msg.type == msgType) {
-            str += msg.text;
-            if (&msg != &m_vecMessage.back())
+            if (hasMessage)
                 str += separator;
+
+            str += msg.text;
+            hasMessage = true;
         }
     }
 

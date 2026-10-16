@@ -62,4 +62,16 @@ void TestBase::MessageCollecter_only_test_data()
         QTest::newRow(std::string{name}.c_str()) << value;
 }
 
+void TestBase::MessageCollecter_asStringFiltered_test()
+{
+    MessageCollecter msgCollect;
+    msgCollect.emitMessage(MessageType::Error, "first error");
+    msgCollect.emitMessage(MessageType::Warning, "warning");
+    msgCollect.emitMessage(MessageType::Error, "second error");
+    msgCollect.emitMessage(MessageType::Info, "last info");
+
+    QCOMPARE(msgCollect.asString(" | ", MessageType::Error), std::string{"first error | second error"});
+    QCOMPARE(msgCollect.asString(" | ", MessageType::Trace), std::string{});
+}
+
 } // namespace Mayo

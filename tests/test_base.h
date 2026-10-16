@@ -12,7 +12,19 @@ namespace Mayo {
 
 class TestBase : public QObject {
     Q_OBJECT
+
 private slots:
+    // Misc
+    void DocumentRefCount_test();
+    void Enumeration_test();
+    void FilePath_test();
+    void MetaEnum_test();
+    void OccHandle_test();
+    void Quantity_test();
+    void TextId_test();
+    void XCaf_userDefinedAttributes_test();
+
+    // Application
     void Application_test();
     void Application_openDocument_test();
     void Application_findDocumentByIdentifier_test();
@@ -22,11 +34,13 @@ private slots:
     void Application_DocumentIterator_empty_test();
     void Application_DocumentIterator_test();
 
+    // ApplicationItem
     void ApplicationItem_default_test();
     void ApplicationItem_document_test();
     void ApplicationItem_documentTreeNode_test();
     void ApplicationItem_equality_test();
 
+    // ApplicationItemSelectionModel
     void ApplicationItemSelectionModel_selectedItems_test();
     void ApplicationItemSelectionModel_isSelected_test();
     void ApplicationItemSelectionModel_addItem_test();
@@ -36,6 +50,7 @@ private slots:
     void ApplicationItemSelectionModel_clear_test();
     void ApplicationItemSelectionModel_clearSignal_test();
 
+    // BRepUtils
     void BRepUtils_makeEmptyCompound_test();
     void BRepUtils_addShape_nullArguments_test();
     void BRepUtils_addShape_nullTarget_test();
@@ -56,74 +71,67 @@ private slots:
     void BRepUtils_anySubShape_stopOnFirstMatch_test();
     void BRepUtils_anySubShape_shapeType_test();
 
+    // CafUtils
+    void CafUtils_labelTag_test();
+    void CafUtils_getNamedDataKeys_test();
+
+    // CppUtils
     void CppUtils_indexInSpan_test();
     void CppUtils_toggle_test();
 
+    // LibTask
+    void LibTask_runAndTrackProgress_test();
+    void LibTask_runJobException_test();
+    void LibTask_taskCompleted_test();
+    void LibTask_taskAborted_test();
+    void LibTask_taskFailed_test();
+    void LibTask_TaskProgress_isRoot_test();
+
+    // LibTree
+    void LibTree_test();
+    void LibTree_nodeRoot_test();
+    void LibTree_removeRoot_test();
+
+    // MathUtils
     void MathUtils_intRound_test();
     void MathUtils_intRound_test_data();
     void MathUtils_mappedValue_test();
     void MathUtils_mappedValue_test_data();
 
-    void DocumentRefCount_test();
-
-    void TextId_test();
-
-    void FilePath_test();
-
+    // MessageCollecter
     void MessageCollecter_ignoreSingleMessageType_test();
     void MessageCollecter_ignoreSingleMessageType_test_data();
     void MessageCollecter_only_test();
     void MessageCollecter_only_test_data();
-
-    void OccHandle_test();
+    void MessageCollecter_asStringFiltered_test();
 
     // PropertyValueConversion
     void PropertyValueConversionVariant_toInt_test();
     void PropertyValueConversionVariant_toInt_test_data();
-
     void PropertyValueConversionVariant_toString_test();
     void PropertyValueConversionVariant_toString_test_data();
-
     void PropertyValueConversionVariant_toDouble_test();
     void PropertyValueConversionVariant_toDouble_test_data();
 
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
-
     void PropertyValueConversion_invalidCoordinateString_test();
     void PropertyValueConversion_invalidCoordinateString_test_data();
-
     void PropertyValueConversion_bugGitHub219_test();
 
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 
-    // StringConv
-    void StringConv_DoubleToString_test();
-    void StringConv_test();
-
-    void CafUtils_labelTag_test();
-    void CafUtils_getNamedDataKeys_test();
-
+    // MeshUtils
     void MeshUtils_test();
     void MeshUtils_test_data();
     void MeshUtils_orientation_test();
     void MeshUtils_orientation_test_data();
 
-    void Enumeration_test();
-    void MetaEnum_test();
-
-    void Quantity_test();
-
-    void TKernelUtils_colorToRgb8_test();
-    void TKernelUtils_colorToRgb8_test_data();
-    void TKernelUtils_colorToHex_test();
-    void TKernelUtils_colorToHex_test_data();
-    void TKernelUtils_colorFromHex_test();
-    void TKernelUtils_colorFromHex_test_data();
-
+    // Settings
     void Settings_test();
 
+    // StringCache
     void StringCache_addFirstTimeThenCachedReturnsSameViewAndFlag_test();
     void StringCache_addTwoSmallStringsContiguous_test();
     void StringCache_addWhenRemainingCapacityInsufficientCreatesNewPool_test();
@@ -133,20 +141,11 @@ private slots:
     void StringCache_longStringLargerThanPoolWorksAndNextInsertsOK_test();
     void StringCache_stressFuzzRandomStringsDedupAndClear_test();
 
-    void UnitSystem_test();
-    void UnitSystem_test_data();
+    // StringConv
+    void StringConv_DoubleToString_test();
+    void StringConv_test();
 
-    void LibTask_runAndTrackProgress_test();
-    void LibTask_runJobException_test();
-    void LibTask_taskCompleted_test();
-    void LibTask_taskAborted_test();
-    void LibTask_taskFailed_test();
-    void LibTask_TaskProgress_isRoot_test();
-
-    void LibTree_test();
-    void LibTree_nodeRoot_test();
-    void LibTree_removeRoot_test();
-
+    // ThreadMessengerChannel
     void ThreadMessengerChannel_addGlobalOccPrinterReturnsNonNullPrinter_test();
     void ThreadMessengerChannel_addGlobalOccPrinterIsIdempotent_test();
     void ThreadMessengerChannel_addGlobalOccPrinter_registersExactlyOnceWithDefaultMessenger_test();
@@ -159,7 +158,17 @@ private slots:
     void ThreadMessengerChannelScope_boundToNullptrDiscardsMessages_test();
     void ThreadMessengerChannelScope_isIsolatedPerThread_test();
 
-    void XCaf_userDefinedAttributes_test();
+    // TKernelUtils
+    void TKernelUtils_colorToRgb8_test();
+    void TKernelUtils_colorToRgb8_test_data();
+    void TKernelUtils_colorToHex_test();
+    void TKernelUtils_colorToHex_test_data();
+    void TKernelUtils_colorFromHex_test();
+    void TKernelUtils_colorFromHex_test_data();
+
+    // UnitSystem
+    void UnitSystem_test();
+    void UnitSystem_test_data();
 };
 
 } // namespace Mayo
