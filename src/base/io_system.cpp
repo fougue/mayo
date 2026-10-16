@@ -709,13 +709,14 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
             constexpr uint32_t offset = 80; // Skip header
             const uint8_t* bytes = reinterpret_cast<const uint8_t*>(sample.data());
             const uint32_t facetsCount =
-                    bytes[offset]
-                    | (bytes[offset+1] << 8)
-                    | (bytes[offset+2] << 16)
-                    | (bytes[offset+3] << 24)
+                static_cast<uint32_t>(bytes[offset])
+                    | (static_cast<uint32_t>(bytes[offset+1]) << 8)
+                    | (static_cast<uint32_t>(bytes[offset+2]) << 16)
+                    | (static_cast<uint32_t>(bytes[offset+3]) << 24)
                 ;
-            constexpr unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
-            if ((facetSize * facetsCount + binaryStlHeaderSize) == input.hintFullSize)
+            constexpr uint64_t facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
+            const uint64_t expectedSize = facetSize * facetsCount + binaryStlHeaderSize;
+            if (expectedSize == input.hintFullSize)
                 return Format_STL;
         }
     }
