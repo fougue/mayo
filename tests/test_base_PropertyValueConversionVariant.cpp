@@ -9,6 +9,9 @@
 #include "../src/base/property_enumeration.h"
 #include "../src/base/property_value_conversion.h"
 
+#include <gsl/util>
+#include <sstream>
+
 Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 Q_DECLARE_METATYPE(std::shared_ptr<Mayo::Property>)
 Q_DECLARE_METATYPE(std::string)
@@ -163,6 +166,33 @@ void TestBase::PropertyValueConversion_test_data()
     QTest::newRow("Enumeration(Color)") << createPropertyPtr<PropertyEnum<MayoTest_Color>>() << Variant("Blanc");
 
     QTest::newRow("QuantityLength(15mm)") << createPropertyPtr<PropertyLength>() << Variant("15mm");
+}
+
+void TestBase::PropertyValueConversion_invalidCoordinateString_test()
+{
+    QFETCH(std::string, value);
+
+    PropertyOccPnt property(nullptr, {});
+    PropertyValueConversion conversion;
+
+    std::ostringstream capturedCerr;
+    std::streambuf* previousBuffer = std::cerr.rdbuf(capturedCerr.rdbuf());
+    auto restoreCerr = gsl::finally([previousBuffer] {
+        std::cerr.rdbuf(previousBuffer);
+    });
+
+    QVERIFY(!conversion.fromVariant(&property, PropertyValueConversion::Variant{value}));
+    QVERIFY(capturedCerr.str().find("::fromVariant()") != std::string::npos);
+}
+
+void TestBase::PropertyValueConversion_invalidCoordinateString_test_data()
+{
+    QTest::addColumn<std::string>("value");
+
+    QTest::newRow("junk-after-coordinate") << std::string{"1xyz, 2, 3"};
+    QTest::newRow("missing-comma") << std::string{"1, 2"};
+    QTest::newRow("junk-after-third-coordinate") << std::string{"1, 2, 3xyz"};
+    QTest::newRow("extra-coordinate") << std::string{"1, 2, 3, 4"};
 }
 
 void TestBase::PropertyValueConversion_bugGitHub219_test()

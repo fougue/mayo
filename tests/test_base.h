@@ -85,6 +85,9 @@ private slots:
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
 
+    void PropertyValueConversion_invalidCoordinateString_test();
+    void PropertyValueConversion_invalidCoordinateString_test_data();
+
     void PropertyValueConversion_bugGitHub219_test();
 
     void PropertyQuantityValueConversion_test();

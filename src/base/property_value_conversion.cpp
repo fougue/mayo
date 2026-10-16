@@ -53,26 +53,45 @@ std::string toString(const gp_XYZ& coords, int prec = 6)
 
 gp_XYZ xyzFromString(std::string_view str)
 {
-    const char* ptrCoord = str.data();
-    const char* const ptrCoordEnd = str.data() + str.size();
-    auto fnParseNextCoord = [&]{
-        const std::locale& locale = std::locale::classic();
-        ptrCoord = std::find_if(ptrCoord, ptrCoordEnd, [&](char ch) { return !std::isspace(ch, locale); });
-        auto ptrComma = std::find(ptrCoord, ptrCoordEnd, ',');
-        double coord = 0;
-        auto [ptr, err] = Mayo::fromChars(ptrCoord, ptrComma, coord);
-        if (err != std::errc())
-            throw std::runtime_error(std::make_error_code(err).message());
+    const char* ptr = str.data();
+    const char* const ptrEnd = str.data() + str.size();
 
-        ptrCoord = ptrComma + 1;
+    auto skipWhitespaces = [&]{
+        while (ptr != ptrEnd && std::isspace(*ptr, std::locale::classic()))
+            ++ptr;
+    };
+
+    auto parseCoord = [&]{
+        skipWhitespaces();
+
+        double coord = 0;
+        auto [ptrParsedEnd, err] = Mayo::fromChars(ptr, ptrEnd, coord);
+        if (err != std::errc{})
+            throw std::runtime_error(std::make_error_code(err).message());
+        else if (ptr == ptrParsedEnd)
+            throw std::runtime_error("Invalid coordinate");
+
+        ptr = ptrParsedEnd;
+        skipWhitespaces();
         return coord;
     };
 
-    gp_XYZ coords;
-    coords.SetX(fnParseNextCoord());
-    coords.SetY(fnParseNextCoord());
-    coords.SetZ(fnParseNextCoord());
-    return coords;
+    const double x = parseCoord();
+    if (ptr == ptrEnd || *ptr != ',')
+        throw std::runtime_error("Expected ',' after first coordinate");
+
+    ++ptr;
+    const double y = parseCoord();
+    if (ptr == ptrEnd || *ptr != ',')
+        throw std::runtime_error("Expected ',' after second coordinate");
+
+    ++ptr;
+    const double z = parseCoord();
+    skipWhitespaces();
+    if (ptr != ptrEnd)
+        throw std::runtime_error("Unexpected characters after third coordinate");
+
+    return gp_XYZ{x, y, z};
 }
 
 void printFromVariantError(const Property* prop, std::string_view text)
