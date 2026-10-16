@@ -59,6 +59,9 @@ private slots:
     void CppUtils_indexInSpan_test();
     void CppUtils_toggle_test();
 
+    void MathUtils_intRound_test();
+    void MathUtils_intRound_test_data();
+
     void DocumentRefCount_test();
 
     void TextId_test();

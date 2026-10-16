@@ -8,6 +8,7 @@
 
 #include <Precision.hxx>
 #include <algorithm>
+#include <climits>
 #include <cmath>
 #include <limits>
 
@@ -55,11 +56,13 @@ int intRound(double v) noexcept
     if (std::isnan(v))
         return 0;
 
-    auto lv = std::lround(v);
-    if constexpr (sizeof(int) != sizeof(long))
-        lv = std::clamp(lv, static_cast<long>(INT_MIN), static_cast<long>(INT_MAX));
+    if (v >= static_cast<double>(INT_MAX))
+        return INT_MAX;
 
-    return static_cast<int>(lv);
+    if (v <= static_cast<double>(INT_MIN))
+        return INT_MIN;
+
+    return static_cast<int>(std::lround(v));
 }
 
 } // namespace Mayo::MathUtils
