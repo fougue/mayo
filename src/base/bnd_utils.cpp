@@ -51,6 +51,9 @@ BndBoxCoords BndBoxCoords::get(const Bnd_Box& box)
 
 void BndUtils::add(Bnd_Box* box, const Bnd_Box& other)
 {
+    if (!box || other.IsVoid())
+        return;
+
     const auto bbc = BndBoxCoords::get(other);
     for (const gp_Pnt& pnt : bbc.vertices())
         box->Add(pnt);
