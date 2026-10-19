@@ -76,6 +76,14 @@ void TaskProgress::setStep(std::string_view title)
     }
 }
 
+bool TaskProgress::isAbortRequested() const
+{
+    if (m_isAbortRequested)
+        return true;
+
+    return this->parent() ? this->parent()->isAbortRequested() : false;
+}
+
 bool TaskProgress::isAbortRequested(const TaskProgress* progress)
 {
     return progress ? progress->isAbortRequested() : false;

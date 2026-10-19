@@ -224,7 +224,7 @@ void cli_asyncExportDocuments(
     DocumentPtr doc = app->newDocument();
     bool okImport = true;
     const TaskId importTaskId = taskMgr->newTask([&](TaskProgress* progress) {
-            okImport = importInDocument(doc, args, helper, progress);
+        okImport = importInDocument(doc, args, helper, progress);
     });
     helper->mapTaskStatus.insert({ importTaskId, std::make_unique<TaskStatus>() });
     taskMgr->setTitle(importTaskId, CliExport::textIdTr("Importing..."));

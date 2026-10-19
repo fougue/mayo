@@ -13,6 +13,10 @@
 
 #include <QtTest/QtTest>
 
+#include <fmt/format.h>
+#include <gsl/util>
+#include <chrono>
+#include <fstream>
 #include <string>
 
 namespace Mayo { namespace {
@@ -346,6 +350,45 @@ void TestIO::System_exportItemsWriterException_test_data()
         QTest::newRow(c_str("writeFile_Exception", name)) << ThrowLocation::Writer_writeFile << value;
         QTest::newRow(c_str("transfer_Exception", name)) << ThrowLocation::Writer_transfer << value;
     }
+}
+
+void TestIO::System_importInDocumentMultipleFilesReadFailure_test()
+{
+    const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
+    FilePath invalidFilePath;
+    std::ofstream invalidFile;
+
+    for (int attempt = 0; attempt < 100 && !invalidFile.is_open(); ++attempt) {
+        const std::string fileName = fmt::format("mayo-invalid-import-{}-{}.brep", timestamp, attempt);
+        const FilePath candidate = std::filesystem::temp_directory_path() / fileName;
+        if (filepathExists(candidate))
+            continue;
+
+        invalidFile.open(candidate, std::ios::binary | std::ios::out);
+        if (invalidFile.is_open())
+            invalidFilePath = candidate;
+    }
+
+    QVERIFY(invalidFile.is_open());
+    auto cleanupTempFile = gsl::finally([&] {
+        std::error_code ec;
+        std::filesystem::remove(invalidFilePath, ec);
+    });
+
+    invalidFile << "This is not a BREP file";
+    invalidFile.close();
+    QVERIFY(invalidFile.good());
+
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+
+    const FilePath filepaths[] = { invalidFilePath, "tests/inputs/face_trsf_scale_almost_1.stl" };
+    const bool importOk = m_ioSystem->importInDocument(
+        IO::System::ArgsImport().setTargetDocument(doc).setFilepaths(filepaths)
+    );
+
+    QVERIFY(!importOk);
+    QVERIFY(doc->entityCount() > 0);
 }
 
 } // namespace Mayo

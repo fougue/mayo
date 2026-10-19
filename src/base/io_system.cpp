@@ -15,6 +15,7 @@
 #include "thread_messenger_channel.h"
 
 #include <fmt/format.h>
+#include <gsl/span>
 #include <gsl/util>
 
 #include <algorithm>
@@ -238,6 +239,68 @@ void dispatchMessages(ImportTaskData& taskData, Messenger* targetMessenger)
     taskData.messenger.clear();
 }
 
+void importMultiFiles(
+        const System& ioSystem,
+        const System::ArgsImport& args,
+        gsl::span<ImportTaskData> spanTaskData
+    )
+{
+    TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
+    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
+
+    TaskManager childTaskManager;
+    childTaskManager.signalProgressChanged.connect([&](TaskId, double) {
+        rootProgress->setValue(childTaskManager.globalProgress());
+    });
+
+    // Read files
+    for (ImportTaskData& taskData : spanTaskData) {
+        taskData.filepath = args.filepaths[&taskData - &spanTaskData.front()];
+        taskData.taskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
+            taskData.progress = progressChild;
+            readFile(taskData, ioSystem, args);
+        });
+    }
+
+    for (const ImportTaskData& taskData : spanTaskData)
+        childTaskManager.run(taskData.taskId, TaskAutoDestroy::Off);
+
+    // Helper function to find a TaskData object
+    auto findTask = [&](const auto& predicate) {
+        auto it = std::find_if(spanTaskData.begin(), spanTaskData.end(), predicate);
+        return it != spanTaskData.end() ? &(*it) : nullptr;
+    };
+
+    // Transfer to target document
+    auto taskDataCount = static_cast<int>(spanTaskData.size());
+    while (taskDataCount > 0 && !rootProgress->isAbortRequested()) {
+        // Find next ready-to-transfer task
+        auto task = findTask([&](const ImportTaskData& taskData) {
+            return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 0);
+        });
+        if (task) {
+            transfer(*task, args);
+            postProcess(*task, args);
+            addModelTreeEntities(*task, args.targetDocument);
+            dispatchMessages(*task, messenger);
+            // Mark the task as "processed" even if reading failed
+            task->transferred = true;
+            --taskDataCount;
+        }
+        else {
+            task = findTask([&](const ImportTaskData& taskData) { return !taskData.transferred; });
+            if (task)
+                childTaskManager.waitForDone(task->taskId, 25);
+        }
+    } // endwhile
+
+    // Abort all children tasks if required
+    if (rootProgress->isAbortRequested()) {
+        childTaskManager.foreachTask([&](TaskId id) { childTaskManager.requestAbort(id); } );
+        childTaskManager.foreachTask([&](TaskId id) { childTaskManager.waitForDone(id); } );
+    }
+}
+
 } // namespace
 
 System::System()
@@ -404,41 +467,14 @@ bool System::importInDocument(const ArgsImport& args) const
         return success(taskData);
     }
     else {
-        // Many files case
+        // Multiple files case
         std::vector<ImportTaskData> vecTaskData;
         vecTaskData.resize(args.filepaths.size());
 
-        TaskManager childTaskManager;
-        childTaskManager.signalProgressChanged.connectSlot([&](TaskId, double) {
-            rootProgress->setValue(childTaskManager.globalProgress());
-        });
+        importMultiFiles(*this, args, vecTaskData);
 
-        // Read files
-        for (ImportTaskData& taskData : vecTaskData) {
-            taskData.filepath = args.filepaths[&taskData - &vecTaskData.front()];
-            taskData.taskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
-                taskData.progress = progressChild;
-                readFile(taskData, *this, args);
-            });
-        }
-
-        for (const ImportTaskData& taskData : vecTaskData)
-            childTaskManager.run(taskData.taskId, TaskAutoDestroy::Off);
-
-        // Transfer to target document
-        auto taskDataCount = static_cast<int>(vecTaskData.size());
-        while (taskDataCount > 0 && !rootProgress->isAbortRequested()) {
-            auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const ImportTaskData& taskData) {
-                return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 25);
-            });
-            if (it != vecTaskData.end()) {
-                transfer(*it, args);
-                postProcess(*it, args);
-                addModelTreeEntities(*it, args.targetDocument);
-                dispatchMessages(*it, messenger);
-                --taskDataCount;
-            }
-        } // endwhile
+        if (rootProgress->isAbortRequested())
+            return false;
 
         for (const ImportTaskData& taskData : vecTaskData) {
             if (!success(taskData))

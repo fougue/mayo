@@ -37,6 +37,7 @@ private slots:
     void System_importInDocument_catchVrmlReaderSendFail_test();
     void System_importInDocumentReaderException_test();
     void System_importInDocumentReaderException_test_data();
+    void System_importInDocumentMultipleFilesReadFailure_test();
     void System_exportItemsWriterException_test();
     void System_exportItemsWriterException_test_data();
     void System_probeFormatDirect_test();

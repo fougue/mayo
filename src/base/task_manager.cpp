@@ -6,7 +6,6 @@
 #include "task_manager.h"
 
 #include "cpp_utils.h"
-#include "math_utils.h"
 #include "task_progress.h"
 
 #include <atomic>
@@ -63,7 +62,7 @@ TaskManager::~TaskManager()
     }
 
     // Erase the task from its container before destruction, this will allow TaskProgress destructor
-    // to behave correctly(it calls TaskProgress::setValue())
+    // to behave correctly (it calls TaskProgress::setValue())
     for (auto it = d->mapEntity.begin(); it != d->mapEntity.end(); )
         it = d->mapEntity.erase(it);
 
@@ -168,14 +167,14 @@ double TaskManager::progress(TaskId id) const
 
 double TaskManager::globalProgress() const
 {
-    double taskAccumPct = 0.;
-    for (const auto& mapPair : d->mapEntity) {
-        const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
-        if (ptrEntity->taskProgress.value() > 0.)
-            taskAccumPct += ptrEntity->taskProgress.value();
-    }
+    if (d->mapEntity.empty())
+        return 0.;
 
-    return MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
+    double taskAccumPct = 0.;
+    for (const auto& [taskId, ptrEntity] : d->mapEntity)
+        taskAccumPct += ptrEntity->taskProgress.value();
+
+    return taskAccumPct / d->mapEntity.size();
 }
 
 const std::string& TaskManager::title(TaskId id) const

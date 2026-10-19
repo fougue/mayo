@@ -38,7 +38,7 @@ public:
     const TaskProgress* parent() const { return m_parent; }
     TaskProgress* parent() { return m_parent; }
 
-    bool isAbortRequested() const { return m_isAbortRequested; }
+    bool isAbortRequested() const;
     static bool isAbortRequested(const TaskProgress* progress);
 
     // Disable copy
