@@ -624,56 +624,71 @@ void GuiDocument::onGraphicsSelectionChanged()
         appSelectionModel->remove(vecRemoved);
 }
 
+void GuiDocument::mapLeafTreeNode(
+        TreeNodeId leafNodeId, GraphicsObjectPtr gfxProduct, GraphicsEntity* gfxEntity
+    )
+{
+    if (!gfxEntity)
+        return;
+
+    const Tree<TDF_Label>& docModelTree = m_document->modelTree();
+
+    if (!docModelTree.nodeIsRoot(leafNodeId)) {
+        const auto parentNodeId = docModelTree.nodeParent(leafNodeId);
+        const auto parentNodeLabel = docModelTree.nodeData(parentNodeId);
+        if (XCaf::isShapeReference(parentNodeLabel) && m_document->xcaf().hasShapeColor(parentNodeLabel)) {
+            // Parent node is a reference and it redefines color attribute, so the graphics can't be
+            // shared with the product
+            auto gfxObject = m_guiApp->createGraphicsObject(parentNodeLabel);
+            if (!gfxObject)
+                return;
+
+            const auto grandParentNodeId = docModelTree.nodeParent(parentNodeId);
+            const auto locGrandParentShape = XCaf::shapeAbsoluteLocation(docModelTree, grandParentNodeId);
+            gfxObject->SetLocalTransformation(locGrandParentShape);
+            gfxEntity->vecObject.emplace_back(gfxObject);
+        }
+        else {
+            auto gfxInstance = makeOccHandle<AIS_ConnectedInteractive>();
+            gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, leafNodeId));
+            gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
+            gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
+            gfxInstance->SetOwner(gfxProduct->GetOwner());
+            gfxEntity->vecObject.emplace_back(gfxInstance);
+        }
+
+        if (XCaf::isShapeReference(parentNodeLabel))
+            leafNodeId = docModelTree.nodeParent(leafNodeId);
+    }
+    else {
+        gfxEntity->vecObject.emplace_back(gfxProduct);
+    }
+
+    const GraphicsEntity::Object& lastGfxObject = gfxEntity->vecObject.back();
+    gfxEntity->mapTreeNodeGfxObject.insert({ leafNodeId, lastGfxObject.ptr });
+    gfxEntity->mapGfxObjectTreeNode.insert({ lastGfxObject.ptr, leafNodeId });
+}
+
 void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
 {
     const Tree<TDF_Label>& docModelTree = m_document->modelTree();
+
     GraphicsEntity gfxEntity;
     gfxEntity.treeNodeId = entityTreeNodeId;
-    std::unordered_map<TDF_Label, GraphicsObjectPtr> mapLabelGfxProduct;
 
+    std::unordered_map<TDF_Label, GraphicsObjectPtr> mapLabelGfxProduct;
     traverseTree(entityTreeNodeId, docModelTree, [&](TreeNodeId id) {
-        const TDF_Label nodeLabel = docModelTree.nodeData(id);
         if (docModelTree.nodeIsLeaf(id)) {
+            const TDF_Label nodeLabel = docModelTree.nodeData(id);
             GraphicsObjectPtr gfxProduct = CppUtils::findValue(nodeLabel, mapLabelGfxProduct);
             if (!gfxProduct) {
                 gfxProduct = m_guiApp->createGraphicsObject(nodeLabel);
-                if (!gfxProduct)
-                    return;
-
-                mapLabelGfxProduct.insert({ nodeLabel, gfxProduct });
+                if (gfxProduct)
+                    mapLabelGfxProduct.insert({ nodeLabel, gfxProduct });
             }
 
-            if (!docModelTree.nodeIsRoot(id)) {
-                const TreeNodeId parentNodeId = docModelTree.nodeParent(id);
-                const TDF_Label parentNodeLabel = docModelTree.nodeData(parentNodeId);
-                if (XCaf::isShapeReference(parentNodeLabel) && m_document->xcaf().hasShapeColor(parentNodeLabel)) {
-                    // Parent node is a reference and it redefines color attribute, so the graphics
-                    // can't be shared with the product
-                    auto gfxObject = m_guiApp->createGraphicsObject(parentNodeLabel);
-                    const TreeNodeId grandParentNodeId = docModelTree.nodeParent(parentNodeId);
-                    const TopLoc_Location locGrandParentShape = XCaf::shapeAbsoluteLocation(docModelTree, grandParentNodeId);
-                    gfxObject->SetLocalTransformation(locGrandParentShape);
-                    gfxEntity.vecObject.emplace_back(gfxObject);
-                }
-                else {
-                    auto gfxInstance = makeOccHandle<AIS_ConnectedInteractive>();
-                    gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
-                    gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
-                    gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
-                    gfxInstance->SetOwner(gfxProduct->GetOwner());
-                    gfxEntity.vecObject.emplace_back(gfxInstance);
-                }
-
-                if (XCaf::isShapeReference(parentNodeLabel))
-                    id = docModelTree.nodeParent(id);
-            }
-            else {
-                gfxEntity.vecObject.emplace_back(gfxProduct);
-            }
-
-            const GraphicsEntity::Object& lastGfxObject = gfxEntity.vecObject.back();
-            gfxEntity.mapTreeNodeGfxObject.insert({ id, lastGfxObject.ptr });
-            gfxEntity.mapGfxObjectTreeNode.insert({ lastGfxObject.ptr, id });
+            if (gfxProduct)
+                this->mapLeafTreeNode(id, gfxProduct, &gfxEntity);
         }
     });
 

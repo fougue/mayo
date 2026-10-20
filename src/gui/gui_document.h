@@ -159,6 +159,7 @@ private:
     void onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId);
     void onGraphicsSelectionChanged();
 
+    // Maps an entity tree and its leaf nodes to graphics objects
     void mapEntity(TreeNodeId entityTreeNodeId);
     void unmapEntity(TreeNodeId entityTreeNodeId);
 
@@ -176,6 +177,9 @@ private:
         std::unordered_map<GraphicsObjectPtr, TreeNodeId> mapGfxObjectTreeNode;
         Bnd_Box bndBox;
     };
+
+    // Maps a leaf node to a graphics object, creating an instance when needed
+    void mapLeafTreeNode(TreeNodeId leafNodeId, GraphicsObjectPtr gfxProduct, GraphicsEntity* gfxEntity);
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
