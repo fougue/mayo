@@ -996,8 +996,28 @@ bool DxfParser::parseInsert()
 
 bool DxfParser::parseDimension()
 {
-    // TODO Implement...
-    return true;
+    // A DIMENSION entity references an anonymous block(eg "*D3") containing the dimension
+    // graphics(measurement lines, arrow heads and text). Such a block is defined in world
+    // coordinates with a null base point, so the dimension is handled as an INSERT of that block
+    // placed at the world origin.
+    // NOTE: code 10/20/30 is the dimension definition point, NOT an insertion point, so it must
+    // not be mapped to Dxf_INSERT::insertPoint
+    Dxf_INSERT insert;
+    insert.isDimension = true;
+    auto fnEntityHandler = [&]{
+        this->addEntity(std::move(insert), m_inserts);
+    };
+    auto fnCodeHandler = [&](int n) {
+        switch (n) {
+        case 2:
+            insert.blockName = m_strCache.add(m_str);
+            break;
+        default:
+            this->handleCommonGroupCode(&insert, n);
+            break;
+        }
+    };
+    return this->parseEntity(fnEntityHandler, fnCodeHandler, "Dimension");
 }
 
 bool DxfParser::parseBlock()

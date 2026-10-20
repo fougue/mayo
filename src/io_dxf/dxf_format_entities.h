@@ -295,6 +295,9 @@ struct Dxf_INSERT : public Dxf_BaseEntity {
     double rowSpacing = 0.;
     // Code 210, 220, 230
     DxfCoords extrusionDirection = { 0., 0., 1. };
+    // True when the INSERT comes from a DIMENSION entity(the inserted block is the anonymous
+    // block containing the dimension graphics: measurement lines, arrow heads and text)
+    bool isDimension = false;
 };
 
 struct Dxf_QuadBase {
