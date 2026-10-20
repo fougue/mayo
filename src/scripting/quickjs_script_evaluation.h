@@ -11,6 +11,9 @@
 
 #include "../base/task_manager.h"
 
+#include <any>
+#include <functional>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -40,20 +43,29 @@ public:
 
     Signal<IScriptEngine::Message>& signalMessage() const;
 
+    using ScriptTaskJob = std::function<std::any(TaskProgress*)>;
+    using TaskResultConverter = std::function<QuickJsValue(JSContext*, const std::any&)>;
+
     // Starts an asynchronous task and returns a JS Promise that is settled when the task completes
-    QuickJsValue startTask(TaskJob job);
+    QuickJsValue startTask(ScriptTaskJob job, TaskResultConverter resultConv = {});
 
 private:
     friend class QuickJsScriptEngine;
     friend class QuickJsTask;
 
     struct TaskEntry {
-        explicit TaskEntry(JSContext* context) : promise(context) {}
+        TaskEntry(JSContext* context, TaskResultConverter converter)
+            : promise(context),
+              resultConverter(std::move(converter))
+        {}
+
         QuickJsPromise promise;
+        TaskResultConverter resultConverter;
+        std::any result;
         std::vector<QuickJsValue> progressCallbacks;
     };
 
-    using PendingTasks = std::unordered_map<TaskId, TaskEntry>;
+    using PendingTasks = std::unordered_map<TaskId, std::unique_ptr<TaskEntry>>;
 
     // Constructible by QuickJsScriptEngine only
     QuickJsScriptEvaluation();
@@ -64,6 +76,8 @@ private:
     void completeTask(TaskId taskId, TaskEndReason reason);
 
     void notifyTaskProgress(TaskId taskId, double value);
+
+    QuickJsValue getTaskJsResult(const TaskEntry& taskEntry) const;
 
     QuickJsScriptEngine* m_engine{nullptr};
     JSContext* m_context{nullptr};

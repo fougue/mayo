@@ -14,6 +14,30 @@
 
 namespace Mayo {
 
+namespace {
+
+QuickJsValue toQuickJsValue(JSContext* context, const std::any& value)
+{
+    if (!value.has_value())
+        return { context, JS_UNDEFINED };
+
+    if (const auto* boolValue = std::any_cast<bool>(&value))
+        return QuickJsValue::newBool(context, *boolValue);
+
+    if (const auto* intValue = std::any_cast<int>(&value))
+        return QuickJsValue::newInt32(context, *intValue);
+
+    if (const auto* doubleValue = std::any_cast<double>(&value))
+        return QuickJsValue::newFloat64(context, *doubleValue);
+
+    if (const auto* stringValue = std::any_cast<std::string>(&value))
+        return QuickJsValue::newString(context, *stringValue);
+
+    return QuickJsContext::throwInternalError(context, "Unsupported std::any type");
+}
+
+} // namespace
+
 QuickJsScriptEvaluation::QuickJsScriptEvaluation()
 {
 }
@@ -21,7 +45,7 @@ QuickJsScriptEvaluation::QuickJsScriptEvaluation()
 QuickJsScriptEvaluation::TaskEntry* QuickJsScriptEvaluation::findTaskEntry(TaskId taskId)
 {
     auto it = m_pendingTasks.find(taskId);
-    return it != m_pendingTasks.end() ? &it->second : nullptr;
+    return it != m_pendingTasks.end() ? it->second.get() : nullptr;
 }
 
 QuickJsScriptEvaluation::~QuickJsScriptEvaluation()
@@ -57,11 +81,14 @@ Signal<IScriptEngine::Message>& QuickJsScriptEvaluation::signalMessage() const
     return m_engine->signalMessage;
 }
 
-QuickJsValue QuickJsScriptEvaluation::startTask(TaskJob job)
+QuickJsValue QuickJsScriptEvaluation::startTask(ScriptTaskJob job, TaskResultConverter resultConv)
 {
-    const auto taskId = m_taskMgr.newTask(std::move(job));
+    auto taskEntry = std::make_unique<TaskEntry>(m_context, std::move(resultConv));
+    TaskEntry* const taskEntryPtr = taskEntry.get();
 
-    TaskEntry taskEntry{m_context};
+    const TaskId taskId = m_taskMgr.newTask([=](TaskProgress* progress) {
+        taskEntryPtr->result = job(progress);
+    });
     m_pendingTasks.emplace(taskId, std::move(taskEntry));
 
     QuickJsValue task = QuickJsTask::create(*this, taskId);
@@ -76,6 +103,22 @@ QuickJsValue QuickJsScriptEvaluation::startTask(TaskJob job)
     return task;
 }
 
+QuickJsValue QuickJsScriptEvaluation::getTaskJsResult(const TaskEntry& taskEntry) const
+{
+    try {
+        return taskEntry.resultConverter
+            ? taskEntry.resultConverter(m_context, taskEntry.result)
+            : toQuickJsValue(m_context, taskEntry.result)
+        ;
+    }
+    catch (const std::exception& err) {
+        return QuickJsContext::throwInternalError(m_context, err.what());
+    }
+    catch (...) {
+        return QuickJsContext::throwInternalError(m_context, "Task result conversion failed");
+    }
+}
+
 void QuickJsScriptEvaluation::completeTask(TaskId taskId, TaskEndReason reason)
 {
     auto it = m_pendingTasks.find(taskId);
@@ -88,14 +131,19 @@ void QuickJsScriptEvaluation::completeTask(TaskId taskId, TaskEndReason reason)
     m_taskMgr.destroy(taskId);
 
     switch (reason) {
-    case TaskEndReason::Completed:
-        taskEntry.promise.resolve(JS_UNDEFINED);
+    case TaskEndReason::Completed: {
+        const QuickJsValue jsResult = this->getTaskJsResult(*taskEntry);
+        if (jsResult.isException())
+            taskEntry->promise.reject(QuickJsContext::takeException(m_context).get());
+        else
+            taskEntry->promise.resolve(jsResult.get());
+    }
         break;
     case TaskEndReason::Aborted:
-        taskEntry.promise.reject("Task aborted");
+        taskEntry->promise.reject("Task aborted");
         break;
     case TaskEndReason::Failed:
-        taskEntry.promise.reject("Task failed");
+        taskEntry->promise.reject("Task failed");
         break;
     }
 }

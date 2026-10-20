@@ -73,6 +73,7 @@ public:
     static QuickJsValue dup(JSContext* context, JSValueConst value);
     static QuickJsValue newError(JSContext* context, std::string_view message = {});
     static QuickJsValue newString(JSContext* context, std::string_view str);
+    static QuickJsValue newBool(JSContext* context, bool val);
     static QuickJsValue newInt32(JSContext* context, int32_t val);
     static QuickJsValue newFloat64(JSContext* context, double val);
 

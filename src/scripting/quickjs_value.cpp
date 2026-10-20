@@ -175,6 +175,11 @@ QuickJsValue QuickJsValue::newString(JSContext* context, std::string_view str)
     return { context, JS_NewStringLen(context, str.data(), str.size()) };
 }
 
+QuickJsValue QuickJsValue::newBool(JSContext* context, bool val)
+{
+    return { context, JS_NewBool(context, val) };
+}
+
 QuickJsValue QuickJsValue::newInt32(JSContext* context, int32_t val)
 {
     return { context, JS_NewInt32(context, val) };
