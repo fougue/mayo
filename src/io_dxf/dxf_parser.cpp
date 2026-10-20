@@ -1114,6 +1114,12 @@ void DxfParser::getLine()
 
     m_str.erase(m_str.begin(), itNonSpace);
 
+    // Erase trailing whitespace characters: DXF files written on Windows use CRLF line endings
+    // and std::getline() keeps the '\r' character in the string, which would break the parsing
+    // (eg code/value string comparisons like m_str == "0" would always fail)
+    while (!m_str.empty() && std::isspace(static_cast<unsigned char>(m_str.back())))
+        m_str.pop_back();
+
     if (m_getLinePostCallback)
         m_getLinePostCallback(getLineSize);
 }
