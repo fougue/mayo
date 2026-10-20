@@ -87,7 +87,6 @@ gp_XYZ xyzFromString(std::string_view str)
 
     ++ptr;
     const double z = parseCoord();
-    skipWhitespaces();
     if (ptr != ptrEnd)
         throw std::runtime_error("Unexpected characters after third coordinate");
 
