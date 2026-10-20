@@ -106,7 +106,7 @@ bool GraphicsMeshDataSource::GetGeomType(const int, const bool IsElement, MeshVS
     return true;
 }
 
-bool GraphicsMeshDataSource::GetNodesByElement(const int ID, NCollection_Array1<int>& theNodeIDs, int& /*theNbNodes*/) const
+bool GraphicsMeshDataSource::GetNodesByElement(const int ID, NCollection_Array1<int>& theNodeIDs, int& theNbNodes) const
 {
     if (m_mesh.IsNull())
         return false;
@@ -116,6 +116,7 @@ bool GraphicsMeshDataSource::GetNodesByElement(const int ID, NCollection_Array1<
         theNodeIDs(aLow)     = m_elemNodes->Value(ID, 1);
         theNodeIDs(aLow + 1) = m_elemNodes->Value(ID, 2);
         theNodeIDs(aLow + 2) = m_elemNodes->Value(ID, 3);
+        theNbNodes = 3;
         return true;
     }
 
