@@ -23,6 +23,7 @@
 #include <Graphic3d_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
 
+#include <gsl/util>
 #include <cmath>
 
 namespace Mayo {
@@ -398,6 +399,8 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
 
 void GuiDocument::setExplodingFactor(double t)
 {
+    Expects(0. <= t && t <= 1.);
+
     m_explodingFactor = t;
     for (const GraphicsEntity& entity : m_vecGraphicsEntity)
         applyExplodingFactor(entity, t);
