@@ -7,6 +7,8 @@
 
 #include "../base/unit_system.h"
 
+#include <gsl/assert>
+
 namespace Mayo {
 
 void V3dViewCameraAnimation::setBackend(std::unique_ptr<IAnimationBackend> anim)
@@ -28,6 +30,8 @@ void V3dViewCameraAnimation::setView(const OccHandle<V3d_View>& view)
 
 void V3dViewCameraAnimation::setDuration(QuantityTime t)
 {
+    Expects(t > (0 * Quantity_Second));
+
     m_duration = t;
     if (m_backend)
         m_backend->setDuration(t);
