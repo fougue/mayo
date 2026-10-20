@@ -6,6 +6,7 @@
 #include "test_scripting.h"
 
 #include "../base/task_progress.h"
+#include "../scripting/quickjs_context.h"
 #include "../scripting/quickjs_script_engine.h"
 #include "../scripting/quickjs_script_evaluation.h"
 
@@ -22,8 +23,56 @@ JSValue jsDoSomething(JSContext* context, JSValueConst, int, JSValueConst*)
         return JS_ThrowInternalError(context, "QuickJsScriptEvaluation is not available");
 
     return evalState->startTask([](TaskProgress*) {
-        /* Task succeeds immediately */
+        return std::any{}; // Task succeeds immediately
     }).release();
+}
+
+template<typename Value>
+JSValue jsStartTaskWithResult(
+        JSContext* context, Value value, QuickJsScriptEvaluation::TaskResultConverter resultConverter = {}
+    )
+{
+    auto evalState = QuickJsScriptEngine::getEvaluationState(context);
+    if (!evalState)
+        return JS_ThrowInternalError(context, "QuickJsScriptEvaluation is not available");
+
+    const std::any result{ std::move(value) };
+    return evalState->startTask(
+        [=](TaskProgress*) { return result; }, std::move(resultConverter)
+    ).release();
+}
+
+JSValue jsDoBoolResultTask(JSContext* context, JSValueConst, int, JSValueConst*)
+{
+    return jsStartTaskWithResult(context, true);
+}
+
+JSValue jsDoIntResultTask(JSContext* context, JSValueConst, int, JSValueConst*)
+{
+    return jsStartTaskWithResult(context, 42);
+}
+
+JSValue jsDoDoubleResultTask(JSContext* context, JSValueConst, int, JSValueConst*)
+{
+    return jsStartTaskWithResult(context, 3.5);
+}
+
+JSValue jsDoStringResultTask(JSContext* context, JSValueConst, int, JSValueConst*)
+{
+    return jsStartTaskWithResult(context, std::string{ "native-result" });
+}
+
+JSValue jsDoCustomResultTask(JSContext* context, JSValueConst, int, JSValueConst*)
+{
+    auto converter = [](JSContext* context, const std::any& result) {
+        const auto* value = std::any_cast<int>(&result);
+        if (!value)
+            return QuickJsContext::throwInternalError(context, "Expected an int task result");
+
+        const std::string str = "custom-" + std::to_string(*value);
+        return QuickJsValue::newString(context, str);
+    };
+    return jsStartTaskWithResult(context, 7, std::move(converter));
 }
 
 JSValue jsDoSomethingFailingTask(JSContext* context, JSValueConst, int, JSValueConst*)
@@ -34,6 +83,7 @@ JSValue jsDoSomethingFailingTask(JSContext* context, JSValueConst, int, JSValueC
 
     return evalState->startTask([](TaskProgress*) {
         throw std::runtime_error("Expected test failure");
+        return std::any{};
     }).release();
 }
 
@@ -46,6 +96,7 @@ JSValue jsDoProgressTask(JSContext* context, JSValueConst, int, JSValueConst*)
     return evalState->startTask([](TaskProgress* progress) {
         progress->setValue(10);
         progress->setValue(20);
+        return std::any{};
     }).release();
 }
 
@@ -63,6 +114,8 @@ JSValue jsWaitAbortMax5secTask(JSContext* context, JSValueConst, int, JSValueCon
 
         if (!progress->isAbortRequested())
             throw std::runtime_error("Task was not cancelled");
+
+        return std::any{};
     }).release();
 }
 
@@ -75,6 +128,26 @@ void installTestApi(JSContext* context, QuickJsScriptEvaluation& evaluation)
     test.setProperty(
         "doSomething",
         QuickJsValue::newFunction(context, jsDoSomething, "doSomething")
+    );
+    test.setProperty(
+        "doBoolResultTask",
+        QuickJsValue::newFunction(context, jsDoBoolResultTask, "doBoolResultTask")
+    );
+    test.setProperty(
+        "doIntResultTask",
+        QuickJsValue::newFunction(context, jsDoIntResultTask, "doIntResultTask")
+    );
+    test.setProperty(
+        "doDoubleResultTask",
+        QuickJsValue::newFunction(context, jsDoDoubleResultTask, "doDoubleResultTask")
+    );
+    test.setProperty(
+        "doStringResultTask",
+        QuickJsValue::newFunction(context, jsDoStringResultTask, "doStringResultTask")
+    );
+    test.setProperty(
+        "doCustomResultTask",
+        QuickJsValue::newFunction(context, jsDoCustomResultTask, "doCustomResultTask")
     );
     test.setProperty(
         "doSomethingFailingTask",
@@ -104,6 +177,32 @@ void TestScripting::QuickJsScriptEvaluation_startTaskResolvesPromise_test()
         await test.doSomething();
         completed = true;
         export default completed;
+    )");
+
+    QVERIFY(eval.result.success);
+    QVERIFY(eval.result.value.has_value());
+    QCOMPARE(std::any_cast<bool>(eval.result.value), true);
+}
+
+void TestScripting::QuickJsScriptEvaluation_startTaskReturnsResult_test()
+{
+    QuickJsScriptEngine engine;
+    engine.addPreEvaluateCallback(&installTestApi);
+
+    auto eval = evaluateScript(engine, R"(
+        const noResult = await test.doSomething();
+        const boolResult = await test.doBoolResultTask();
+        const intResult = await test.doIntResultTask();
+        const doubleResult = await test.doDoubleResultTask();
+        const stringResult = await test.doStringResultTask();
+        const customResult = await test.doCustomResultTask();
+
+        export default noResult === undefined
+            && boolResult === true
+            && intResult === 42
+            && doubleResult === 3.5
+            && stringResult === "native-result"
+            && customResult === "custom-7";
     )");
 
     QVERIFY(eval.result.success);
@@ -276,16 +375,14 @@ void TestScripting::QuickJsScriptEvaluation_taskCancelAfterCompletion_test()
     auto eval = evaluateScript(engine, R"(
         const task = test.doSomething();
         const result = await task;
-
-        // Task finished, calling cancel() must not alter result
         task.cancel();
 
-        export default result;
+        export default result === undefined;
     )");
 
     QVERIFY(eval.result.success);
     QVERIFY(eval.result.value.has_value());
-    QVERIFY(std::any_cast<bool>(eval.result.value));
+    QCOMPARE(std::any_cast<bool>(eval.result.value), true);
 }
 
 } // namespace Mayo

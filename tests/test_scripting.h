@@ -57,6 +57,7 @@ private slots:
     void QuickJsPromise_duplicatedPromiseReference_test();
 
     void QuickJsScriptEvaluation_startTaskResolvesPromise_test();
+    void QuickJsScriptEvaluation_startTaskReturnsResult_test();
     void QuickJsScriptEvaluation_failingTaskReportsError_test();
     void QuickJsScriptEvaluation_startTaskSupportsMultiplePendingTasks_test();
     void QuickJsScriptEvaluation_startTaskRejectsPromiseOnTaskFailure_test();

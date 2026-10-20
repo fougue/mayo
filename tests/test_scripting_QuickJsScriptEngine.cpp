@@ -72,9 +72,10 @@ void runCooperativeTask(ShutdownTestState& state, TaskProgress* progress)
 void startCooperativeTasks(QuickJsScriptEvaluation& evaluation, ShutdownTestState& state, int count)
 {
     for (int i = 0; i < count; ++i) {
-        auto task = evaluation.startTask(
-            [&state](TaskProgress* progress) { runCooperativeTask(state, progress); }
-        );
+        auto task = evaluation.startTask([&state](TaskProgress* progress) {
+            runCooperativeTask(state, progress);
+            return std::any{};
+        });
         if (task.isException()) {
             auto exception = QuickJsContext::takeException(evaluation.context());
             QFAIL(exception.toStdString().value_or(std::string{}).c_str());
@@ -572,6 +573,8 @@ void TestScripting::QuickJsScriptEngine_shutdownWhileTaskIsFinishing_test()
                     ++state.abortsObserved;
                 }
                 state.condition.notify_all();
+
+                return std::any{};
             });
         }
     );
