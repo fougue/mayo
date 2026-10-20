@@ -34,13 +34,6 @@ namespace Mayo {
 
 namespace {
 
-// NOTE: the native file dialog is disabled for these calls. The native(GTK) dialog depends on
-//       the xdg-desktop-portal service and fails to render its content when this service isn't
-//       reachable(eg when the application runs inside a container or a forwarded X11 session),
-//       showing an empty/transparent dialog. The Qt dialog is also what the application theme
-//       styles(see Theme::QFileDialog stylesheet entry)
-constexpr QFileDialog::Options kFileDialogOptions = QFileDialog::DontUseNativeDialog;
-
 QString fileFilter(IO::Format format)
 {
     if (format == IO::Format_Unknown)
@@ -113,7 +106,7 @@ struct OpenFileNames {
         if (option == OpenFileNames::GetOption::One) {
             const QString strFilepath =
                 QFileDialog::getOpenFileName(
-                    parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter, kFileDialogOptions
+                    parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
                 );
             result.listFilepath.clear();
             result.listFilepath.push_back(filepathFrom(strFilepath));
@@ -121,7 +114,7 @@ struct OpenFileNames {
         else {
             const QStringList listStrFilePath =
                 QFileDialog::getOpenFileNames(
-                    parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter, kFileDialogOptions
+                    parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
                 );
             result.listFilepath.clear();
             for (const QString& strFilePath : listStrFilePath)
@@ -447,8 +440,7 @@ void CommandExportSelectedApplicationItems::execute()
             Command::tr("Select Output File"),
             filepathTo<QString>(lastSettings.openDir),
             listWriterFileFilter.join(QLatin1String(";;")),
-            &lastSettings.selectedFilter,
-            kFileDialogOptions
+            &lastSettings.selectedFilter
         );
     if (strFilepath.isEmpty())
         return;
