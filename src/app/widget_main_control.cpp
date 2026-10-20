@@ -233,6 +233,7 @@ bool WidgetMainControl::eventFilter(QObject* watched, QEvent* event)
     if (watched == this->widgetLeftSideBar()) {
         if (eventType == QEvent::Show) {
             m_widgetLeftSideBarIsVisble = true;
+            this->flushPendingFileSystemLocation();
         }
         else if (eventType == QEvent::Hide && AppModule::get()->application()->documentCount() > 0) {
             // When all documents are closed the Documents page gets hidden which isn't something
@@ -403,6 +404,7 @@ void WidgetMainControl::onApplicationItemSelectionChanged()
 void WidgetMainControl::onLeftContentsPageChanged(int pageId)
 {
     m_ui->stack_LeftContents->setCurrentIndex(pageId);
+    this->flushPendingFileSystemLocation();
     QWidget* placeHolder = this->recreateLeftHeaderPlaceHolder();
     if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ModelTree && placeHolder) {
         const int btnSideLen = m_ui->combo_LeftContents->frameGeometry().height();
@@ -523,6 +525,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
     auto widgetCtrl = widget->controller();
     widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
     widgetCtrl->setNavigationStyle(appProps->navigationStyle);
+    gfxScene->setSelectionPixelTolerance(appProps->selectionPixelTolerance.value());
     if (appProps->defaultShowOriginTrihedron) {
         guiDoc->toggleOriginTrihedronVisibility();
         gfxScene->redraw();
@@ -536,6 +539,8 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
                 widgetCtrl->setNavigationStyle(appProps->navigationStyle);
             else if (setting == &appProps->viewCubeCorner)
                 guiDoc->setViewTrihedronCorner(appProps->graphicsViewCubeCornerValue());
+            else if (setting == &appProps->selectionPixelTolerance)
+                gfxScene->setSelectionPixelTolerance(appProps->selectionPixelTolerance.value());
         }
     );
     // NOTE
@@ -609,7 +614,7 @@ void WidgetMainControl::onCurrentDocumentIndexChanged(int idx)
 
     const DocumentPtr docPtr = m_guiApp->application()->findDocumentByIndex(idx);
     const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
-    m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(docFilePath));
+    this->updateFileSystemLocation(docFilePath);
 
     if (m_docFilesWatcher->isEnabled()) {
         auto itDoc = m_pendingDocsToReload.find(docPtr);
@@ -645,7 +650,30 @@ void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
 void WidgetMainControl::onDocumentFilePathChanged(const DocumentPtr& doc, const FilePath& fp)
 {
     if (this->currentWidgetGuiDocument()->documentIdentifier() == doc->identifier())
-        m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(fp));
+        this->updateFileSystemLocation(fp);
+}
+
+void WidgetMainControl::updateFileSystemLocation(const FilePath& filePath)
+{
+    // The File System browser performs blocking filesystem queries that may be slow(eg when the
+    // document is located on a network share). Do not refresh it while it is not displayed:
+    // remember the location and refresh it once it gets shown(see flushPendingFileSystemLocation())
+    if (m_ui->widget_FileSystem->isVisible()) {
+        m_ui->widget_FileSystem->setDocumentLocation(filePath);
+        m_hasPendingFileSystemLocation = false;
+    }
+    else {
+        m_pendingFileSystemLocation = filePath;
+        m_hasPendingFileSystemLocation = true;
+    }
+}
+
+void WidgetMainControl::flushPendingFileSystemLocation()
+{
+    if (m_hasPendingFileSystemLocation && m_ui->widget_FileSystem->isVisible()) {
+        m_ui->widget_FileSystem->setDocumentLocation(m_pendingFileSystemLocation);
+        m_hasPendingFileSystemLocation = false;
+    }
 }
 
 void WidgetMainControl::onSplitterMainMoved(int pos, int /*index*/)

@@ -73,6 +73,9 @@ protected:
     void zoom(const Position& prevPos, const Position& currPos);
     void zoomAt(const Position& currPos, double delta);
 
+    // Zooms the view by 'factor'(> 1 to zoom in, < 1 to zoom out) about the given anchor point
+    void zoomByFactor(const Position& anchor, double factor);
+
     void windowFitAll(const Position& posMin, const Position& posMax);
 
     void windowZoomRubberBand(const Position& currPos);

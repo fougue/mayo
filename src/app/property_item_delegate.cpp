@@ -108,8 +108,10 @@ QString propertyValueText(const PropertyString* prop) {
 }
 
 QString propertyValueText(const PropertyFilePath* prop) {
-    const FilePath filepath = filepathCanonical(prop->value());
-    return QDir::toNativeSeparators(filepathTo<QString>(filepath));
+    // NOTE: do not canonicalize the path here. This function is called on every repaint and
+    // std::filesystem::canonical() performs one filesystem query per path component, which is very
+    // slow on high-latency(eg network) locations
+    return QDir::toNativeSeparators(filepathTo<QString>(prop->value()));
 }
 
 QString propertyValueText(const PropertyOccColor* prop) {
