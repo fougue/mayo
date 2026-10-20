@@ -16,7 +16,10 @@
 #include <kdbindings/signal.h>
 #include <any>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <thread>
+#include <utility>
 
 namespace Mayo {
 
@@ -105,6 +108,31 @@ public:
         std::function<void(Args...)> bound = KDBindings::Private::bind_first(std::forward<FunctionSlot>(fnSlot), std::forward<FunctionSlotArgs>(args)...);
         return this->connectSlot(bound);
     }
+};
+
+// Holds a fixed number of signal connections and disconnects them when destroyed
+// Connections are added in order. Adding more than N connections throws std::length_error
+template<unsigned N = 9>
+class ScopedSignalConnections {
+public:
+    void add(SignalConnectionHandle hnd)
+    {
+        if (m_addedCount >= N)
+            throw std::length_error("ScopedSignalConnections is full(" + std::to_string(N) + " items)");
+
+        m_connections[m_addedCount] = std::move(hnd);
+        ++m_addedCount;
+    }
+
+    ScopedSignalConnections& operator<<(SignalConnectionHandle hnd)
+    {
+        this->add(std::move(hnd));
+        return *this;
+    }
+
+private:
+    ScopedSignalConnection m_connections[N];
+    unsigned m_addedCount = 0;
 };
 
 } // namespace Mayo
