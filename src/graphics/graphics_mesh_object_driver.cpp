@@ -152,8 +152,11 @@ public:
         // Init properties
         Mayo_PropertyChangedBlocker(this);
 
-        m_propertyColor.setValue(Quantity_Color(sumColor / float(spanObject.size())));
-        m_propertyEdgeColor.setValue(Quantity_Color(sumEdgeColor / float(spanObject.size())));
+        if (!spanObject.empty()) {
+            m_propertyColor.setValue(Quantity_Color(sumColor / float(spanObject.size())));
+            m_propertyEdgeColor.setValue(Quantity_Color(sumEdgeColor / float(spanObject.size())));
+        }
+
         m_propertyShowEdges.setValue(fnCheckState(countShowEdges));
         m_propertyShowNodes.setValue(fnCheckState(countShowNodes));
     }
