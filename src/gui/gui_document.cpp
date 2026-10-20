@@ -131,9 +131,9 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     for (TreeNodeId nodeId : doc->allEntityNodeIds())
         this->mapEntity(nodeId);
 
-    doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
-    doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
     m_gfxScene.signalSelectionChanged.connectSlot(&GuiDocument::onGraphicsSelectionChanged, this);
+    m_conns.add(doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this));
+    m_conns.add(doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this));
 }
 
 Bnd_Box GuiDocument::graphicsBoundingBox(GraphicsBoundingBoxFlags flags) const

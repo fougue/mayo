@@ -11,11 +11,15 @@
 #include "../src/base/mesh_utils.h"
 #include "../src/graphics/graphics_scene.h"
 #include "../src/graphics/graphics_shape_object_driver.h"
+#include "../src/gui/gui_application.h"
+#include "../src/gui/gui_document.h"
 
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRep_Tool.hxx>
 
 #include <QtTest/QtTest>
+
+#include <memory>
 
 namespace Mayo {
 
@@ -51,6 +55,37 @@ void TestGraphics::Regression_bugGitHub255_test()
         auto mesh = BRep_Tool::Triangulation(face, loc);
         QVERIFY(mesh.IsNull() || MeshUtils::triangles(mesh).IsEmpty());
     });
+}
+
+void TestGraphics::GuiApplication_destroyDisconnectsApplicationSignals_test()
+{
+    auto app = makeOccHandle<Application>();
+    auto guiApp = std::make_unique<GuiApplication>(app);
+    guiApp->setAutomaticDocumentMapping(false);
+    guiApp.reset();
+
+    // Emitting this signal after GuiApplication destruction must not call its stale slots
+    DocumentPtr doc = app->newDocument();
+    QVERIFY(!doc.IsNull());
+    app->closeDocument(doc);
+}
+
+void TestGraphics::GuiDocument_destroyDisconnectsDocumentSignals_test()
+{
+    auto app = makeOccHandle<Application>();
+    GuiApplication guiApp(app);
+    guiApp.setAutomaticDocumentMapping(false);
+    DocumentPtr doc = app->newDocument();
+
+    auto guiDoc = std::make_unique<GuiDocument>(doc, &guiApp);
+    guiDoc.reset();
+
+    // Adding an entity emits Document::signalEntityAdded; no slot may target the destroyed GuiDocument
+    const TDF_Label shapeLabel = doc->newEntityShapeLabel();
+    doc->xcaf().setShape(shapeLabel, BRepPrimAPI_MakeBox(10, 10, 10));
+    doc->addEntityTreeNode(shapeLabel);
+
+    app->closeDocument(doc);
 }
 
 } // namespace Mayo

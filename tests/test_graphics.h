@@ -13,6 +13,8 @@ class TestGraphics : public QObject {
     Q_OBJECT
 private slots:
     void Regression_bugGitHub255_test();
+    void GuiApplication_destroyDisconnectsApplicationSignals_test();
+    void GuiDocument_destroyDisconnectsDocumentSignals_test();
 };
 
 } // namespace Mayo

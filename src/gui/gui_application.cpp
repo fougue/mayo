@@ -41,9 +41,11 @@ struct GuiApplication::Private {
     ApplicationPtr m_app;
     std::vector<GuiDocument*> m_vecGuiDocument;
     std::vector<GraphicsObjectDriverPtr> m_vecGfxObjectDriver;
-    SignalConnectionHandle m_connApplicationItemSelectionChanged;
     ApplicationItemSelectionModel m_selectionModel;
     bool m_automaticDocumentMapping = true;
+
+    SignalConnectionHandle m_connApplicationItemSelectionChanged;
+    ScopedSignalConnections<> m_conns;
 };
 
 GuiApplication::GuiApplication(const ApplicationPtr& app)
@@ -52,8 +54,8 @@ GuiApplication::GuiApplication(const ApplicationPtr& app)
     d->m_backPtr = this;
     d->m_app = app;
 
-    app->signalDocumentAdded.connectSlot(&GuiApplication::onDocumentAdded, this);
-    app->signalDocumentClosed.connectSlot(&GuiApplication::onDocumentClosed, this);
+    d->m_conns.add(app->signalDocumentAdded.connectSlot(&GuiApplication::onDocumentAdded, this));
+    d->m_conns.add(app->signalDocumentClosed.connectSlot(&GuiApplication::onDocumentClosed, this));
     this->connectApplicationItemSelectionChanged(true);
 }
 

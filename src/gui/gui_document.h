@@ -207,6 +207,8 @@ private:
     std::unordered_map<TreeNodeId, CheckState> m_mapTreeNodeCheckState;
 
     double m_explodingFactor = 0.;
+
+    ScopedSignalConnections<> m_conns;
 };
 
 } // namespace Mayo
