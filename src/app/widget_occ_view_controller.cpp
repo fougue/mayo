@@ -5,11 +5,13 @@
 
 #include "widget_occ_view_controller.h"
 #include "widget_occ_view.h"
+#include "qtwidgets_utils.h"
 #include "qtgui_utils.h"
 #include "theme.h"
 
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QLineF>
+#include <QtCore/QTimer>
 #include <QtCore/QtGlobal>
 #include <QtGui/QCursor>
 #include <QtGui/QPainter>
@@ -113,6 +115,25 @@ WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
     m_inputSequence.setPrePushCallback([=](Input in) { m_actionMatcher->onInputPrePush(in); });
     m_inputSequence.setPreReleaseCallback([=](Input in) { m_actionMatcher->onInputPreRelease(in); });
     m_inputSequence.setClearCallback([=] { m_actionMatcher->onInputCleared(); });
+
+    if (QtWidgetsUtils::isTouchSessionActive()) {
+        // In touch sessions the keyboard is not grabbed on mouse hover, so the view widget must
+        // be able to receive focus to handle key events(space, shift, ...)
+        m_occView->widget()->setFocusPolicy(Qt::StrongFocus);
+    }
+
+    m_touchLongPressTimer = new QTimer(this);
+    m_touchLongPressTimer->setSingleShot(true);
+    m_touchLongPressTimer->setInterval(700);
+    QObject::connect(m_touchLongPressTimer, &QTimer::timeout, this, [=]{
+        if (m_touchGesture.isActive && !m_touchGesture.isTwoFinger && !m_touchGesture.hasMoved) {
+            // Freeze the gesture so that neither rotation nor tap-selection occurs after the
+            // long-press, the finger can be released safely
+            m_touchGesture.hasMoved = true;
+            const Position pos = toPosition(m_touchGesture.pressPos.toPoint());
+            emit this->touchLongPressRequested(pos.x, pos.y);
+        }
+    });
 }
 
 WidgetOccViewController::~WidgetOccViewController()
@@ -126,11 +147,17 @@ bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
 
     if (event->type() == QEvent::Enter) {
         m_inputSequence.clear();
-        m_occView->widget()->grabKeyboard();
+        // Grab keyboard on mouse hover to handle key events(space, shift, ...). But in touch
+        // sessions this is undesirable: hover doesn't exist for touch input and a keyboard grab
+        // interferes with the virtual keyboard. In that case key events are delivered to the view
+        // widget when it holds focus(focus is given to the widget on tap)
+        if (!QtWidgetsUtils::isTouchSessionActive())
+            m_occView->widget()->grabKeyboard();
         return false;
     }
     else if (event->type() == QEvent::Leave) {
-        m_occView->widget()->releaseKeyboard();
+        if (!QtWidgetsUtils::isTouchSessionActive())
+            m_occView->widget()->releaseKeyboard();
         return false;
     }
 
@@ -325,9 +352,10 @@ void WidgetOccViewController::handleMouseWheel(const QWheelEvent* event)
 void WidgetOccViewController::handleTouch(const QTouchEvent* event)
 {
     // Touch screen gestures:
-    //   * 2 fingers -> pinch to zoom(zoom anchored on the fingers centroid)
-    //   * 1 finger  -> rotation
-    //   * tap       -> selection(equivalent to a left mouse button click)
+    //   * 2 fingers    -> pinch to zoom + drag to pan(zoom anchored on the fingers centroid)
+    //   * 1 finger     -> rotation
+    //   * tap          -> highlight entity under the finger, second tap selects
+    //   * long-press   -> context menu(touchLongPressRequested signal)
     // Touch events are consumed by the event filter(see eventFilter()) so that Qt does not also
     // synthesize mouse events from the first touch point
     const std::vector<QPointF> vecPos = activeTouchPositions(event);
@@ -338,9 +366,13 @@ void WidgetOccViewController::handleTouch(const QTouchEvent* event)
         m_touchGesture.isActive = true;
         m_touchGesture.pressPos = vecPos.empty() ? QPointF() : vecPos.front();
         m_touchGesture.timer.start();
+        // Key events(space, shift, ...) are handled by the view widget when it holds focus
+        m_occView->widget()->setFocus(Qt::OtherFocusReason);
+        m_touchLongPressTimer->start();
     }
 
     if (eventType == QEvent::TouchEnd || eventType == QEvent::TouchCancel) {
+        m_touchLongPressTimer->stop();
         const bool isTap =
             eventType == QEvent::TouchEnd
             && m_touchGesture.isActive
@@ -349,7 +381,8 @@ void WidgetOccViewController::handleTouch(const QTouchEvent* event)
             && m_touchGesture.timer.elapsed() < QApplication::startDragTime()
         ;
         if (isTap) {
-            // Update the highlighted object before selecting it(like the mouse move + click path)
+            // Update the highlighted object(like the mouse move path) then select it(like the
+            // mouse click path)
             const Position pos = toPosition(m_touchGesture.pressPos.toPoint());
             this->signalMouseMoved.send(pos.x, pos.y);
             this->signalMouseButtonClicked.send(Aspect_VKeyMouse_LeftButton);
@@ -365,6 +398,7 @@ void WidgetOccViewController::handleTouch(const QTouchEvent* event)
         const double spread = QLineF(vecPos[0], vecPos[1]).length();
         if (!m_touchGesture.isTwoFinger) {
             // Transition from one to two fingers: cancel the ongoing single-finger action, if any
+            m_touchLongPressTimer->stop();
             if (this->hasCurrentDynamicAction())
                 this->stopDynamicAction();
 
@@ -391,6 +425,7 @@ void WidgetOccViewController::handleTouch(const QTouchEvent* event)
             const double dragDist = QLineF(m_touchGesture.pressPos, currPos).length();
             if (dragDist > QApplication::startDragDistance()) {
                 m_touchGesture.hasMoved = true;
+                m_touchLongPressTimer->stop();
                 this->rotation(toPosition(m_touchGesture.pressPos.toPoint()));
             }
         }

@@ -7,13 +7,69 @@
 #include "qtgui_utils.h"
 
 #include <QtGui/QGuiApplication>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#  include <QtGui/QInputDevice>
+#else
+#  include <QtGui/QTouchDevice>
+#endif
 #include <QtGui/QScreen>
 #include <QtGui/QWindow>
+#include <QtWidgets/QAbstractScrollArea>
+#include <QtWidgets/QAbstractItemView>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QScroller>
 #include <QtWidgets/QWidget>
 
 namespace Mayo {
+
+bool QtWidgetsUtils::isTouchSessionActive()
+{
+    static const bool isTouchSession = [] {
+        // Environment variable allows to force the touch mode on/off
+        const QString strEnvValue = qEnvironmentVariable("MAYO_TOUCH_MODE");
+        if (strEnvValue.compare(QLatin1String("1"), Qt::CaseInsensitive) == 0
+            || strEnvValue.compare(QLatin1String("on"), Qt::CaseInsensitive) == 0)
+        {
+            return true;
+        }
+        else if (strEnvValue.compare(QLatin1String("0"), Qt::CaseInsensitive) == 0
+                 || strEnvValue.compare(QLatin1String("off"), Qt::CaseInsensitive) == 0)
+        {
+            return false;
+        }
+
+        // Auto-detect: is there a touchscreen input device available?
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        for (const QInputDevice* inputDevice : QInputDevice::devices()) {
+            if (inputDevice->type() == QInputDevice::DeviceType::TouchScreen)
+                return true;
+        }
+#else
+        for (const QTouchDevice* touchDevice : QTouchDevice::devices()) {
+            if (touchDevice->type() == QTouchDevice::TouchScreen)
+                return true;
+        }
+#endif
+        return false;
+    }();
+    return isTouchSession;
+}
+
+void QtWidgetsUtils::enableTouchScrolling(QAbstractScrollArea* scrollArea)
+{
+    if (!scrollArea)
+        return;
+
+    if (auto itemView = qobject_cast<QAbstractItemView*>(scrollArea))
+        itemView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+    QWidget* viewport = scrollArea->viewport();
+    if (viewport) {
+        viewport->setAttribute(Qt::WA_AcceptTouchEvents);
+        QScroller::grabGesture(viewport, QScroller::TouchGesture);
+    }
+}
 
 QScreen* QtWidgetsUtils::screen(const QWidget* widget)
 {

@@ -12,6 +12,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
 #include <QtCore/QPointF>
+#include <QtCore/QTimer>
 #include <gsl/span>
 #include <functional>
 #include <memory>
@@ -61,6 +62,12 @@ private:
     void handleMouseWheel(const QWheelEvent* event);
     void handleTouch(const QTouchEvent* event);
 
+signals:
+    // Emitted when a touch press is held long enough without any move(2 fingers, ...) : a context
+    // menu should be displayed at position(x,y) in the view
+    void touchLongPressRequested(int xPos, int yPos);
+
+private:
     // -- Action matching
 
     // User input: key, mouse button, ...
@@ -142,6 +149,7 @@ private:
     InputSequence m_inputSequence;
     std::unique_ptr<ActionMatcher> m_actionMatcher;
     TouchGesture m_touchGesture;
+    QTimer* m_touchLongPressTimer = nullptr;
 };
 
 } // namespace Mayo

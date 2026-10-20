@@ -7,6 +7,7 @@
 
 #include "../base/filepath.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QFileIconProvider>
@@ -33,6 +34,7 @@ signals:
 
 private:
     void onTreeItemActivated(QTreeWidgetItem* item, int column);
+    void onTreeItemClicked(QTreeWidgetItem* item, int column);
     void onTreeItemEntered(QTreeWidgetItem* item, int column);
     void requestFolder(const QString& folderPath, const QString& fileNameToSelect);
     void populateFolder(quint64 generation, const QFileInfoList& listEntryFileInfo);
@@ -48,6 +50,13 @@ private:
     bool m_folderIsSet = false;
     QString m_currentFolderPath;
     QString m_fileToSelect;
+
+    // Tap/activation timing(see onTreeItemClicked/onTreeItemActivated)
+    QElapsedTimer m_clock;
+    QTreeWidgetItem* m_lastTapItem = nullptr;
+    qint64 m_lastTapTimeMs = -1;
+    QTreeWidgetItem* m_lastActivatedItem = nullptr;
+    qint64 m_lastActivatedTimeMs = -1000;
 };
 
 } // namespace Mayo

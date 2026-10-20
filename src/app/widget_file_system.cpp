@@ -5,6 +5,7 @@
 
 #include "widget_file_system.h"
 #include "qstring_utils.h"
+#include "qtwidgets_utils.h"
 
 #include "../qtcommon/filepath_conv.h"
 
@@ -15,6 +16,7 @@
 #include <QtCore/QPointer>
 #include <QtCore/QThreadPool>
 #include <QtCore/QVariant>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QScroller>
 #include <QtWidgets/QTreeWidget>
@@ -55,11 +57,13 @@ WidgetFileSystem::WidgetFileSystem(QWidget* parent)
         m_treeWidget, &QTreeWidget::itemActivated,
         this, &WidgetFileSystem::onTreeItemActivated
     );
-    // Single tap/click also triggers navigation or file opening: on touch screens itemActivated()
-    // requires a double tap which is not discoverable
+    // Touch sessions: a single tap must only highlight/select the entry, opening a file requires
+    // an explicit double-tap(see onTreeItemClicked). Otherwise casual taps while flick-scrolling
+    // would open files
+    m_clock.start();
     QObject::connect(
         m_treeWidget, &QTreeWidget::itemClicked,
-        this, &WidgetFileSystem::onTreeItemActivated
+        this, &WidgetFileSystem::onTreeItemClicked
     );
     QObject::connect(
         m_treeWidget, &QTreeWidget::itemEntered,
@@ -94,6 +98,20 @@ void WidgetFileSystem::setDocumentLocation(const FilePath& filePath)
 void WidgetFileSystem::onTreeItemActivated(QTreeWidgetItem* item, int column)
 {
     if (item != nullptr && column == 0) {
+        // Guard against duplicate activation of the same entry within a short time frame: a touch
+        // double-tap may both synthesize a native double-click activation(and thus this function
+        // being called) and trigger the manual double-tap detection(see onTreeItemClicked)
+        const qint64 nowMs = m_clock.elapsed();
+        const bool isDuplicateActivation =
+            item == m_lastActivatedItem
+            && m_lastActivatedTimeMs >= 0
+            && (nowMs - m_lastActivatedTimeMs) <= QApplication::doubleClickInterval()
+        ;
+        m_lastActivatedItem = item;
+        m_lastActivatedTimeMs = nowMs;
+        if (isDuplicateActivation)
+            return;
+
         if (item->text(0) == QLatin1String("..")) {
             QDir dir = Internal::absolutePath(m_location);
             dir.cdUp();
@@ -112,6 +130,28 @@ void WidgetFileSystem::onTreeItemActivated(QTreeWidgetItem* item, int column)
             }
         }
     }
+}
+
+void WidgetFileSystem::onTreeItemClicked(QTreeWidgetItem* item, int column)
+{
+    if (!item || column != 0)
+        return;
+
+    // Desktop sessions: single click only highlights/selects the item, itemActivated() handles
+    // activation on double-click/Enter key
+    if (!QtWidgetsUtils::isTouchSessionActive())
+        return;
+
+    const qint64 nowMs = m_clock.elapsed();
+    const bool isDoubleTap =
+        item == m_lastTapItem
+        && m_lastTapTimeMs >= 0
+        && (nowMs - m_lastTapTimeMs) <= QApplication::doubleClickInterval()
+    ;
+    m_lastTapItem = item;
+    m_lastTapTimeMs = nowMs;
+    if (isDoubleTap)
+        this->onTreeItemActivated(item, column);
 }
 
 void WidgetFileSystem::onTreeItemEntered(QTreeWidgetItem* item, int column)

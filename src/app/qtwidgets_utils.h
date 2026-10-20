@@ -7,9 +7,11 @@
 
 #include <QtGui/QCursor>
 #include <QtWidgets/QMessageBox>
+class QAbstractScrollArea;
 class QLocale;
 class QMenu;
 class QScreen;
+class QSize;
 class QWidget;
 
 namespace Mayo {
@@ -21,6 +23,17 @@ public:
     static int screenPixelWidth(double screenRatio, const QWidget* parentWidget = nullptr);
     static int screenPixelHeight(double screenRatio, const QWidget* parentWidget = nullptr);
     static QSize screenPixelSize(double widthRatio, double heightRatio, const QWidget* parentWidget = nullptr);
+
+    // Returns true when the application session involves touch input(either a touchscreen device
+    // is available or environment variable MAYO_TOUCH_MODE is set to "1"/"on")
+    // Several parts of the UI are adapted for touch when this function returns true(eg size of
+    // interaction targets, hover-independent display, ...) because touch input has no equivalent
+    // of mouse hover
+    static bool isTouchSessionActive();
+
+    // Configures 'scrollArea' so its contents can be scrolled with a finger on touch screens
+    // (flick/kinetic scrolling based on QScroller)
+    static void enableTouchScrolling(QAbstractScrollArea* scrollArea);
 
     // Add 'contentsWidget' to 'containerWidget'
     // If 'containerWidget' is empty then a QBoxLayout is created to receive 'contentsWidget'
