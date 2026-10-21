@@ -94,7 +94,7 @@ JSValue QuickJsTask::onProgress(JSContext* context, JSValueConst thisValue, int 
     if (!funcValue.isFunction())
         return JS_ThrowTypeError(context, "Expected a callback function");
 
-    taskEntry->progressCallbacks.push_back(std::move(funcValue));
+    taskEntry->progressEventCallbacks.push_back(std::move(funcValue));
     return JS_DupValue(context, thisValue);
 }
 

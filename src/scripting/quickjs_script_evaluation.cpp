@@ -66,6 +66,7 @@ QuickJsScriptEvaluation::~QuickJsScriptEvaluation()
     // No worker can emit signalEnded after this point
     m_connTaskEnded.disconnect();
     m_connTaskProgressChanged.disconnect();
+    m_connTaskProgressStep.disconnect();
 
     // No further completion jobs can be posted by these workers
     m_engine->discardJobs();
@@ -81,13 +82,13 @@ Signal<IScriptEngine::Message>& QuickJsScriptEvaluation::signalMessage() const
     return m_engine->signalMessage;
 }
 
-QuickJsValue QuickJsScriptEvaluation::startTask(ScriptTaskJob job, TaskResultConverter resultConv)
+QuickJsValue QuickJsScriptEvaluation::startTask(TaskFunction fn, TaskResultConverter resultConv)
 {
     auto taskEntry = std::make_unique<TaskEntry>(m_context, std::move(resultConv));
     TaskEntry* const taskEntryPtr = taskEntry.get();
 
     const TaskId taskId = m_taskMgr.newTask([=](TaskProgress* progress) {
-        taskEntryPtr->result = job(progress);
+        taskEntryPtr->result = fn(progress);
     });
     m_pendingTasks.emplace(taskId, std::move(taskEntry));
 
@@ -148,38 +149,50 @@ void QuickJsScriptEvaluation::completeTask(TaskId taskId, TaskEndReason reason)
     }
 }
 
-void QuickJsScriptEvaluation::notifyTaskProgress(TaskId taskId, double value)
+void QuickJsScriptEvaluation::notifyTaskProgressEvent(TaskId taskId, double value)
 {
     auto taskEntry = this->findTaskEntry(taskId);
-    if (!taskEntry)
+    if (!taskEntry || taskEntry->progressEventCallbacks.empty())
         return;
 
-    // Keep a snapshot of the callbacks because a JavaScript callback may register additional
-    // callbacks while the notification is being processed
     std::vector<QuickJsValue> callbacks;
-    callbacks.reserve(taskEntry->progressCallbacks.size());
-    for (const QuickJsValue& callback : taskEntry->progressCallbacks)
+    callbacks.reserve(taskEntry->progressEventCallbacks.size());
+    for (const QuickJsValue& callback : taskEntry->progressEventCallbacks)
         callbacks.push_back(callback.dup());
 
-    auto progressValue = QuickJsValue::newFloat64(m_context, value);
-    if (progressValue.isException())
+    auto progress = QuickJsValue::newObject(m_context);
+    if (progress.isException()) {
+        QuickJsContext::takeException(m_context);
         return;
+    }
+
+    const std::string& message = taskEntry->progressMessage;
+    if (!(progress.setProperty("value", QuickJsValue::newFloat64(m_context, value))
+          && progress.setProperty("message", QuickJsValue::newString(m_context, message))
+        ))
+    {
+        QuickJsContext::takeException(m_context);
+        return;
+    }
 
     for (const QuickJsValue& callback : callbacks) {
-        // Invoke each callback with the progress value as its only argument
-        QuickJsValue result = callback.call(JS_UNDEFINED, { progressValue.get() });
-
-        // Release the returned value, or consume the pending exception
+        QuickJsValue result = callback.call(JS_UNDEFINED, { progress.get() });
         if (result.isException()) {
             QuickJsValue exception = QuickJsContext::takeException(m_context);
             IScriptEngine::Message errMsg;
             errMsg.type = MessageType::Error;
             errMsg.text = exception.getProperty("message").toStdString().value_or(std::string{});
-            // TODO Assign IScriptEngine::Message::contextFile by parsing stacktrace
-            // Use exception.getProperty("stack")
             this->signalMessage().send(errMsg);
-            continue; // Continue notifying the remaining callbacks
         }
+    }
+}
+
+void QuickJsScriptEvaluation::updateTaskProgressMessage(TaskId taskId, std::string message)
+{
+    auto taskEntry = this->findTaskEntry(taskId);
+    if (taskEntry) {
+        taskEntry->progressMessage = std::move(message);
+        this->notifyTaskProgressEvent(taskId, m_taskMgr.progress(taskId));
     }
 }
 

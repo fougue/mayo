@@ -302,9 +302,9 @@ void TestScripting::QuickJsScriptEvaluation_taskOnProgressRegisterDuringCallback
         let sequence = "";
 
         const task = test.doProgressTask();
-        task.onProgress(pct => {
-            sequence += `${pct},`;
-            task.onProgress(pct => { sequence += `${pct},`; });
+        task.onProgress(progress => {
+            sequence += `${progress.value},`;
+            task.onProgress(progress => { sequence += `${progress.value},`; });
         });
 
         await task;
@@ -353,7 +353,7 @@ void TestScripting::QuickJsScriptEvaluation_taskOnProgressCallbackThrows_test()
         const task = test.doProgressTask();
 
         task.onProgress(() => { throw new Error("progress callback failure"); });
-        task.onProgress(value => { values.push(value); });
+        task.onProgress(progress => { values.push(progress.value); });
 
         await task;
 

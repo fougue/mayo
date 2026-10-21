@@ -422,7 +422,12 @@ void QuickJsScriptEngine::initEvaluationState(EvaluationState& state, JSContext*
     );
     state.m_connTaskProgressChanged = state.m_taskMgr.signalProgressChanged.connect(
         [&](TaskId taskId, double value) {
-            this->postJob([&state, taskId, value] { state.notifyTaskProgress(taskId, value); });
+            this->postJob([&state, taskId, value] { state.notifyTaskProgressEvent(taskId, value); });
+        }
+    );
+    state.m_connTaskProgressStep = state.m_taskMgr.signalProgressStep.connect(
+        [&](TaskId taskId, const std::string& message) {
+            this->postJob([&state, taskId, message] { state.updateTaskProgressMessage(taskId, message); });
         }
     );
 }
