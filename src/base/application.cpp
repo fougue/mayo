@@ -55,9 +55,17 @@ private:
     ApplicationPtr m_app;
 };
 
+// Pimpl of Application class
 struct Application::Private {
+    // Sequence to generate unique integers
+    // Used to create an identifier for each Document object (unique in the scope of an Application)
+    // TODO Introduce a Sequence class with currentValue() and nextValue() member functions
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
+
+    // Mapping of identifier -> Document
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
+
+    // Storage for Application::autoExpandCompoundToAssembly()
     bool m_autoExpandCompoundToAssembly = true;
 };
 
