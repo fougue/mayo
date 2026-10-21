@@ -7,10 +7,14 @@
 
 #include "../base/global.h"
 
+#include <QtCore/QCoreApplication>
 #include <QtCore/QByteArray>
+#include <QtCore/QTimer>
+
 #include <gsl/span>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 // Provides a collection of tools for the QtCore module
@@ -62,5 +66,11 @@ Qt::CheckState toQtCheckState(Mayo::CheckState state);
 
 // Converts Qt::CheckState -> Mayo::CheckState
 Mayo::CheckState toCheckState(Qt::CheckState state);
+
+// Schedules 'fn' for deferred execution on the main thread
+template<typename Fn> void postOnMainThread(Fn&& fn)
+{
+    QTimer::singleShot(0, QCoreApplication::instance(), std::forward<Fn>(fn));
+}
 
 } // namespace Mayo::QtCoreUtils

@@ -32,7 +32,6 @@
 
 #include <QtDebug>
 #include <QtCore/QDir>
-#include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
 
