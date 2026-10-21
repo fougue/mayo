@@ -28,6 +28,44 @@ std::shared_ptr<Property> createPropertyPtr()
 
 } // namespace
 
+void TestBase::PropertyValueConversionVariant_ctor_test()
+{
+    using Variant = PropertyValueConversion::Variant;
+
+    QFETCH(Variant, variant);
+    QFETCH(bool, variantIsValid);
+    QFETCH(int, variantTypeIndex);
+
+    QCOMPARE(variant.isValid(), variantIsValid);
+    QCOMPARE(variant.index(), variantTypeIndex);
+}
+
+void TestBase::PropertyValueConversionVariant_ctor_test_data()
+{
+    using Variant = PropertyValueConversion::Variant;
+
+    QTest::addColumn<Variant>("variant");
+    QTest::addColumn<bool>("variantIsValid");
+    QTest::addColumn<int>("variantTypeIndex");
+
+    QTest::newRow("Variant{}") << Variant{} << false << 0;
+    QTest::newRow("Variant{bool}") << Variant{true} << true << 1;
+    QTest::newRow("Variant{short}") << Variant{static_cast<short>(777)} << true << 2;
+    QTest::newRow("Variant{int}") << Variant{777} << true << 2;
+    QTest::newRow("Variant{long}") << Variant{static_cast<long>(777)} << true << 2;
+    QTest::newRow("Variant{float}") << Variant{777.f} << true << 3;
+    QTest::newRow("Variant{double}") << Variant{777.} << true << 3;
+    QTest::newRow("Variant{string}") << Variant{std::string{"str"}} << true << 4;
+    {
+        std::string str{"test"};
+        QTest::newRow("Variant{moved-string}") << Variant{std::move(str)} << true << 4;
+    }
+    QTest::newRow("Variant{czstring}") << Variant{"test-str"} << true << 4;
+    QTest::newRow("Variant{null-czstring}") << Variant{static_cast<const char*>(nullptr)} << true << 4;
+    QTest::newRow("Variant{vector<uint8>}") << Variant{std::vector<uint8_t>{}} << true << 5;
+    QTest::newRow("Variant{span<uint8>}") << Variant{gsl::span<const uint8_t>{}} << true << 5;
+}
+
 void TestBase::PropertyValueConversionVariant_toInt_test()
 {
     using Variant = PropertyValueConversion::Variant;
@@ -60,7 +98,7 @@ void TestBase::PropertyValueConversionVariant_toInt_test_data()
     QTest::newRow("'non_int_str'") << Variant{"non_int_str"} << 0 << false;
 
     const uint8_t bytes[] = { 52, 55 }; // ascii: {'4', '7'}
-    QTest::newRow("bytes") << Variant{gsl::span<const uint8_t>(bytes)} << 47 << true;
+    QTest::newRow("bytes") << Variant{bytes} << 47 << true;
 }
 
 void TestBase::PropertyValueConversionVariant_toString_test()
@@ -87,7 +125,7 @@ void TestBase::PropertyValueConversionVariant_toString_test_data()
     QTest::newRow("'some string'") << Variant{"some string"} << std::string{"some string"};
 
     const uint8_t bytes[] = { 48, 65 }; // ascii: {'0', 'A'}
-    QTest::newRow("bytes") << Variant{gsl::span<const uint8_t>(bytes)} << std::string{"0A"};
+    QTest::newRow("bytes") << Variant{bytes} << std::string{"0A"};
 }
 
 void TestBase::PropertyValueConversionVariant_toDouble_test()

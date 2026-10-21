@@ -8,6 +8,7 @@
 #include "property.h"
 
 #include <gsl/span>
+#include <cstddef>
 #include <map>
 #include <string>
 #include <variant>
@@ -41,6 +42,7 @@ public:
 
         explicit Variant(const char* str);
         explicit Variant(gsl::span<const uint8_t> bytes);
+        explicit Variant(std::nullptr_t) = delete;
 
         bool isValid() const;
         bool toBool(bool* ok = nullptr) const;

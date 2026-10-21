@@ -228,7 +228,7 @@ bool propertyFromVariantQuantity(BasePropertyQuantity* prop, const PropertyValue
 } // namespace
 
 PropertyValueConversion::Variant::Variant(const char* str)
-    : BaseVariantType(std::string{str})
+    : BaseVariantType(std::string{str ? str : ""})
 {}
 
 PropertyValueConversion::Variant::Variant(gsl::span<const uint8_t> bytes)

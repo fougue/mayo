@@ -107,6 +107,8 @@ private slots:
     void MessageCollecter_messageCount_test();
 
     // PropertyValueConversion
+    void PropertyValueConversionVariant_ctor_test();
+    void PropertyValueConversionVariant_ctor_test_data();
     void PropertyValueConversionVariant_toInt_test();
     void PropertyValueConversionVariant_toInt_test_data();
     void PropertyValueConversionVariant_toString_test();
