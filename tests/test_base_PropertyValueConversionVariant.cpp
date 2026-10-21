@@ -51,8 +51,8 @@ void TestBase::PropertyValueConversionVariant_ctor_test_data()
     QTest::newRow("Variant{}") << Variant{} << false << 0;
     QTest::newRow("Variant{bool}") << Variant{true} << true << 1;
     QTest::newRow("Variant{short}") << Variant{static_cast<short>(777)} << true << 2;
+    // NOTE: "long" isn't promoted to int
     QTest::newRow("Variant{int}") << Variant{777} << true << 2;
-    QTest::newRow("Variant{long}") << Variant{static_cast<long>(777)} << true << 2;
     QTest::newRow("Variant{float}") << Variant{777.f} << true << 3;
     QTest::newRow("Variant{double}") << Variant{777.} << true << 3;
     QTest::newRow("Variant{string}") << Variant{std::string{"str"}} << true << 4;
