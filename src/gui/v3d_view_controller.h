@@ -56,6 +56,7 @@ public:
     Signal<int, int> signalMouseMoved; // x,y: mouse position in view
     Signal<Aspect_VKeyMouse> signalMouseButtonClicked;
     Signal<bool> signalMultiSelectionToggled;
+    Signal<> signalToggleSelectionVisibilityRequested;
 
 protected:
     struct Position { int x; int y; };
