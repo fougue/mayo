@@ -27,6 +27,13 @@ private slots:
     void BRepMinDistance_TwoBoxes_test();
     void BRepMinDistance_TwoConfusedFaces_test();
 
+    void BRepMinDistanceToCenter_CircleAndEdge_test();
+    void BRepMinDistanceToCenter_CircleAndTiltedEdge_test();
+    void BRepMinDistanceToCenter_PolygonEdge_test();
+    void BRepMinDistanceToCenter_NotEdgeError_test();
+
+    void MeasureDisplayDistance_Delta_test();
+
     void BRepAngle_TwoLinesIntersect_test();
     void BRepAngle_TwoLinesParallelError_test();
     void BRepAngle_QuasiLinearBSpline45degrees_test();

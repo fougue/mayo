@@ -8,8 +8,11 @@
 #include "../gui/v3d_view_controller.h"
 #include "view3d_navigation_style.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
+#include <QtCore/QPointF>
+#include <QtCore/QTimer>
 #include <gsl/span>
 #include <functional>
 #include <memory>
@@ -18,6 +21,7 @@ class QCursor;
 class QKeyEvent;
 class QMouseEvent;
 class QRubberBand;
+class QTouchEvent;
 class QWheelEvent;
 
 namespace Mayo {
@@ -56,7 +60,14 @@ private:
     void handleMouseMove(const QMouseEvent* event);
     void handleMouseButtonRelease(const QMouseEvent* event);
     void handleMouseWheel(const QWheelEvent* event);
+    void handleTouch(const QTouchEvent* event);
 
+signals:
+    // Emitted when a touch press is held long enough without any move(2 fingers, ...) : a context
+    // menu should be displayed at position(x,y) in the view
+    void touchLongPressRequested(int xPos, int yPos);
+
+private:
     // -- Action matching
 
     // User input: key, mouse button, ...
@@ -117,6 +128,19 @@ private:
     class Unigraphics_ActionMatcher;
     class ProEngineer_ActionMatcher;
 
+    // -- Touch screen input
+
+    // State of the ongoing touch gesture(2 fingers pinch to zoom, 1 finger rotation, tap selection)
+    struct TouchGesture {
+        bool isActive = false;
+        bool isTwoFinger = false;
+        bool hasMoved = false;
+        QPointF pressPos;
+        QPointF prevCentroid;
+        double prevSpread = 0.;
+        QElapsedTimer timer;
+    };
+
     // -- Attributes
 
     IWidgetOccView* m_occView = nullptr;
@@ -124,6 +148,8 @@ private:
     View3dNavigationStyle m_navigStyle = View3dNavigationStyle::Mayo;
     InputSequence m_inputSequence;
     std::unique_ptr<ActionMatcher> m_actionMatcher;
+    TouchGesture m_touchGesture;
+    QTimer* m_touchLongPressTimer = nullptr;
 };
 
 } // namespace Mayo

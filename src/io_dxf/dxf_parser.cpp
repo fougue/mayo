@@ -996,8 +996,28 @@ bool DxfParser::parseInsert()
 
 bool DxfParser::parseDimension()
 {
-    // TODO Implement...
-    return true;
+    // A DIMENSION entity references an anonymous block(eg "*D3") containing the dimension
+    // graphics(measurement lines, arrow heads and text). Such a block is defined in world
+    // coordinates with a null base point, so the dimension is handled as an INSERT of that block
+    // placed at the world origin.
+    // NOTE: code 10/20/30 is the dimension definition point, NOT an insertion point, so it must
+    // not be mapped to Dxf_INSERT::insertPoint
+    Dxf_INSERT insert;
+    insert.isDimension = true;
+    auto fnEntityHandler = [&]{
+        this->addEntity(std::move(insert), m_inserts);
+    };
+    auto fnCodeHandler = [&](int n) {
+        switch (n) {
+        case 2:
+            insert.blockName = m_strCache.add(m_str);
+            break;
+        default:
+            this->handleCommonGroupCode(&insert, n);
+            break;
+        }
+    };
+    return this->parseEntity(fnEntityHandler, fnCodeHandler, "Dimension");
 }
 
 bool DxfParser::parseBlock()
@@ -1113,6 +1133,12 @@ void DxfParser::getLine()
     }
 
     m_str.erase(m_str.begin(), itNonSpace);
+
+    // Erase trailing whitespace characters: DXF files written on Windows use CRLF line endings
+    // and std::getline() keeps the '\r' character in the string, which would break the parsing
+    // (eg code/value string comparisons like m_str == "0" would always fail)
+    while (!m_str.empty() && std::isspace(static_cast<unsigned char>(m_str.back())))
+        m_str.pop_back();
 
     if (m_getLinePostCallback)
         m_getLinePostCallback(getLineSize);

@@ -26,7 +26,13 @@ struct MeasureNone {};
 // Measure of a distance between two entities
 struct MeasureDistance {
     enum class Type {
-        None, Mininmum, CenterToCenter
+        None,
+        // Minimum distance between the two entities
+        Mininmum,
+        // Minimum distance between the center of the 1st entity and the closest point on the 2nd entity
+        MinDistanceToCenter,
+        // Distance between the centers of the two entities
+        CenterToCenter
     };
 
     // Point on 1st entity from which the distance is measured
@@ -106,6 +112,7 @@ public:
     virtual gp_Pnt vertexPosition(const GraphicsOwnerPtr& owner) const = 0;
     virtual MeasureCircle circle(const GraphicsOwnerPtr& owner) const = 0;
     virtual MeasureDistance minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
+    virtual MeasureDistance minDistanceToCenter(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual MeasureDistance centerDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual MeasureLength length(const GraphicsOwnerPtr& owner) const = 0;

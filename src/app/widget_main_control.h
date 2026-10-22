@@ -68,6 +68,10 @@ private:
     void onLeftContentsPageChanged(int pageId);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
 
+    // Update the File System browser location, deferring the refresh while it is not displayed
+    void updateFileSystemLocation(const FilePath& filePath);
+    void flushPendingFileSystemLocation();
+
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onGuiDocumentErased(const GuiDocument* guiDoc);
 
@@ -94,6 +98,10 @@ private:
 
     bool m_widgetLeftSideBarIsVisble = true;
     double m_widgetLeftSideBarWidthFactor = 0.25;
+
+    // Location the File System browser should display while it is not visible
+    FilePath m_pendingFileSystemLocation;
+    bool m_hasPendingFileSystemLocation = false;
 };
 
 } // namespace Mayo

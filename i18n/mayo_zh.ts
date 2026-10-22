@@ -2640,60 +2640,85 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::MeasureDisplayI18N</name>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="105"/>
+        <location filename="../src/measure/measure_display.cpp" line="108"/>
         <source>Sum</source>
         <translation>总和</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="114"/>
+        <location filename="../src/measure/measure_display.cpp" line="117"/>
         <source>(&lt;font color=&quot;#FF5500&quot;&gt;X&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;Y&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;Z&lt;/font&gt;{2}){3}</source>
         <translation>(&lt;font color=&quot;#FF5500&quot;&gt;X&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;Y&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;Z&lt;/font&gt;{2}){3}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="131"/>
+        <location filename="../src/measure/measure_display.cpp" line="141"/>
+        <source>(&lt;font color=&quot;#FF5500&quot;&gt;ΔX&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;ΔY&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;ΔZ&lt;/font&gt;{2}){3}</source>
+        <translation>(&lt;font color=&quot;#FF5500&quot;&gt;ΔX&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;ΔY&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;ΔZ&lt;/font&gt;{2}){3}</translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="152"/>
         <source> X{0} Y{1} Z{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="264"/>
+        <location filename="../src/measure/measure_display.cpp" line="285"/>
         <source>Diameter: {0}{1}</source>
         <translation>直径：{0}{1}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="267"/>
+        <location filename="../src/measure/measure_display.cpp" line="288"/>
         <source>Ø{0}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="323"/>
-        <location filename="../src/measure/measure_display.cpp" line="399"/>
-        <location filename="../src/measure/measure_display.cpp" line="449"/>
-        <location filename="../src/measure/measure_display.cpp" line="486"/>
+        <location filename="../src/measure/measure_display.cpp" line="334"/>
+        <source>Min Distance</source>
+        <translation type="unfinished">最小距离</translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="336"/>
+        <source>Min Distance to Center</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="338"/>
+        <location filename="../src/measure/measure_display.cpp" line="340"/>
+        <source>Distance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="346"/>
+        <location filename="../src/measure/measure_display.cpp" line="423"/>
+        <location filename="../src/measure/measure_display.cpp" line="473"/>
+        <location filename="../src/measure/measure_display.cpp" line="510"/>
         <source>{0}: {1}{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="328"/>
-        <source>{0}: {1}{2}&lt;br&gt;Point1: {3}&lt;br&gt;Point2: {4}</source>
-        <translation>{0}：{1}{2}&lt;br&gt;点1：{3}&lt;br&gt;点2：{4}</translation>
+        <location filename="../src/measure/measure_display.cpp" line="351"/>
+        <source>{0}: {1}{2}&lt;br&gt;Point1: {3}&lt;br&gt;Point2: {4}&lt;br&gt;Delta: {5}</source>
+        <translation>{0}：{1}{2}&lt;br&gt;点1：{3}&lt;br&gt;点2：{4}&lt;br&gt;差值：{5}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="400"/>
+        <source>{0}: {1}{2}&lt;br&gt;Point1: {3}&lt;br&gt;Point2: {4}</source>
+        <translation type="vanished">{0}：{1}{2}&lt;br&gt;点1：{3}&lt;br&gt;点2：{4}</translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="424"/>
         <source>Angle</source>
         <translation>角度</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="450"/>
+        <location filename="../src/measure/measure_display.cpp" line="474"/>
         <source>Length</source>
         <translation>长度</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="487"/>
+        <location filename="../src/measure/measure_display.cpp" line="511"/>
         <source>Area</source>
         <translation>面积</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="543"/>
+        <location filename="../src/measure/measure_display.cpp" line="567"/>
         <source>Min point: {0}&lt;br&gt;Max point: {1}&lt;br&gt;Size: {2} x {3} x {4}{5}&lt;br&gt;Volume: {6}{7}</source>
         <translation>最小点：{0}&lt;br&gt;最大点：{1}&lt;br&gt;尺寸：{2} × {3} × {4}{5}&lt;br&gt;体积：{6}{7}</translation>
     </message>
@@ -3459,66 +3484,71 @@ File: `%2`</source>
     </message>
     <message>
         <location filename="../src/app/widget_measure.ui" line="191"/>
+        <source>Min Distance to Center</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="196"/>
         <source>Center-to-center Distance</source>
         <translation>中心到中心距离</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="201"/>
+        <location filename="../src/app/widget_measure.ui" line="206"/>
         <source>Length</source>
         <translation>长度</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="211"/>
+        <location filename="../src/app/widget_measure.ui" line="216"/>
         <source>Bounding Box</source>
         <translation>包围盒</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="220"/>
+        <location filename="../src/app/widget_measure.ui" line="225"/>
         <source>Cubic Millimeter(mm³)</source>
         <translation>立方毫米 (mm³)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="225"/>
+        <location filename="../src/app/widget_measure.ui" line="230"/>
         <source>Cubic Centimeter(cm³)</source>
         <translation>立方厘米 (cm³)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="230"/>
+        <location filename="../src/app/widget_measure.ui" line="235"/>
         <source>Cubic Meter(m³)</source>
         <translation>立方米 (m³)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="235"/>
+        <location filename="../src/app/widget_measure.ui" line="240"/>
         <source>Cubic Inch(in³)</source>
         <translation>立方英寸 (in³)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="240"/>
+        <location filename="../src/app/widget_measure.ui" line="245"/>
         <source>Cubic Foot(ft³)</source>
         <translation>立方英尺 (ft³)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="245"/>
+        <location filename="../src/app/widget_measure.ui" line="250"/>
         <source>Liter(L)</source>
         <translation>升 (L)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="250"/>
+        <location filename="../src/app/widget_measure.ui" line="255"/>
         <source>Imperial Gallon(GBgal)</source>
         <translation>英制加仑 (GBgal)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="255"/>
+        <location filename="../src/app/widget_measure.ui" line="260"/>
         <source>US Gallon(USgal)</source>
         <translation>美制加仑 (USgal)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="196"/>
+        <location filename="../src/app/widget_measure.ui" line="201"/>
         <source>Angle</source>
         <translation>角度</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.ui" line="206"/>
+        <location filename="../src/app/widget_measure.ui" line="211"/>
         <source>Surface Area</source>
         <translation>表面积</translation>
     </message>

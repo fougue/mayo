@@ -912,6 +912,9 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_ELLIPSE& ellipse)
 
 TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_INSERT& insert)
 {
+    if (insert.isDimension && !m_params.importAnnotations)
+        return {}; // Dimension objects are annotations
+
     if (!insert.isVisible)
         return {};
 

@@ -108,8 +108,10 @@ QString propertyValueText(const PropertyString* prop) {
 }
 
 QString propertyValueText(const PropertyFilePath* prop) {
-    const FilePath filepath = filepathCanonical(prop->value());
-    return QDir::toNativeSeparators(filepathTo<QString>(filepath));
+    // NOTE: do not canonicalize the path here. This function is called on every repaint and
+    // std::filesystem::canonical() performs one filesystem query per path component, which is very
+    // slow on high-latency(eg network) locations
+    return QDir::toNativeSeparators(filepathTo<QString>(prop->value()));
 }
 
 QString propertyValueText(const PropertyOccColor* prop) {
@@ -220,10 +222,15 @@ void PropertyItemDelegate::paint(
 
     if (index.column() == 1 && !index.data().isNull()) {
         const Property* prop = qvariant_cast<Property*>(index.data());
+        // Display the edit affordance on mouse hover(the classic desktop behavior) but also when
+        // the item is selected: touch input has no hover capability
+        const bool isItemHovered =
+            option.state.testFlag(QStyle::State_MouseOver)
+            || option.state.testFlag(QStyle::State_Selected)
+        ;
         if (!prop->isUserReadOnly()
             && option.state.testFlag(QStyle::State_Enabled)
-            && option.state.testFlag(QStyle::State_MouseOver)
-           )
+            && isItemHovered)
         {
             const QSize itemSize = this->sizeHint(option, index);
             const QSize pixItemSize = option.decorationSize * 0.75;

@@ -1,0 +1,10 @@
+# Build outputs / user-local artifacts that must not be copied into the image.
+# NOTE: .git is intentionally kept - CMake uses it to embed the version commit/revnum.
+build/
+build-*/
+cmake-build*/
+out/
+dist/
+*.o
+*.a
+*.so

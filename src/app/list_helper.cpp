@@ -6,6 +6,7 @@
 #include "list_helper.h"
 
 #include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
@@ -246,8 +247,26 @@ bool ItemDelegate::editorEvent(
         if (mev->button() != Qt::LeftButton)
             return false;
 
-        if (index.isValid())
+        if (!index.isValid())
+            return QStyledItemDelegate::editorEvent(event, model, option, index);
+
+        if (QtWidgetsUtils::isTouchSessionActive()) {
+            // Touch sessions: a single tap only highlights/selects the item, activation(open)
+            // requires an explicit double-tap. Otherwise casual taps while flick-scrolling would
+            // open files
+            const bool isDoubleTap =
+                m_touchTapIndex == index
+                && m_touchTapTimer.isValid()
+                && m_touchTapTimer.elapsed() <= QApplication::doubleClickInterval()
+            ;
+            m_touchTapIndex = index;
+            m_touchTapTimer.start();
+            if (isDoubleTap)
+                this->clickAction(item);
+        }
+        else {
             this->clickAction(item);
+        }
     }
 
     return QStyledItemDelegate::editorEvent(event, model, option, index);

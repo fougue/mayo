@@ -88,6 +88,8 @@ protected:
 
     static std::string text(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
     static std::string text(double value, const MeasureDisplayConfig& config);
+    // Textual representation of the delta(vector) between 2 points
+    static std::string deltaText(const gp_Pnt& pnt1, const gp_Pnt& pnt2, const MeasureDisplayConfig& config);
     static std::string graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
     static void adaptScale(const OccHandle<AIS_TextLabel>& gfxText, const MeasureDisplayConfig& config);
 

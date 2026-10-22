@@ -18,6 +18,7 @@
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
@@ -50,6 +51,7 @@ using PrsDim_AngleDimension = AIS_AngleDimension;
 #include <array>
 #include <cmath>
 #include <optional>
+#include <vector>
 
 namespace Mayo {
 
@@ -163,6 +165,42 @@ gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
 
     throwErrorIf<ErrorCode::CenterFailure>(shapeProps.Mass() < Precision::Confusion());
     return shapeProps.CentreOfMass();
+}
+
+// Computes the point of the segment [pnt1, pnt2] that is the closest to 'pnt'
+gp_Pnt closestPointOnSegment(const gp_Pnt& pnt, const gp_Pnt& pnt1, const gp_Pnt& pnt2)
+{
+    const gp_Vec dir{pnt1, pnt2};
+    const double lenSquared = dir.SquareMagnitude();
+    if (lenSquared < Precision::SquareConfusion())
+        return pnt1;
+
+    const gp_Vec offset{pnt1, pnt};
+    double t = offset.Dot(dir) / lenSquared;
+    t = std::max(0., std::min(1., t));
+    return pnt1.Translated(t * dir);
+}
+
+// Computes the point of the polyline 'points' that is the closest to 'pnt'
+// Returns false if 'points' is empty
+bool closestPointOnPolyline(const gp_Pnt& pnt, gsl::span<const gp_Pnt> points, gp_Pnt& result)
+{
+    if (points.empty())
+        return false;
+
+    double minDist = Precision::Infinite();
+    gp_Pnt minPnt = points.front();
+    for (size_t i = 1; i < points.size(); ++i) {
+        const gp_Pnt pntOnSegment = closestPointOnSegment(pnt, points[i - 1], points[i]);
+        const double dist = pnt.Distance(pntOnSegment);
+        if (dist < minDist) {
+            minDist = dist;
+            minPnt = pntOnSegment;
+        }
+    }
+
+    result = minPnt;
+    return true;
 }
 
 // Defines the result of fittedPlane() function
@@ -359,7 +397,8 @@ gsl::span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(Mea
     case MeasureType::CircleCenter:
     case MeasureType::CircleDiameter:
     case MeasureType::Length:
-    case MeasureType::Angle: {
+    case MeasureType::Angle:
+    case MeasureType::MinDistanceToCenter: {
         static const GraphicsObjectSelectionMode modes[] = { AIS_Shape::SelectionMode(TopAbs_EDGE) };
         return modes;
     }
@@ -414,6 +453,13 @@ MeasureCircle MeasureToolBRep::circle(const GraphicsOwnerPtr& owner) const
 MeasureDistance MeasureToolBRep::minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
 {
     return brepMinDistance(getShape(owner1), getShape(owner2));
+}
+
+MeasureDistance MeasureToolBRep::minDistanceToCenter(
+        const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2
+    ) const
+{
+    return brepMinDistanceToCenter(getShape(owner1), getShape(owner2));
 }
 
 MeasureDistance MeasureToolBRep::centerDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
@@ -596,6 +642,51 @@ MeasureDistance MeasureToolBRep::brepMinDistance(
     distResult.pnt2 = dist.PointOnShape2(1);
     distResult.value = dist.Value() * Quantity_Millimeter;
     distResult.type = MeasureDistance::Type::Mininmum;
+    return distResult;
+}
+
+MeasureDistance MeasureToolBRep::brepMinDistanceToCenter(
+        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2
+    )
+{
+    throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
+    throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
+    throwErrorIf<ErrorCode::NotAllEdges>(shape1.ShapeType() != TopAbs_EDGE);
+    throwErrorIf<ErrorCode::NotAllEdges>(shape2.ShapeType() != TopAbs_EDGE);
+
+    const TopoDS_Edge& edge2 = TopoDS::Edge(shape2);
+
+    // Center of the 1st entity: center of the circle for a circular edge, centroid otherwise
+    const gp_Pnt center = computeShapeCenter(shape1);
+
+    MeasureDistance distResult;
+    distResult.pnt1 = center;
+    distResult.type = MeasureDistance::Type::MinDistanceToCenter;
+
+    if (BRepUtils::isGeometric(edge2)) {
+        // Find the point of the 2nd entity that is the closest to the center
+        const TopoDS_Vertex centerVertex = BRepBuilderAPI_MakeVertex(center);
+        const MeasureDistance minDist = brepMinDistance(centerVertex, edge2);
+        distResult.pnt2 = minDist.pnt2;
+        distResult.value = minDist.value;
+    }
+    else {
+        // The 2nd entity is a polygon: find the closest point of its segments
+        TopLoc_Location loc;
+        const OccHandle<Poly_Polygon3D>& polyline = BRep_Tool::Polygon3D(edge2, loc);
+        throwErrorIf<ErrorCode::NotGeometricOrPolygonEdge>(polyline.IsNull());
+
+        std::vector<gp_Pnt> points;
+        points.reserve(size_t(polyline->NbNodes()));
+        for (int i = 1; i <= polyline->NbNodes(); ++i)
+            points.push_back(polyline->Nodes().Value(i).Transformed(loc));
+
+        gp_Pnt pntOnEdge;
+        throwErrorIf<ErrorCode::MinDistanceFailure>(!closestPointOnPolyline(center, points, pntOnEdge));
+        distResult.pnt2 = pntOnEdge;
+        distResult.value = center.Distance(pntOnEdge) * Quantity_Millimeter;
+    }
+
     return distResult;
 }
 

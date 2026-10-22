@@ -12,6 +12,7 @@
 #include "../src/base/task_progress.h"
 #include "../src/base/unit_system.h"
 #include "../src/io_occ/io_occ_stl.h"
+#include "../src/measure/measure_display.h"
 #include "../src/measure/measure_tool_brep.h"
 
 #include <BRep_Builder.hxx>
@@ -187,6 +188,97 @@ void TestMeasure::BRepMinDistance_TwoConfusedFaces_test()
     } catch (const IMeasureError& err) {
         qDebug() << std::string{err.message()}.c_str();
     }
+}
+
+void TestMeasure::BRepMinDistanceToCenter_CircleAndEdge_test()
+{
+    const gp_Pnt pntCenter{ 0, 0, 0 };
+    const double radius = 10.;
+    const GC_MakeCircle makeCircle(gp_Ax2(pntCenter, gp::DZ()), radius);
+    const TopoDS_Edge circleEdge = BRepBuilderAPI_MakeEdge(makeCircle.Value());
+
+    // Line segment that is perpendicular to the Z-axis and that starts at the closest point
+    const double expectedDist = 25.;
+    const gp_Pnt expectedPnt{ 0, 0, expectedDist };
+    const TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(expectedPnt, gp_Pnt{ 20, 0, expectedDist });
+
+    const MeasureDistance dist = MeasureToolBRep::brepMinDistanceToCenter(circleEdge, edge);
+    QVERIFY(dist.type == MeasureDistance::Type::MinDistanceToCenter);
+    QVERIFY(GeomUtils::equal(dist.pnt1, pntCenter));
+    QVERIFY(GeomUtils::equal(dist.pnt2, expectedPnt));
+    QVERIFY(std::abs(UnitSystem::millimeters(dist.value).value - expectedDist) < 1e-6);
+}
+
+void TestMeasure::BRepMinDistanceToCenter_CircleAndTiltedEdge_test()
+{
+    const gp_Pnt pntCenter{ 0, 0, 0 };
+    const double radius = 10.;
+    const GC_MakeCircle makeCircle(gp_Ax2(pntCenter, gp::DZ()), radius);
+    const TopoDS_Edge circleEdge = BRepBuilderAPI_MakeEdge(makeCircle.Value());
+
+    // Tilted line segment: the closest point is in the middle of the segment
+    const gp_Pnt pnt1{ 0, 0, 25 };
+    const gp_Pnt pnt2{ 25, 0, 0 };
+    const TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2);
+
+    const gp_Pnt expectedPnt{ 12.5, 0, 12.5 };
+    const double expectedDist = expectedPnt.Distance(pntCenter);
+
+    const MeasureDistance dist = MeasureToolBRep::brepMinDistanceToCenter(circleEdge, edge);
+    QVERIFY(GeomUtils::equal(dist.pnt1, pntCenter));
+    QVERIFY(GeomUtils::equal(dist.pnt2, expectedPnt));
+    QVERIFY(std::abs(UnitSystem::millimeters(dist.value).value - expectedDist) < 1e-6);
+}
+
+void TestMeasure::BRepMinDistanceToCenter_PolygonEdge_test()
+{
+    const gp_Pnt pntCenter{ 0, 0, 0 };
+    const double radius = 10.;
+    const GC_MakeCircle makeCircle(gp_Ax2(pntCenter, gp::DZ()), radius);
+    const TopoDS_Edge circleEdge = BRepBuilderAPI_MakeEdge(makeCircle.Value());
+
+    // 2nd entity is not a geometric edge but a polygon
+    const double expectedDist = 25.;
+    const gp_Pnt expectedPnt{ 0, 0, expectedDist };
+    NCollection_Array1<gp_Pnt> points(1, 3);
+    points.ChangeValue(1) = expectedPnt;
+    points.ChangeValue(2) = gp_Pnt{ 10, 0, expectedDist };
+    points.ChangeValue(3) = gp_Pnt{ 20, 0, expectedDist };
+    const TopoDS_Edge polygonEdge = makePolygonEdge(points);
+
+    const MeasureDistance dist = MeasureToolBRep::brepMinDistanceToCenter(circleEdge, polygonEdge);
+    QVERIFY(GeomUtils::equal(dist.pnt1, pntCenter));
+    QVERIFY(GeomUtils::equal(dist.pnt2, expectedPnt));
+    QVERIFY(std::abs(UnitSystem::millimeters(dist.value).value - expectedDist) < 1e-6);
+}
+
+void TestMeasure::BRepMinDistanceToCenter_NotEdgeError_test()
+{
+    const TopoDS_Shape vertex = BRepBuilderAPI_MakeVertex(gp_Pnt{ 0, 0, 0 });
+    const TopoDS_Shape edge = BRepBuilderAPI_MakeEdge(gp_Pnt{ 0, 0, 0 }, gp_Pnt{ 10, 0, 0 });
+    MAYO_QVERIFY_THROWS_EXCEPTION(IMeasureError, MeasureToolBRep::brepMinDistanceToCenter(vertex, edge));
+    MAYO_QVERIFY_THROWS_EXCEPTION(IMeasureError, MeasureToolBRep::brepMinDistanceToCenter(edge, vertex));
+}
+
+void TestMeasure::MeasureDisplayDistance_Delta_test()
+{
+    MeasureDistance dist;
+    dist.pnt1 = gp_Pnt{ 0, 0, 0 };
+    dist.pnt2 = gp_Pnt{ 10, 20, 30 };
+    dist.value = 37.4176 * Quantity_Millimeter;
+    dist.type = MeasureDistance::Type::MinDistanceToCenter;
+
+    MeasureDisplayDistance display(dist);
+    MeasureDisplayConfig config;
+    config.lengthUnit = LengthUnit::Millimeter;
+    display.update(config);
+
+    // The measure text must report the delta between the 2 points
+    const std::string text = display.text();
+    QVERIFY(text.find("Delta") != std::string::npos);
+    QVERIFY(text.find("ΔX</font>10") != std::string::npos);
+    QVERIFY(text.find("ΔY</font>20") != std::string::npos);
+    QVERIFY(text.find("ΔZ</font>30") != std::string::npos);
 }
 
 void TestMeasure::BRepAngle_TwoLinesIntersect_test()
