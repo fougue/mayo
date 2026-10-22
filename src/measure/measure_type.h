@@ -13,6 +13,7 @@ enum class MeasureType {
     CircleCenter,
     CircleDiameter,
     MinDistance,
+    MinDistanceToCenter,
     CenterDistance,
     Angle,
     Length,

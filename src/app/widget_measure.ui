@@ -188,6 +188,11 @@
      </item>
      <item>
       <property name="text">
+       <string>Min Distance to Center</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>Center-to-center Distance</string>
       </property>
      </item>

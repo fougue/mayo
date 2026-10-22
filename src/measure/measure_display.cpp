@@ -17,6 +17,7 @@
 #include <ElCLib.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Geom_Circle.hxx>
+#include <gp_Vec.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <OpenGl_Context.hxx>
 #include <Prs3d_LineAspect.hxx>
@@ -42,6 +43,7 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createFrom(MeasureType type
     case MeasureType::CircleDiameter:
         return std::make_unique<MeasureDisplayCircleDiameter>(std::get<MeasureCircle>(value));
     case MeasureType::MinDistance:
+    case MeasureType::MinDistanceToCenter:
     case MeasureType::CenterDistance:
         return std::make_unique<MeasureDisplayDistance>(std::get<MeasureDistance>(value));
     case MeasureType::Length:
@@ -61,6 +63,7 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySum(MeasureType 
 {
     switch (type) {
     case MeasureType::MinDistance:
+    case MeasureType::MinDistanceToCenter:
     case MeasureType::CenterDistance:
         return std::make_unique<MeasureDisplayDistance>(Mayo::MeasureDistance{});
     case MeasureType::Angle:
@@ -123,6 +126,24 @@ std::string BaseMeasureDisplay::text(const gp_Pnt& pnt, const MeasureDisplayConf
 std::string BaseMeasureDisplay::text(double value, const MeasureDisplayConfig& config)
 {
     return to_stdString(value, config.doubleToStringOptions);
+}
+
+std::string BaseMeasureDisplay::deltaText(
+        const gp_Pnt& pnt1, const gp_Pnt& pnt2, const MeasureDisplayConfig& config
+    )
+{
+    // Delta between the 2 points: vector going from 'pnt1' to 'pnt2'
+    const gp_Vec delta{pnt1, pnt2};
+    auto trDeltaX = UnitSystem::translateLength(delta.X() * Quantity_Millimeter, config.lengthUnit);
+    auto trDeltaY = UnitSystem::translateLength(delta.Y() * Quantity_Millimeter, config.lengthUnit);
+    auto trDeltaZ = UnitSystem::translateLength(delta.Z() * Quantity_Millimeter, config.lengthUnit);
+    return fmt::format(
+        MeasureDisplayI18N::textIdTr("(<font color=\"#FF5500\">ΔX</font>{0} "
+                                     "<font color=\"#55FF00\">ΔY</font>{1} "
+                                     "<font color=\"#0077FF\">ΔZ</font>{2}){3}"),
+        text(trDeltaX, config), text(trDeltaY, config), text(trDeltaZ, config),
+        trDeltaX.strUnit
+    );
 }
 
 std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config)
@@ -310,11 +331,13 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
     auto fnStrDistanceType = [](MeasureDistance::Type distType) -> std::string_view {
         switch(distType) {
         case MeasureDistance::Type::Mininmum:
-            return "Min Distance";
+            return MeasureDisplayI18N::textIdTr("Min Distance");
+        case MeasureDistance::Type::MinDistanceToCenter:
+            return MeasureDisplayI18N::textIdTr("Min Distance to Center");
         case MeasureDistance::Type::CenterToCenter:
-            return "Distance";
+            return MeasureDisplayI18N::textIdTr("Distance");
         default:
-            return "Distance";
+            return MeasureDisplayI18N::textIdTr("Distance");
         }
     };
 
@@ -325,12 +348,13 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
     }
     else {
         this->setText(fmt::format(
-            MeasureDisplayI18N::textIdTr("{0}: {1}{2}<br>Point1: {3}<br>Point2: {4}"),
+            MeasureDisplayI18N::textIdTr("{0}: {1}{2}<br>Point1: {3}<br>Point2: {4}<br>Delta: {5}"),
             fnStrDistanceType(m_dist.type),
             strLength,
             trLength.strUnit,
             BaseMeasureDisplay::text(m_dist.pnt1, config),
-            BaseMeasureDisplay::text(m_dist.pnt2, config)
+            BaseMeasureDisplay::text(m_dist.pnt2, config),
+            BaseMeasureDisplay::deltaText(m_dist.pnt1, m_dist.pnt2, config)
         ));
     }
 
