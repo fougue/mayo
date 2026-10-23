@@ -19,6 +19,7 @@
 #include <Geom_Circle.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <OpenGl_Context.hxx>
+#include <Precision.hxx>
 #include <Prs3d_LineAspect.hxx>
 #include <Prs3d_TextAspect.hxx>
 
@@ -290,15 +291,19 @@ gp_Pnt MeasureDisplayCircleDiameter::diameterOpposedPnt(const gp_Pnt& pntOnCircl
 
 MeasureDisplayDistance::MeasureDisplayDistance(const MeasureDistance& dist)
     : m_dist(dist),
-      m_gfxLength(new AIS_Line(
-          makeOccHandle<Geom_CartesianPoint>(dist.pnt1),
-          makeOccHandle<Geom_CartesianPoint>(dist.pnt2))
-      ),
       m_gfxPnt1(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(dist.pnt1))),
       m_gfxPnt2(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(dist.pnt2)))
 {
-    m_gfxLength->SetWidth(2.5);
-    m_gfxLength->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
+    // A zero-length line has no direction: AIS_Line's presentation would throw a gp_Dir
+    // "zero norm" error, eg when measuring an edge against a face it bounds
+    if (dist.pnt1.Distance(dist.pnt2) > Precision::Confusion()) {
+        m_gfxLength = new AIS_Line(
+            makeOccHandle<Geom_CartesianPoint>(dist.pnt1),
+            makeOccHandle<Geom_CartesianPoint>(dist.pnt2));
+        m_gfxLength->SetWidth(2.5);
+        m_gfxLength->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
+    }
+
     m_gfxDistText->SetPosition(dist.pnt1.Translated(gp_Vec(dist.pnt1, dist.pnt2) / 2.));
     BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
@@ -341,10 +346,10 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
 GraphicsObjectPtr MeasureDisplayDistance::graphicsObjectAt(int i) const
 {
     switch (i) {
-    case 0: return m_gfxLength;
-    case 1: return m_gfxDistText;
-    case 2: return m_gfxPnt1;
-    case 3: return m_gfxPnt2;
+    case 0: return m_gfxDistText;
+    case 1: return m_gfxPnt1;
+    case 2: return m_gfxPnt2;
+    case 3: return m_gfxLength;
     }
 
     return {};

@@ -169,7 +169,7 @@ public:
     explicit MeasureDisplayDistance(const MeasureDistance& dist);
 
     void update(const MeasureDisplayConfig& config) override;
-    int graphicsObjectsCount() const override { return 4; }
+    int graphicsObjectsCount() const override { return m_gfxLength ? 4 : 3; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
     bool isSumSupported() const override { return true; }
