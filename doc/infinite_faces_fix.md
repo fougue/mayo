@@ -18,13 +18,35 @@ It changes presentation and selection only. The original XDE shapes, labels,
 component references, locations, colors and visibility attributes are retained.
 No OCCT source modification or model healing is required.
 
-Validation used Ubuntu 24.04.3, GCC 13.3, Qt 5.15.13, OCCT 7.9.3, Xvfb and
+Initial validation used Ubuntu 24.04.3, GCC 13.3, Qt 5.15.13, OCCT 7.9.3, Xvfb and
 Mesa llvmpipe. Both original and patched Mayo GUI applications were compiled
 and run. Builds used Release configuration with `-O0 -DNDEBUG`; these are
-correctness checks, not performance measurements. A Windows executable was not
-built or run. A separate production-only backport applies cleanly to Mayo
+correctness checks, not performance measurements. Subsequent Windows validation
+and the reporter's real-model confirmation are recorded below. A separate
+production-only backport applies cleanly to Mayo
 v0.10.0, commit `f3edd21e77e1f597a65583e9af5beba06a0849ad`; that older version
 was not compiled in this investigation.
+
+### Windows build and reporter confirmation
+
+The [Windows validation run](https://github.com/mingisrookie/mayo/actions/runs/39914427243)
+built the same production fix with MSVC x64 Release, Qt 5.15.2 and OCCT 7.9.3
+on Windows Server 2022. All six CTest targets passed; the graphics test reported
+33 passed, zero failed and zero skipped. Cylinder, plane and cone reproductions
+retained 80 x 60 x 40 presentation bounds across all five inspected display
+states, with byte-identical complete BREP snapshots before and after display.
+An isolated portable-package smoke test also imported and exported all three
+STEP reproductions successfully.
+
+The [Windows prerelease](https://github.com/mingisrookie/mayo/releases/tag/v0.11.0-infinite-faces.1)
+contains the portable application, public synthetic samples, and a separate
+verification archive with test logs, rendered screenshots and statistics.
+CI rendering used Mesa; the portable application uses the user's graphics
+driver and does not bundle Mesa's OpenGL DLL. After trying this prerelease, the
+reporter confirmed that the problem was fixed in the original private
+industrial assembly. That assembly was not provided to this investigation;
+the real-model result is the reporter's confirmation, separate from the
+automated synthetic-model results.
 
 ## Input geometry and rendering are separate issues
 
@@ -170,17 +192,14 @@ STEP round-trip support for that exporter limitation.
 
 ## Build and reproduce
 
-The full patch includes tests and two optional executables enabled by
-`Mayo_BuildTests=ON`. The production-only patch is sufficient for the viewer fix.
-Apply the appropriate patch to its stated source baseline, then build against
+The change includes tests and two optional executables enabled by
+`Mayo_BuildTests=ON`. To reproduce from the public fix branch, build against
 your installed Qt and OCCT:
 
 ```sh
-git clone https://github.com/fougue/mayo.git
+git clone --single-branch --branch fix/unbounded-face-presentation \
+  https://github.com/mingisrookie/mayo.git
 cd mayo
-git checkout 8e69135dd5259a6a2b77568fcf630f969f408762
-git apply --check /path/to/mayo-infinite-faces-full.patch
-git apply /path/to/mayo-infinite-faces-full.patch
 cmake -S . -B ../mayo-build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DOpenCASCADE_DIR=/path/to/occt-install/lib/cmake/opencascade \
@@ -197,8 +216,8 @@ On a headless Linux machine, run the graphical commands under a working Xvfb
 display, with the OCCT shared libraries available to the dynamic loader. This
 investigation used `DISPLAY=:99`, `LIBGL_ALWAYS_SOFTWARE=1`, and an
 `LD_LIBRARY_PATH` pointing to the local OCCT installation. On Windows, use the
-corresponding CMake generator, Qt directory and OCCT runtime DLL paths; no
-Windows test result is asserted here.
+corresponding CMake generator, Qt directory and OCCT runtime DLL paths. The
+linked Windows validation run records the tested build configuration.
 
 The generator constructs the unbounded BREP face directly with `BRep_Builder`
 to avoid accidentally introducing a seam or natural boundary wire. To create
