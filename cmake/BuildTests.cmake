@@ -106,6 +106,19 @@ mayo_add_test(
     SOURCES ${MayoTestGraphics_SourceFiles}  LIBRARIES MayoCoreLib
 )
 
+# Synthetic STEP/BREP files preserving empty ADVANCED_FACE bounds for manual QA.
+add_executable(mayo-repro-infinite-faces tests/tools/generate_infinite_faces.cpp)
+target_compile_definitions(mayo-repro-infinite-faces PRIVATE ${Mayo_CompileDefinitions})
+target_compile_options(mayo-repro-infinite-faces PRIVATE ${Mayo_CompileOptions})
+target_link_libraries(mayo-repro-infinite-faces PRIVATE MayoCoreLib MayoIOLib)
+add_test(NAME test-infinite-face-step-roundtrip
+    COMMAND mayo-repro-infinite-faces ${CMAKE_BINARY_DIR}/tests/outputs/infinite-faces
+)
+add_executable(mayo-inspect-infinite-faces tests/tools/inspect_infinite_faces.cpp)
+target_compile_definitions(mayo-inspect-infinite-faces PRIVATE ${Mayo_CompileDefinitions})
+target_compile_options(mayo-inspect-infinite-faces PRIVATE ${Mayo_CompileOptions})
+target_link_libraries(mayo-inspect-infinite-faces PRIVATE MayoCoreLib MayoIOLib Qt${QT_VERSION_MAJOR}::Core)
+
 # test-measure
 file(
     GLOB MayoTestMeasure_SourceFiles

@@ -10,6 +10,8 @@
 
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
+#include <AIS_ConnectedInteractive.hxx>
+#include <AIS_Shape.hxx>
 #include <Aspect_DisplayConnection.hxx>
 #include <Aspect_Grid.hxx>
 #include <Aspect_Window.hxx>
@@ -19,6 +21,9 @@
 #include <Image_PixMap.hxx>
 #include <ProjLib.hxx>
 #include <SelectMgr_SelectionManager.hxx>
+#include <SelectMgr_Selection.hxx>
+#include <SelectMgr_SensitiveEntity.hxx>
+#include <StdSelect_BRepOwner.hxx>
 #include <Standard_Version.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
@@ -30,6 +35,32 @@
 namespace Mayo {
 
 namespace Internal {
+
+class ConnectedInteractive : public AIS_ConnectedInteractive {
+protected:
+    void ComputeSelection(const OccHandle<SelectMgr_Selection>& selection, int mode) override
+    {
+        AIS_ConnectedInteractive::ComputeSelection(selection, mode);
+        if (mode != AIS_Shape::SelectionMode(TopAbs_COMPOUND))
+            return;
+
+        const auto source = OccHandle<AIS_Shape>::DownCast(this->ConnectedTo());
+        if (!source || source->Shape().IsNull())
+            return;
+
+        // OCCT marks every nonzero-mode instance owner as decomposed, even
+        // when it owns the complete source shape. Such an owner highlights a
+        // fresh raw BRep presentation, losing hidden face styles. Restore
+        // whole-object highlighting without changing the owner's shape.
+        for (const auto& sensitive : selection->Entities()) {
+            const auto owner = OccHandle<StdSelect_BRepOwner>::DownCast(
+                sensitive->BaseSensitive()->OwnerId()
+            );
+            if (owner && owner->HasShape() && owner->Shape().IsSame(source->Shape()))
+                owner->SetComesFromDecomposition(false);
+        }
+    }
+};
 
 static void AisContext_setObjectVisible(
         AIS_InteractiveContext* ptrContext, const OccHandle<AIS_InteractiveObject>& object, bool on
@@ -180,6 +211,15 @@ Bnd_Box GraphicsUtils::AisObject_boundingBox(const OccHandle<AIS_InteractiveObje
 
     object->BoundingBox(box);
     return box;
+}
+
+OccHandle<AIS_ConnectedInteractive> GraphicsUtils::AisObject_createConnected(
+        const OccHandle<AIS_InteractiveObject>& object, const TopLoc_Location& location
+    )
+{
+    auto instance = makeOccHandle<Internal::ConnectedInteractive>();
+    instance->Connect(object, location);
+    return instance;
 }
 
 int GraphicsUtils::AspectWindow_width(const OccHandle<Aspect_Window>& wnd)

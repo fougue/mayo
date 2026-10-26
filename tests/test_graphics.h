@@ -13,6 +13,15 @@ class TestGraphics : public QObject {
     Q_OBJECT
 private slots:
     void Regression_bugGitHub255_test();
+    void ShapeObject_unboundedFaces_test();
+    void ShapeObject_unboundedFaces_test_data();
+    void ShapeObject_retainedFaces_test();
+    void ShapeObject_retainedFaces_test_data();
+    void ShapeObject_unboundedFaceStylesAndGeometry_test();
+    void ShapeObject_unboundedFaceSelection_test();
+    void ShapeObject_unboundedFaceCompoundSelection_test();
+    void ShapeObject_unboundedFaceCompoundSelection_test_data();
+    void ShapeObject_unboundedFaceInstances_test();
 
     void GuiApplication_documentMappingLifecycle_test();
     void GuiApplication_documentMappingCanBeDisabled_test();

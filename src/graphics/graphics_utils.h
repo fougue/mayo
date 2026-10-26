@@ -20,10 +20,12 @@ class Aspect_Grid;
 class Aspect_Window;
 class AIS_InteractiveContext;
 class AIS_InteractiveObject;
+class AIS_ConnectedInteractive;
 class Graphic3d_ClipPlane;
 class Image_PixMap;
 class V3d_View;
 class V3d_Viewer;
+class TopLoc_Location;
 class gp_Dir;
 
 namespace Mayo {
@@ -58,6 +60,9 @@ struct GraphicsUtils {
     static bool AisObject_isVisible(const OccHandle<AIS_InteractiveObject>& object);
     static void AisObject_setVisible(const OccHandle<AIS_InteractiveObject>& object, bool on);
     static Bnd_Box AisObject_boundingBox(const OccHandle<AIS_InteractiveObject>& object);
+    static OccHandle<AIS_ConnectedInteractive> AisObject_createConnected(
+        const OccHandle<AIS_InteractiveObject>& object, const TopLoc_Location& location
+    );
 
     static int AspectWindow_width(const OccHandle<Aspect_Window>& wnd);
     static int AspectWindow_height(const OccHandle<Aspect_Window>& wnd);
