@@ -156,6 +156,7 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
 {
     assert(cmdContainer != nullptr);
 
+    const bool touchSession = QtWidgetsUtils::isTouchSessionActive();
     m_appContext = cmdContainer->appContext();
     auto fnFindAction = [=](std::string_view cmdName) {
         QAction* action = cmdContainer->findCommandAction(cmdName);
@@ -175,13 +176,13 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
     // Touch input has no hover: display the close button on the selected item instead
     m_listViewBtns->setButtonDisplayModes(
         1,
-        QtWidgetsUtils::isTouchSessionActive() ?
+        touchSession ?
             ItemViewButtons::DisplayWhenItemSelected :
             ItemViewButtons::DisplayOnDetection
     );
     m_listViewBtns->setButtonItemSide(1, ItemViewButtons::ItemRightSide);
     const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
-    const double btnIconFactor = QtWidgetsUtils::isTouchSessionActive() ? 1.0 : 0.66;
+    const double btnIconFactor = touchSession ? 1.0 : 0.66;
     m_listViewBtns->setButtonIconSize(1, QSize(iconSize * btnIconFactor, iconSize * btnIconFactor));
     QObject::connect(m_listViewBtns, &ItemViewButtons::buttonClicked, this, [=](int btnId, QModelIndex index) {
         if (btnId == 1) {

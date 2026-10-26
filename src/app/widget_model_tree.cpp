@@ -148,12 +148,12 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     m_ui->treeWidget_Model->setUniformRowHeights(true);
     QtWidgetsUtils::enableTouchScrolling(m_ui->treeWidget_Model);
 
-    // Long-press(touch input) displays a context menu with the user actions, mirroring the
-    // desktop menu found in the left header gear button
-    if (QtWidgetsUtils::isTouchSessionActive()) {
+    const bool touchSession = QtWidgetsUtils::isTouchSessionActive();
+    // Long-press(touch input) displays a context menu with the model tree user actions
+    if (touchSession) {
         auto touchPressTimer = new QTimer(this);
         touchPressTimer->setSingleShot(true);
-        touchPressTimer->setInterval(700);
+        touchPressTimer->setInterval(QtWidgetsUtils::TouchLongPressDelayMs);
         QObject::connect(
             touchPressTimer, &QTimer::timeout,
             this, &WidgetModelTree::onTreeWidgetTouchLongPress
@@ -179,13 +179,13 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     // Touch input has no hover: display the remove button on the selected item instead
     modelTreeBtns->setButtonDisplayModes(
         idBtnRemove,
-        QtWidgetsUtils::isTouchSessionActive() ?
+        touchSession ?
             ItemViewButtons::DisplayWhenItemSelected :
             ItemViewButtons::DisplayOnDetection
     );
     modelTreeBtns->setButtonItemSide(idBtnRemove, ItemViewButtons::ItemRightSide);
     const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
-    const double btnIconFactor = QtWidgetsUtils::isTouchSessionActive() ? 1.0 : 0.66;
+    const double btnIconFactor = touchSession ? 1.0 : 0.66;
     modelTreeBtns->setButtonIconSize(idBtnRemove, QSize(iconSize * btnIconFactor, iconSize * btnIconFactor));
     modelTreeBtns->installDefaultItemDelegate();
     QObject::connect(
@@ -212,36 +212,22 @@ bool WidgetModelTree::eventFilter(QObject* watched, QEvent* event)
         switch (event->type()) {
         case QEvent::TouchBegin: {
             const auto touchEvent = static_cast<const QTouchEvent*>(event);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-            if (!touchEvent->points().empty()) {
-                m_touchPressPos = touchEvent->points().front().position().toPoint();
-                m_touchPressTimer->setProperty("pressActive", true);
+            const std::vector<QPointF> vecPos = QtWidgetsUtils::activeTouchPositions(touchEvent);
+            if (vecPos.size() == 1) {
+                m_touchPressPos = vecPos.front().toPoint();
+                m_touchPressActive = true;
                 m_touchPressTimer->start();
             }
-#else
-            if (!touchEvent->touchPoints().empty()) {
-                m_touchPressPos = touchEvent->touchPoints().front().pos().toPoint();
-                m_touchPressTimer->setProperty("pressActive", true);
-                m_touchPressTimer->start();
-            }
-#endif
             break;
         }
         case QEvent::TouchUpdate: {
             const auto touchEvent = static_cast<const QTouchEvent*>(event);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-            if (!touchEvent->points().empty()) {
-                const QPointF currPos = touchEvent->points().front().position();
-                if (QLineF(m_touchPressPos, currPos).length() > QApplication::startDragDistance())
-                    this->cancelTreeWidgetTouchPress();
+            const std::vector<QPointF> vecPos = QtWidgetsUtils::activeTouchPositions(touchEvent);
+            if (vecPos.size() != 1
+                || QLineF(m_touchPressPos, vecPos.front()).length() > QApplication::startDragDistance())
+            {
+                this->cancelTreeWidgetTouchPress();
             }
-#else
-            if (!touchEvent->touchPoints().empty()) {
-                const QPointF currPos = touchEvent->touchPoints().front().pos();
-                if (QLineF(m_touchPressPos, currPos).length() > QApplication::startDragDistance())
-                    this->cancelTreeWidgetTouchPress();
-            }
-#endif
             break;
         }
         case QEvent::TouchEnd:
@@ -259,14 +245,14 @@ bool WidgetModelTree::eventFilter(QObject* watched, QEvent* event)
 void WidgetModelTree::cancelTreeWidgetTouchPress()
 {
     if (m_touchPressTimer) {
-        m_touchPressTimer->setProperty("pressActive", false);
+        m_touchPressActive = false;
         m_touchPressTimer->stop();
     }
 }
 
 void WidgetModelTree::onTreeWidgetTouchLongPress()
 {
-    if (!m_touchPressTimer || !m_touchPressTimer->property("pressActive").toBool())
+    if (!m_touchPressTimer || !m_touchPressActive)
         return;
 
     this->cancelTreeWidgetTouchPress();

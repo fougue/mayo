@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include <QtCore/QElapsedTimer>
+#include "qtwidgets_utils.h"
+
 #include <QtCore/QMetaType>
-#include <QtCore/QPersistentModelIndex>
 #include <QtCore/QVariantAnimation>
 #include <QtGui/QTextOption>
 #include <QtWidgets/QStyledItemDelegate>
@@ -99,8 +99,7 @@ private:
 
     // On touch sessions, activation(open) of an item requires a double-tap: a single tap only
     // highlights/selects the item. Otherwise casual taps while flick-scrolling would open files
-    QElapsedTimer m_touchTapTimer;
-    QPersistentModelIndex m_touchTapIndex;
+    QtWidgetsUtils::TouchTapDetector m_touchTapDetector;
 
     QColor m_frameColor;
     QColor m_pixmapColor;

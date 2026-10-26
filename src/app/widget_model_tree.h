@@ -86,6 +86,10 @@ private:
     WidgetModelTreeBuilder* findSupportBuilder(const DocumentPtr& doc) const;
     WidgetModelTreeBuilder* findSupportBuilder(const DocumentTreeNode& entityNode) const;
 
+    bool eventFilter(QObject* watched, QEvent* event) override;
+    void cancelTreeWidgetTouchPress();
+    void onTreeWidgetTouchLongPress();
+
     class Ui_WidgetModelTree* m_ui = nullptr;
     GuiApplication* m_guiApp = nullptr;
     std::vector<BuilderPtr> m_vecBuilder;
@@ -94,14 +98,11 @@ private:
     QMetaObject::Connection m_connTreeWidgetDocumentSelectionChanged;
 
     // Touch long-press state(context menu with user actions)
-    bool eventFilter(QObject* watched, QEvent* event) override;
-    void cancelTreeWidgetTouchPress();
-    void onTreeWidgetTouchLongPress();
-
     QTimer* m_touchPressTimer = nullptr;
     QPoint m_touchPressPos;
     QMenu* m_touchContextMenu = nullptr;
     WidgetModelTree_UserActions::FunctionSyncItems m_fnSyncTouchContextMenuItems;
+    bool m_touchPressActive = false;
 };
 
 } // namespace Mayo

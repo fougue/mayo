@@ -247,24 +247,9 @@ bool ItemDelegate::editorEvent(
         if (mev->button() != Qt::LeftButton)
             return false;
 
-        if (!index.isValid())
-            return QStyledItemDelegate::editorEvent(event, model, option, index);
-
-        if (QtWidgetsUtils::isTouchSessionActive()) {
-            // Touch sessions: a single tap only highlights/selects the item, activation(open)
-            // requires an explicit double-tap. Otherwise casual taps while flick-scrolling would
-            // open files
-            const bool isDoubleTap =
-                m_touchTapIndex == index
-                && m_touchTapTimer.isValid()
-                && m_touchTapTimer.elapsed() <= QApplication::doubleClickInterval()
-            ;
-            m_touchTapIndex = index;
-            m_touchTapTimer.start();
-            if (isDoubleTap)
-                this->clickAction(item);
-        }
-        else {
+        if (index.isValid()
+            && (!QtWidgetsUtils::isTouchSessionActive() || m_touchTapDetector.isDoubleTap(index)))
+        {
             this->clickAction(item);
         }
     }

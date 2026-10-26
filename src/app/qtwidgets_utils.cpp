@@ -7,6 +7,7 @@
 #include "qtgui_utils.h"
 
 #include <QtGui/QGuiApplication>
+#include <QtGui/QTouchEvent>
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #  include <QtGui/QInputDevice>
 #else
@@ -16,6 +17,7 @@
 #include <QtGui/QWindow>
 #include <QtWidgets/QAbstractScrollArea>
 #include <QtWidgets/QAbstractItemView>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QScroller>
@@ -25,35 +27,48 @@ namespace Mayo {
 
 bool QtWidgetsUtils::isTouchSessionActive()
 {
-    static const bool isTouchSession = [] {
-        // Environment variable allows to force the touch mode on/off
-        const QString strEnvValue = qEnvironmentVariable("MAYO_TOUCH_MODE");
-        if (strEnvValue.compare(QLatin1String("1"), Qt::CaseInsensitive) == 0
-            || strEnvValue.compare(QLatin1String("on"), Qt::CaseInsensitive) == 0)
-        {
-            return true;
-        }
-        else if (strEnvValue.compare(QLatin1String("0"), Qt::CaseInsensitive) == 0
-                 || strEnvValue.compare(QLatin1String("off"), Qt::CaseInsensitive) == 0)
-        {
-            return false;
-        }
-
-        // Auto-detect: is there a touchscreen input device available?
+    // Auto-detect: is there a touchscreen input device available?
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        for (const QInputDevice* inputDevice : QInputDevice::devices()) {
-            if (inputDevice->type() == QInputDevice::DeviceType::TouchScreen)
-                return true;
-        }
+    for (const QInputDevice* inputDevice : QInputDevice::devices()) {
+        if (inputDevice->type() == QInputDevice::DeviceType::TouchScreen)
+            return true;
+    }
 #else
-        for (const QTouchDevice* touchDevice : QTouchDevice::devices()) {
-            if (touchDevice->type() == QTouchDevice::TouchScreen)
-                return true;
-        }
+    for (const QTouchDevice* touchDevice : QTouchDevice::devices()) {
+        if (touchDevice->type() == QTouchDevice::TouchScreen)
+            return true;
+    }
 #endif
-        return false;
-    }();
-    return isTouchSession;
+    return false;
+}
+
+std::vector<QPointF> QtWidgetsUtils::activeTouchPositions(const QTouchEvent* event)
+{
+    std::vector<QPointF> vecPos;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    for (const QEventPoint& touchPnt : event->points()) {
+        if (touchPnt.state() != QEventPoint::State::Released)
+            vecPos.push_back(touchPnt.position());
+    }
+#else
+    for (const QTouchEvent::TouchPoint& touchPnt : event->touchPoints()) {
+        if (touchPnt.state() != Qt::TouchPointReleased)
+            vecPos.push_back(touchPnt.pos());
+    }
+#endif
+    return vecPos;
+}
+
+bool QtWidgetsUtils::TouchTapDetector::isDoubleTap(const QModelIndex& index)
+{
+    const bool isDoubleTap =
+        m_index == index
+        && m_timer.isValid()
+        && m_timer.elapsed() <= QApplication::doubleClickInterval()
+    ;
+    m_index = index;
+    m_timer.start();
+    return isDoubleTap;
 }
 
 void QtWidgetsUtils::enableTouchScrolling(QAbstractScrollArea* scrollArea)

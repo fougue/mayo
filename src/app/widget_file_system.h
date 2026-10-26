@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include <QtCore/QElapsedTimer>
+#include "qtwidgets_utils.h"
+
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QFileIconProvider>
@@ -34,13 +35,8 @@ private:
     QTreeWidget* m_treeWidget = nullptr;
     QFileInfo m_location;
     QFileIconProvider m_fileIconProvider;
-
-    // Tap/activation timing(see onTreeItemClicked/onTreeItemActivated)
-    QElapsedTimer m_clock;
-    QTreeWidgetItem* m_lastTapItem = nullptr;
-    qint64 m_lastTapTimeMs = -1;
-    QTreeWidgetItem* m_lastActivatedItem = nullptr;
-    qint64 m_lastActivatedTimeMs = -1000;
+    QtWidgetsUtils::TouchTapDetector m_tapDetector;
+    QtWidgetsUtils::TouchTapDetector m_activationDetector;
 };
 
 } // namespace Mayo

@@ -5,14 +5,11 @@
 
 #include "widget_file_system.h"
 #include "qstring_utils.h"
-#include "qtwidgets_utils.h"
 
 #include <QtCore/QDateTime>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
-#include <QtWidgets/QApplication>
 #include <QtWidgets/QBoxLayout>
-#include <QtWidgets/QScroller>
 #include <QtWidgets/QTreeWidget>
 
 namespace Mayo {
@@ -40,9 +37,7 @@ WidgetFileSystem::WidgetFileSystem(QWidget* parent)
     m_treeWidget->setIndentation(0);
 
     // Enable flick scrolling with a finger on touch screens
-    m_treeWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-    m_treeWidget->viewport()->setAttribute(Qt::WA_AcceptTouchEvents);
-    QScroller::grabGesture(m_treeWidget->viewport(), QScroller::TouchGesture);
+    QtWidgetsUtils::enableTouchScrolling(m_treeWidget);
 
     QObject::connect(
         m_treeWidget, &QTreeWidget::itemActivated,
@@ -51,7 +46,6 @@ WidgetFileSystem::WidgetFileSystem(QWidget* parent)
     // Touch sessions: a single tap must only highlight/select the entry, opening a file requires
     // an explicit double-tap(see onTreeItemClicked). Otherwise casual taps while flick-scrolling
     // would open files
-    m_clock.start();
     QObject::connect(
         m_treeWidget, &QTreeWidget::itemClicked,
         this, &WidgetFileSystem::onTreeItemClicked
@@ -84,15 +78,7 @@ void WidgetFileSystem::onTreeItemActivated(QTreeWidgetItem* item, int column)
         // Guard against duplicate activation of the same entry within a short time frame: a touch
         // double-tap may both synthesize a native double-click activation(and thus this function
         // being called) and trigger the manual double-tap detection(see onTreeItemClicked)
-        const qint64 nowMs = m_clock.elapsed();
-        const bool isDuplicateActivation =
-            item == m_lastActivatedItem
-            && m_lastActivatedTimeMs >= 0
-            && (nowMs - m_lastActivatedTimeMs) <= QApplication::doubleClickInterval()
-        ;
-        m_lastActivatedItem = item;
-        m_lastActivatedTimeMs = nowMs;
-        if (isDuplicateActivation)
+        if (m_activationDetector.isDoubleTap(m_treeWidget->indexFromItem(item)))
             return;
 
         if (item->text(0) == QLatin1String("..")) {
@@ -125,15 +111,7 @@ void WidgetFileSystem::onTreeItemClicked(QTreeWidgetItem* item, int column)
     if (!QtWidgetsUtils::isTouchSessionActive())
         return;
 
-    const qint64 nowMs = m_clock.elapsed();
-    const bool isDoubleTap =
-        item == m_lastTapItem
-        && m_lastTapTimeMs >= 0
-        && (nowMs - m_lastTapTimeMs) <= QApplication::doubleClickInterval()
-    ;
-    m_lastTapItem = item;
-    m_lastTapTimeMs = nowMs;
-    if (isDoubleTap)
+    if (m_tapDetector.isDoubleTap(m_treeWidget->indexFromItem(item)))
         this->onTreeItemActivated(item, column);
 }
 

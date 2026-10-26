@@ -5,13 +5,17 @@
 
 #pragma once
 
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QPersistentModelIndex>
+#include <QtCore/QPointF>
 #include <QtGui/QCursor>
 #include <QtWidgets/QMessageBox>
+#include <vector>
 class QAbstractScrollArea;
 class QLocale;
 class QMenu;
 class QScreen;
-class QSize;
+class QTouchEvent;
 class QWidget;
 
 namespace Mayo {
@@ -19,13 +23,16 @@ namespace Mayo {
 // Provides a collection of tools for the QtWidgets module
 class QtWidgetsUtils {
 public:
+    static constexpr int TouchLongPressDelayMs = 700;
+    static constexpr int TouchTapTimeoutMs = 300;
+
     static QScreen* screen(const QWidget* widget);
     static int screenPixelWidth(double screenRatio, const QWidget* parentWidget = nullptr);
     static int screenPixelHeight(double screenRatio, const QWidget* parentWidget = nullptr);
     static QSize screenPixelSize(double widthRatio, double heightRatio, const QWidget* parentWidget = nullptr);
 
-    // Returns true when the application session involves touch input(either a touchscreen device
-    // is available or environment variable MAYO_TOUCH_MODE is set to "1"/"on")
+    // Returns true when the application session involves touch input(a touchscreen device is
+    // available)
     // Several parts of the UI are adapted for touch when this function returns true(eg size of
     // interaction targets, hover-independent display, ...) because touch input has no equivalent
     // of mouse hover
@@ -34,6 +41,19 @@ public:
     // Configures 'scrollArea' so its contents can be scrolled with a finger on touch screens
     // (flick/kinetic scrolling based on QScroller)
     static void enableTouchScrolling(QAbstractScrollArea* scrollArea);
+
+    // Returns the positions of the touch points not yet released for 'event'
+    static std::vector<QPointF> activeTouchPositions(const QTouchEvent* event);
+
+    // Detects repeated taps on the same model index within the double-click interval
+    class TouchTapDetector {
+    public:
+        bool isDoubleTap(const QModelIndex& index);
+
+    private:
+        QElapsedTimer m_timer;
+        QPersistentModelIndex m_index;
+    };
 
     // Add 'contentsWidget' to 'containerWidget'
     // If 'containerWidget' is empty then a QBoxLayout is created to receive 'contentsWidget'
