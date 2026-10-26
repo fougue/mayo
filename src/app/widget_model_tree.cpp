@@ -11,12 +11,18 @@
 #include "../gui/gui_application.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "item_view_buttons.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 
 #include <QtCore/QtDebug>
+#include <QtCore/QLineF>
 #include <QtCore/QMetaType>
+#include <QtCore/QTimer>
 #include <QtGui/QMouseEvent>
+#include <QtGui/QTouchEvent>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
@@ -140,6 +146,21 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
 {
     m_ui->setupUi(this);
     m_ui->treeWidget_Model->setUniformRowHeights(true);
+    QtWidgetsUtils::enableTouchScrolling(m_ui->treeWidget_Model);
+
+    // Long-press(touch input) displays a context menu with the user actions, mirroring the
+    // desktop menu found in the left header gear button
+    if (QtWidgetsUtils::isTouchSessionActive()) {
+        auto touchPressTimer = new QTimer(this);
+        touchPressTimer->setSingleShot(true);
+        touchPressTimer->setInterval(700);
+        QObject::connect(
+            touchPressTimer, &QTimer::timeout,
+            this, &WidgetModelTree::onTreeWidgetTouchLongPress
+        );
+        m_ui->treeWidget_Model->viewport()->installEventFilter(this);
+        m_touchPressTimer = touchPressTimer;
+    }
     for (const BuilderPtr& ptrBuilder : Internal::arrayPrototypeBuilder()) {
         m_vecBuilder.push_back(ptrBuilder->clone());
         m_vecBuilder.back()->setTreeWidget(m_ui->treeWidget_Model);
@@ -155,10 +176,17 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
         idBtnRemove, Internal::TreeItemTypeRole, QVariant{Internal::TreeItemType_DocumentEntity}
     );
     modelTreeBtns->setButtonDisplayColumn(idBtnRemove, 0);
-    modelTreeBtns->setButtonDisplayModes(idBtnRemove, ItemViewButtons::DisplayOnDetection);
+    // Touch input has no hover: display the remove button on the selected item instead
+    modelTreeBtns->setButtonDisplayModes(
+        idBtnRemove,
+        QtWidgetsUtils::isTouchSessionActive() ?
+            ItemViewButtons::DisplayWhenItemSelected :
+            ItemViewButtons::DisplayOnDetection
+    );
     modelTreeBtns->setButtonItemSide(idBtnRemove, ItemViewButtons::ItemRightSide);
     const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
-    modelTreeBtns->setButtonIconSize(idBtnRemove, QSize(iconSize * 0.66, iconSize * 0.66));
+    const double btnIconFactor = QtWidgetsUtils::isTouchSessionActive() ? 1.0 : 0.66;
+    modelTreeBtns->setButtonIconSize(idBtnRemove, QSize(iconSize * btnIconFactor, iconSize * btnIconFactor));
     modelTreeBtns->installDefaultItemDelegate();
     QObject::connect(
         modelTreeBtns, &ItemViewButtons::buttonClicked,
@@ -176,6 +204,94 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
 WidgetModelTree::~WidgetModelTree()
 {
     delete m_ui;
+}
+
+bool WidgetModelTree::eventFilter(QObject* watched, QEvent* event)
+{
+    if (m_touchPressTimer && watched == m_ui->treeWidget_Model->viewport()) {
+        switch (event->type()) {
+        case QEvent::TouchBegin: {
+            const auto touchEvent = static_cast<const QTouchEvent*>(event);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            if (!touchEvent->points().empty()) {
+                m_touchPressPos = touchEvent->points().front().position().toPoint();
+                m_touchPressTimer->setProperty("pressActive", true);
+                m_touchPressTimer->start();
+            }
+#else
+            if (!touchEvent->touchPoints().empty()) {
+                m_touchPressPos = touchEvent->touchPoints().front().pos().toPoint();
+                m_touchPressTimer->setProperty("pressActive", true);
+                m_touchPressTimer->start();
+            }
+#endif
+            break;
+        }
+        case QEvent::TouchUpdate: {
+            const auto touchEvent = static_cast<const QTouchEvent*>(event);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            if (!touchEvent->points().empty()) {
+                const QPointF currPos = touchEvent->points().front().position();
+                if (QLineF(m_touchPressPos, currPos).length() > QApplication::startDragDistance())
+                    this->cancelTreeWidgetTouchPress();
+            }
+#else
+            if (!touchEvent->touchPoints().empty()) {
+                const QPointF currPos = touchEvent->touchPoints().front().pos();
+                if (QLineF(m_touchPressPos, currPos).length() > QApplication::startDragDistance())
+                    this->cancelTreeWidgetTouchPress();
+            }
+#endif
+            break;
+        }
+        case QEvent::TouchEnd:
+        case QEvent::TouchCancel:
+            this->cancelTreeWidgetTouchPress();
+            break;
+        default:
+            break;
+        } // end switch
+    }
+
+    return QWidget::eventFilter(watched, event);
+}
+
+void WidgetModelTree::cancelTreeWidgetTouchPress()
+{
+    if (m_touchPressTimer) {
+        m_touchPressTimer->setProperty("pressActive", false);
+        m_touchPressTimer->stop();
+    }
+}
+
+void WidgetModelTree::onTreeWidgetTouchLongPress()
+{
+    if (!m_touchPressTimer || !m_touchPressTimer->property("pressActive").toBool())
+        return;
+
+    this->cancelTreeWidgetTouchPress();
+    const QModelIndex index = m_ui->treeWidget_Model->indexAt(m_touchPressPos);
+    if (!index.isValid())
+        return;
+
+    // Create the context menu lazily and reuse it afterwards(actions state is re-synced on
+    // each display with WidgetModelTree_UserActions::fnSyncItems)
+    if (!m_touchContextMenu) {
+        m_touchContextMenu = new QMenu(m_ui->treeWidget_Model);
+        const WidgetModelTree_UserActions userActions = this->createUserActions(m_touchContextMenu);
+        for (QAction* action : userActions.items)
+            m_touchContextMenu->addAction(action);
+
+        m_fnSyncTouchContextMenuItems = userActions.fnSyncItems;
+    }
+
+    if (m_touchContextMenu->actions().empty())
+        return;
+
+    if (m_fnSyncTouchContextMenuItems)
+        m_fnSyncTouchContextMenuItems();
+
+    m_touchContextMenu->popup(m_ui->treeWidget_Model->viewport()->mapToGlobal(m_touchPressPos));
 }
 
 void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
