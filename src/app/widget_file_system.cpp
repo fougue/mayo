@@ -10,6 +10,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QScroller>
 #include <QtWidgets/QTreeWidget>
 
 namespace Mayo {
@@ -36,8 +37,19 @@ WidgetFileSystem::WidgetFileSystem(QWidget* parent)
     m_treeWidget->setColumnCount(1);
     m_treeWidget->setIndentation(0);
 
+    // Enable flick scrolling with a finger on touch screens
+    m_treeWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    m_treeWidget->viewport()->setAttribute(Qt::WA_AcceptTouchEvents);
+    QScroller::grabGesture(m_treeWidget->viewport(), QScroller::TouchGesture);
+
     QObject::connect(
         m_treeWidget, &QTreeWidget::itemActivated,
+        this, &WidgetFileSystem::onTreeItemActivated
+    );
+    // Single tap/click also triggers navigation or file opening: on touch screens itemActivated()
+    // requires a double tap which is not discoverable
+    QObject::connect(
+        m_treeWidget, &QTreeWidget::itemClicked,
         this, &WidgetFileSystem::onTreeItemActivated
     );
 }

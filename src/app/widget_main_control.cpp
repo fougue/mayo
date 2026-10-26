@@ -523,6 +523,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
     auto widgetCtrl = widget->controller();
     widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
     widgetCtrl->setNavigationStyle(appProps->navigationStyle);
+    gfxScene->setSelectionPixelTolerance(appProps->selectionPixelTolerance.value());
     if (appProps->defaultShowOriginTrihedron) {
         guiDoc->toggleOriginTrihedronVisibility();
         gfxScene->redraw();
@@ -536,6 +537,8 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
                 widgetCtrl->setNavigationStyle(appProps->navigationStyle);
             else if (setting == &appProps->viewCubeCorner)
                 guiDoc->setViewTrihedronCorner(appProps->graphicsViewCubeCornerValue());
+            else if (setting == &appProps->selectionPixelTolerance)
+                gfxScene->setSelectionPixelTolerance(appProps->selectionPixelTolerance.value());
         }
     );
     // NOTE
