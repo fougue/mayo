@@ -149,6 +149,7 @@ QWidgetOccView::QWidgetOccView(const OccHandle<V3d_View>& view, QWidget* parent)
     : QWidget(parent),
       IWidgetOccView(view)
 {
+    this->setAttribute(Qt::WA_AcceptTouchEvents);
     this->setMouseTracking(true);
     this->setBackgroundRole(QPalette::NoRole);
 

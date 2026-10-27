@@ -6,6 +6,7 @@
 #include "list_helper.h"
 
 #include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
@@ -246,8 +247,11 @@ bool ItemDelegate::editorEvent(
         if (mev->button() != Qt::LeftButton)
             return false;
 
-        if (index.isValid())
+        if (index.isValid()
+            && (!QtWidgetsUtils::isTouchSessionActive() || m_touchTapDetector.isDoubleTap(index)))
+        {
             this->clickAction(item);
+        }
     }
 
     return QStyledItemDelegate::editorEvent(event, model, option, index);

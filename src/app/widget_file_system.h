@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "qtwidgets_utils.h"
+
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QFileIconProvider>
@@ -26,12 +28,15 @@ signals:
 
 private:
     void onTreeItemActivated(QTreeWidgetItem* item, int column);
+    void onTreeItemClicked(QTreeWidgetItem* item, int column);
     void setCurrentFolder(const QDir& dir);
     void selectFileInCurrentFolder(const QString& fileName);
 
     QTreeWidget* m_treeWidget = nullptr;
     QFileInfo m_location;
     QFileIconProvider m_fileIconProvider;
+    QtWidgetsUtils::TouchTapDetector m_tapDetector;
+    QtWidgetsUtils::TouchTapDetector m_activationDetector;
 };
 
 } // namespace Mayo

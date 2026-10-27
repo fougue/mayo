@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "qtwidgets_utils.h"
+
 #include <QtCore/QMetaType>
 #include <QtCore/QVariantAnimation>
 #include <QtGui/QTextOption>
@@ -94,6 +96,10 @@ protected:
 
 private:
     void drawItem();
+
+    // On touch sessions, activation(open) of an item requires a double-tap: a single tap only
+    // highlights/selects the item. Otherwise casual taps while flick-scrolling would open files
+    QtWidgetsUtils::TouchTapDetector m_touchTapDetector;
 
     QColor m_frameColor;
     QColor m_pixmapColor;

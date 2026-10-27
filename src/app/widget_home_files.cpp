@@ -11,6 +11,7 @@
 #include "app_module_properties.h"
 #include "qstring_utils.h"
 #include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include "recent_files.h"
 #include "theme.h"
 
@@ -219,6 +220,7 @@ WidgetHomeFiles::WidgetHomeFiles(QWidget* parent)
 
     m_gridView = new GridHelper::View(this);
     m_gridView->setModel(&m_gridModel);
+    QtWidgetsUtils::enableTouchScrolling(m_gridView);
     layout->addWidget(m_gridView);
 
     m_gridDelegate = new HomeFilesDelegate(this);
