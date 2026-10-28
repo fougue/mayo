@@ -348,7 +348,7 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
 
     QuickJsClassRegistry classRegistry(runtime.get());
     JS_SetRuntimeOpaque(runtime.get(), &classRegistry);
-    classRegistry.newClass(QuickJsTask::className);
+    classRegistry.newClass(QuickJsTask::className, QuickJsTask::finalizer);
 
     // Create JS context
     QuickJsContext context{JS_NewContext(runtime.get())};
@@ -368,8 +368,11 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
     JS_SetContextOpaque(context.get(), &evalState);
     installConsole(context.get());
 
-    for (const EvaluateCallback& callback : m_preEvaluateCallbacks)
-        callback(context.get(), evalState);
+    for (const EvaluateCallback& callback : m_preEvaluateCallbacks) {
+        auto result = callback(context.get(), evalState);
+        if (result.isException())
+            return handleError(context.takeException());
+    }
 
     // Evaluate JS program
     auto moduleValue = context.eval(script, scriptFilePath, JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);

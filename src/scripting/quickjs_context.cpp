@@ -34,6 +34,26 @@ QuickJsValue QuickJsContext::throwInternalError(JSContext* context, const char* 
 {
     return { context, JS_ThrowInternalError(context, "%s", message) };
 }
+
+QuickJsValue QuickJsContext::throwError(JSContext* context, std::string_view message)
+{
+    auto error = QuickJsValue::newError(context, message);
+    if (error.isException())
+        return error;
+    else
+        return { context, JS_Throw(context, error.release()) };
+}
+
+QuickJsValue QuickJsContext::throwError(std::string_view message) const
+{
+    return throwError(this->get(), message);
+}
+
+QuickJsValue QuickJsContext::getGlobalObject(JSContext* context)
+{
+    return { context, JS_GetGlobalObject(context) };
+}
+
 QuickJsValue QuickJsContext::getModuleNamespace(JSModuleDef* module) const
 {
     return { this->get(), JS_GetModuleNamespace(this->get(), module) };

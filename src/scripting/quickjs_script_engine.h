@@ -26,7 +26,7 @@ class QuickJsScriptEvaluation;
 class QuickJsScriptEngine : public IScriptEngine {
 public:
     using EvaluationState = QuickJsScriptEvaluation;
-    using EvaluateCallback = std::function<void(JSContext*, EvaluationState&)>;
+    using EvaluateCallback = std::function<QuickJsValue(JSContext*, EvaluationState&)>;
 
     ~QuickJsScriptEngine();
 

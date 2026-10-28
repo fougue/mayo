@@ -69,7 +69,9 @@ void runCooperativeTask(ShutdownTestState& state, TaskProgress* progress)
     state.condition.notify_all();
 }
 
-void startCooperativeTasks(QuickJsScriptEvaluation& evaluation, ShutdownTestState& state, int count)
+QuickJsValue startCooperativeTasks(
+        QuickJsScriptEvaluation& evaluation, ShutdownTestState& state, int count
+    )
 {
     for (int i = 0; i < count; ++i) {
         auto task = evaluation.startTask([&state](TaskProgress* progress) {
@@ -77,8 +79,8 @@ void startCooperativeTasks(QuickJsScriptEvaluation& evaluation, ShutdownTestStat
             return std::any{};
         });
         if (task.isException()) {
-            auto exception = QuickJsContext::takeException(evaluation.context());
-            QFAIL(exception.toStdString().value_or(std::string{}).c_str());
+            QTest::qFail("Failed to start cooperative task", __FILE__, __LINE__);
+            return task; // Propagate JS_EXCEPTION to the engine
         }
     }
 
@@ -86,6 +88,8 @@ void startCooperativeTasks(QuickJsScriptEvaluation& evaluation, ShutdownTestStat
         std::lock_guard lock(state.mutex);
         state.startupTimedOut = true;
     }
+
+    return {};
 }
 
 void verifyTasksStopped(ShutdownTestState& state, int expectedCount)
@@ -436,9 +440,13 @@ void TestScripting::QuickJsScriptEngine_shutdownWaitsForRunningTask_test()
 
     engine.addPreEvaluateCallback(
         [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
-            startCooperativeTasks(evaluation, state, 1);
-            // Don't let the script execute before work had started
-            waitForTasksStarted(state, 1);
+            auto result = startCooperativeTasks(evaluation, state, 1);
+            if (!result.isException()) {
+                // Don't let the script execute before work had started
+                waitForTasksStarted(state, 1);
+            }
+
+            return result;
         }
     );
 
@@ -458,7 +466,7 @@ void TestScripting::QuickJsScriptEngine_shutdownAbortsAllRunningTasks_test()
 
     engine.addPreEvaluateCallback(
         [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
-            startCooperativeTasks(evaluation, state, taskCount);
+            return startCooperativeTasks(evaluation, state, taskCount);
         }
     );
 
@@ -476,7 +484,7 @@ void TestScripting::QuickJsScriptEngine_shutdownWithPendingCompletionJob_test()
 
     engine.addPreEvaluateCallback(
         [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
-            startCooperativeTasks(evaluation, state, 1);
+            return startCooperativeTasks(evaluation, state, 1);
         }
     );
 
@@ -494,7 +502,7 @@ void TestScripting::QuickJsScriptEngine_stopEvaluateAbortsPendingTasks_test()
 
     engine.addPreEvaluateCallback(
         [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
-            startCooperativeTasks(evaluation, state, 1);
+            return startCooperativeTasks(evaluation, state, 1);
         }
     );
 
@@ -518,7 +526,7 @@ void TestScripting::QuickJsScriptEngine_shutdownStress_test()
 
         engine.addPreEvaluateCallback(
             [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
-                startCooperativeTasks(evaluation, state, taskCount);
+                return startCooperativeTasks(evaluation, state, taskCount);
             }
         );
 
@@ -546,7 +554,7 @@ void TestScripting::QuickJsScriptEngine_shutdownWhileTaskIsFinishing_test()
 
     engine.addPreEvaluateCallback(
         [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
-            evaluation.startTask([&](TaskProgress* progress) {
+            return evaluation.startTask([&](TaskProgress* progress) {
                 {
                     std::lock_guard lock(state.mutex);
                     ++state.tasksStarted;

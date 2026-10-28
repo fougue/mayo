@@ -35,6 +35,11 @@ public:
 
     static QuickJsValue throwInternalError(JSContext* context, const char* message);
 
+    static QuickJsValue throwError(JSContext* context, std::string_view message);
+    QuickJsValue throwError(std::string_view message) const;
+
+    static QuickJsValue getGlobalObject(JSContext* context);
+
     QuickJsValue getModuleNamespace(JSModuleDef* module) const;
     QuickJsValue getModuleDefaultExport(JSModuleDef* module) const;
 };

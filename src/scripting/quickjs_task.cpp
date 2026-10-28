@@ -10,6 +10,7 @@
 #include "quickjs_script_engine.h"
 #include "quickjs_script_evaluation.h"
 
+#include <cassert>
 #include <memory>
 
 namespace Mayo {
@@ -70,11 +71,11 @@ QuickJsValue QuickJsTask::create(QuickJsScriptEvaluation& evaluation, TaskId tas
     return object;
 }
 
-void QuickJsTask::finalizer(JSRuntime* runtime, JSValue value)
+void QuickJsTask::finalizer(JSRuntime*, JSValue value)
 {
-    auto classId = QuickJsScriptEngine::findClassId(runtime, className);
-    if (classId != JS_INVALID_CLASS_ID)
-        delete static_cast<TaskHandle*>(JS_GetOpaque(value, classId));
+    const JSClassID classId = JS_GetClassID(value);
+    assert(classId != JS_INVALID_CLASS_ID);
+    delete static_cast<TaskHandle*>(JS_GetOpaque(value, classId));
 }
 
 JSValue QuickJsTask::onProgress(JSContext* context, JSValueConst thisValue, int argc, JSValueConst* argv)

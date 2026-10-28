@@ -119,7 +119,7 @@ JSValue jsWaitAbortMax5secTask(JSContext* context, JSValueConst, int, JSValueCon
     }).release();
 }
 
-void installTestApi(JSContext* context, QuickJsScriptEvaluation& evaluation)
+QuickJsValue installTestApi(JSContext* context, QuickJsScriptEvaluation& evaluation)
 {
     QuickJsValue global{ context, JS_GetGlobalObject(context) };
 
@@ -163,6 +163,8 @@ void installTestApi(JSContext* context, QuickJsScriptEvaluation& evaluation)
     );
 
     global.setProperty("test", std::move(test));
+
+    return {};
 }
 
 } // namespace
