@@ -52,6 +52,8 @@ public:
     bool isException() const;
     bool isError() const;
     bool isFunction() const;
+    bool isBool() const;
+    bool isObject() const;
 
     void* getOpaquePtr(JSClassID classId) const;
     void* getOpaquePtrOrThrow(JSClassID classId) const;
@@ -61,12 +63,14 @@ public:
     QuickJsValue promiseResult() const;
 
     QuickJsValue getProperty(const char* name) const;
+    static QuickJsValue getProperty(JSContext* context, JSValueConst thisObj, const char* name);
     bool defineProperty(const char* name, QuickJsValue value, int flags);
     bool defineProperty(const char* name, JSValue value, int flags);
     bool setProperty(const char* name, QuickJsValue value);
     bool setProperty(const char* name, JSValue value);
     bool setFunction(const char* name, JSCFunction* func, int length = 0);
 
+    std::optional<bool> toBool() const;
     std::optional<int32_t> toInt32() const;
     std::optional<std::string> toStdString() const;
 
@@ -81,7 +85,10 @@ public:
     static QuickJsValue newObjectClass(JSContext* context, JSClassID classId);
 
     static QuickJsValue newFunction(
-        JSContext* context, JSCFunction* func, const char* name, int length = 0
+        JSContext* context, JSCFunction* fn, const char* name, int length = 0
+    );
+    static QuickJsValue newFunction(
+        JSContext* context, JSCFunction* fn, const char* name, JSCFunctionEnum fnType, int length = 0
     );
 };
 

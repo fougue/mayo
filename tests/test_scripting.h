@@ -32,6 +32,11 @@ private slots:
     void QuickJsScriptEngine_evaluateNestedModules_test();
     void QuickJsScriptEngine_evaluateTwice_test();
 
+    void QuickJsMayoApi_hostApplication_test();
+    void QuickJsMayoApi_applicationGraphics_test();
+    void QuickJsMayoApi_applicationGraphics_test_data();
+    void QuickJsMayoApi_applicationRejectsInvalidGraphics_test();
+
     void QuickJsScriptEngine_evaluateValue_test();
     void QuickJsScriptEngine_evaluateValue_test_data();
 

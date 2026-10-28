@@ -263,9 +263,9 @@ void QuickJsScriptEngine::addPreEvaluateCallback(EvaluateCallback callback)
         m_preEvaluateCallbacks.push_back(std::move(callback));
 }
 
-const QuickJsClassRegistry* QuickJsScriptEngine::getClassRegistry(JSRuntime* runtime)
+QuickJsClassRegistry* QuickJsScriptEngine::getClassRegistry(JSRuntime* runtime)
 {
-    return static_cast<const QuickJsClassRegistry*>(JS_GetRuntimeOpaque(runtime));
+    return static_cast<QuickJsClassRegistry*>(JS_GetRuntimeOpaque(runtime));
 }
 
 JSClassID QuickJsScriptEngine::findClassId(JSRuntime* runtime, const char* className)
@@ -369,7 +369,7 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
     installConsole(context.get());
 
     for (const EvaluateCallback& callback : m_preEvaluateCallbacks) {
-        auto result = callback(context.get(), evalState);
+        auto result = callback(evalState);
         if (result.isException())
             return handleError(context.takeException());
     }

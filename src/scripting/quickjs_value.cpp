@@ -63,6 +63,16 @@ bool QuickJsValue::isFunction() const
     return JS_IsFunction(this->context(), this->get());
 }
 
+bool QuickJsValue::isBool() const
+{
+    return JS_IsBool(this->get());
+}
+
+bool QuickJsValue::isObject() const
+{
+    return JS_IsObject(this->get());
+}
+
 void* QuickJsValue::getOpaquePtr(JSClassID classId) const
 {
     return JS_GetOpaque(this->get(), classId);
@@ -90,7 +100,12 @@ QuickJsValue QuickJsValue::promiseResult() const
 
 QuickJsValue QuickJsValue::getProperty(const char* name) const
 {
-    return { this->context(), JS_GetPropertyStr(this->context(), this->get(), name) };
+    return getProperty(this->context(), this->get(), name);
+}
+
+QuickJsValue QuickJsValue::getProperty(JSContext* context, JSValueConst thisObj, const char* name)
+{
+    return { context, JS_GetPropertyStr(context, thisObj, name) };
 }
 
 bool QuickJsValue::defineProperty(const char* name, QuickJsValue value, int flags)
@@ -120,6 +135,18 @@ bool QuickJsValue::setFunction(const char* name, JSCFunction* func, int length)
         return false;
 
     return this->setProperty(name, std::move(funcValue));
+}
+
+std::optional<bool> QuickJsValue::toBool() const
+{
+    if (!this->context())
+        return std::nullopt;
+
+    const int toBoolResult = JS_ToBool(this->context(), this->get());
+    if (toBoolResult < 0)
+        return std::nullopt;
+
+    return toBoolResult != 0;
 }
 
 std::optional<int32_t> QuickJsValue::toInt32() const
@@ -201,10 +228,17 @@ QuickJsValue QuickJsValue::newObjectClass(JSContext* context, JSClassID classId)
 }
 
 QuickJsValue QuickJsValue::newFunction(
-        JSContext* context, JSCFunction* func, const char* name, int length
+        JSContext* context, JSCFunction* fn, const char* name, int length
     )
 {
-    return { context, JS_NewCFunction(context, func, name, length) };
+    return { context, JS_NewCFunction(context, fn, name, length) };
+}
+
+QuickJsValue QuickJsValue::newFunction(
+        JSContext* context, JSCFunction* fn, const char* name, JSCFunctionEnum fnType, int length
+    )
+{
+    return { context, JS_NewCFunction2(context, fn, name, length, fnType, 0/*magic*/) };
 }
 
 } // namespace Mayo

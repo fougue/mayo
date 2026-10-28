@@ -26,7 +26,7 @@ class QuickJsScriptEvaluation;
 class QuickJsScriptEngine : public IScriptEngine {
 public:
     using EvaluationState = QuickJsScriptEvaluation;
-    using EvaluateCallback = std::function<QuickJsValue(JSContext*, EvaluationState&)>;
+    using EvaluateCallback = std::function<QuickJsValue(EvaluationState&)>;
 
     ~QuickJsScriptEngine();
 
@@ -39,7 +39,7 @@ public:
 
     void addPreEvaluateCallback(EvaluateCallback callback);
 
-    static const QuickJsClassRegistry* getClassRegistry(JSRuntime* runtime);
+    static QuickJsClassRegistry* getClassRegistry(JSRuntime* runtime);
     static JSClassID findClassId(JSRuntime* runtime, const char* className);
 
     static EvaluationState* getEvaluationState(JSContext* context);

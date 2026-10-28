@@ -119,8 +119,9 @@ JSValue jsWaitAbortMax5secTask(JSContext* context, JSValueConst, int, JSValueCon
     }).release();
 }
 
-QuickJsValue installTestApi(JSContext* context, QuickJsScriptEvaluation& evaluation)
+QuickJsValue installTestApi(QuickJsScriptEvaluation& evaluation)
 {
+    JSContext* context = evaluation.context();
     QuickJsValue global{ context, JS_GetGlobalObject(context) };
 
     QuickJsValue test = QuickJsValue::newObject(context);

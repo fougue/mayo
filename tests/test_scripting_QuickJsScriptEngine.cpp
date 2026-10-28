@@ -439,7 +439,7 @@ void TestScripting::QuickJsScriptEngine_shutdownWaitsForRunningTask_test()
     engine.setScript("42");
 
     engine.addPreEvaluateCallback(
-        [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
+        [&state](QuickJsScriptEvaluation& evaluation) {
             auto result = startCooperativeTasks(evaluation, state, 1);
             if (!result.isException()) {
                 // Don't let the script execute before work had started
@@ -465,7 +465,7 @@ void TestScripting::QuickJsScriptEngine_shutdownAbortsAllRunningTasks_test()
     engine.setScript("42");
 
     engine.addPreEvaluateCallback(
-        [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
+        [&](QuickJsScriptEvaluation& evaluation) {
             return startCooperativeTasks(evaluation, state, taskCount);
         }
     );
@@ -483,7 +483,7 @@ void TestScripting::QuickJsScriptEngine_shutdownWithPendingCompletionJob_test()
     engine.setScript("42");
 
     engine.addPreEvaluateCallback(
-        [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
+        [&state](QuickJsScriptEvaluation& evaluation) {
             return startCooperativeTasks(evaluation, state, 1);
         }
     );
@@ -501,7 +501,7 @@ void TestScripting::QuickJsScriptEngine_stopEvaluateAbortsPendingTasks_test()
     engine.setScript("while (true) {}");
 
     engine.addPreEvaluateCallback(
-        [&state](JSContext*, QuickJsScriptEvaluation& evaluation) {
+        [&state](QuickJsScriptEvaluation& evaluation) {
             return startCooperativeTasks(evaluation, state, 1);
         }
     );
@@ -525,7 +525,7 @@ void TestScripting::QuickJsScriptEngine_shutdownStress_test()
         engine.setScript("42");
 
         engine.addPreEvaluateCallback(
-            [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
+            [&](QuickJsScriptEvaluation& evaluation) {
                 return startCooperativeTasks(evaluation, state, taskCount);
             }
         );
@@ -553,7 +553,7 @@ void TestScripting::QuickJsScriptEngine_shutdownWhileTaskIsFinishing_test()
     engine.setScript("42");
 
     engine.addPreEvaluateCallback(
-        [&](JSContext*, QuickJsScriptEvaluation& evaluation) {
+        [&](QuickJsScriptEvaluation& evaluation) {
             return evaluation.startTask([&](TaskProgress* progress) {
                 {
                     std::lock_guard lock(state.mutex);

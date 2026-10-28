@@ -5,21 +5,15 @@
 
 #pragma once
 
-#include "../base/application.h"
+#include "quickjs_value.h"
 
 namespace Mayo {
 
-class ScriptDocument {
-};
+class QuickJsScriptEvaluation;
+class ScriptHostEnvironment;
 
-class ScriptApplication {
-public:
-    //std::string semanticVersion() const;
-    int documentCount() const;
-    ScriptDocument newDocument();
-
-private:
-    ApplicationPtr m_app;
-};
+QuickJsValue quickjs_installMayoApi(
+    QuickJsScriptEvaluation& evaluation, const ScriptHostEnvironment& hostEnv
+);
 
 } // namespace Mayo
