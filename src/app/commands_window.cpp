@@ -21,7 +21,8 @@ CommandMainWidgetToggleFullscreen::CommandMainWidgetToggleFullscreen(IAppContext
     auto action = this->createAction();
     action->setText(Command::tr("Fullscreen"));
     action->setToolTip(Command::tr("Switch Fullscreen/Normal"));
-    action->setShortcut(QKeySequence::StandardKey::FullScreen);
+    // NOTE QKeySequence::StandardKey::FullScreen is not bound on every desktop environment
+    action->setShortcut(QKeySequence(Qt::Key_F11));
     action->setCheckable(true);
     action->setChecked(context->widgetMain()->isFullScreen());
 }

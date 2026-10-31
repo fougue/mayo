@@ -87,7 +87,8 @@ CommandEditOptions::CommandEditOptions(IAppContext* context)
     action->setMenuRole(QAction::PreferencesRole);
     action->setText(Command::tr("Options"));
     action->setToolTip(Command::tr("Options"));
-    action->setShortcut(QKeySequence::StandardKey::Preferences);
+    // NOTE QKeySequence::StandardKey::Preferences is not bound on every desktop environment
+    action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
 }
 
 void CommandEditOptions::execute()
