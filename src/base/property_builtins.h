@@ -127,6 +127,16 @@ using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;
 using PropertyFilePath = GenericProperty<FilePath>;
 
+// Property holding a keyboard shortcut as portable text(eg "Ctrl+Shift+O")
+// An empty value means that no shortcut is assigned
+class PropertyKeySequence : public GenericProperty<std::string> {
+public:
+    using GenericProperty<std::string>::GenericProperty;
+
+    const char* dynTypeName() const override { return TypeName; }
+    static const char TypeName[];
+};
+
 using PropertyLength = GenericPropertyQuantity<Unit::Length>;
 using PropertyArea = GenericPropertyQuantity<Unit::Area>;
 using PropertyVolume = GenericPropertyQuantity<Unit::Volume>;
