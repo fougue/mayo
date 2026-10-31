@@ -10,11 +10,13 @@
 #include "../qtbackend/qsettings_storage.h"
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
+#include "command_shortcuts.h"
 #include "item_view_buttons.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
 #include "theme.h"
 #include "ui_dialog_options.h"
+#include "widget_command_shortcuts.h"
 
 #include <QtCore/QSettings>
 #include <QtGui/QStandardItemModel>
@@ -167,12 +169,30 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
             QtGuiUtils::FontChange(m_ui->listWidget_Settings->font())
             .bold(true).scalePointSizeF(1.7);
 
+    CommandShortcuts* cmdShortcuts = CommandShortcuts::instance();
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
         const Settings::GroupIndex indexGroup(iGroup);
         const QString titleGroup = to_QString(settings->groupTitle(indexGroup));
         auto listItemGroup = new QListWidgetItem(titleGroup, m_ui->listWidget_Settings);
         listItemGroup->setFont(fontItemGroupSection);
         listItemGroup->setData(ItemSettingNodeId_Role, toSettingNodeId(indexGroup));
+        m_vecSearchEntry.push_back({ listItemGroup, titleGroup, true });
+
+        if (cmdShortcuts && indexGroup == cmdShortcuts->groupId_shortcuts) {
+            // All the keyboard shortcuts are edited at once, with a dedicated widget
+            QString strSearchText = titleGroup;
+            for (const CommandShortcuts::Entry& entry : cmdShortcuts->entries())
+                strSearchText += QLatin1Char(' ') + to_QString(entry.label);
+            auto widgetShortcuts = new WidgetCommandShortcuts(cmdShortcuts);
+            auto listItem = new QListWidgetItem;
+            listItem->setData(ItemSettingNodeId_Role, toSettingNodeId(indexGroup));
+            listItem->setSizeHint(widgetShortcuts->sizeHint());
+            m_ui->listWidget_Settings->addItem(listItem);
+            m_ui->listWidget_Settings->setItemWidget(listItem, widgetShortcuts);
+            m_vecSearchEntry.push_back({ listItem, strSearchText, false });
+            continue;
+        }
+
         for (int iSection = 0; iSection < settings->sectionCount(indexGroup); ++iSection) {
             const Settings::SectionIndex indexSection(indexGroup, iSection);
             const int settingCount = settings->settingCount(indexSection);
@@ -184,6 +204,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                 auto listItemSection = new QListWidgetItem(titleSection, m_ui->listWidget_Settings);
                 listItemSection->setFont(fontItemGroupSection);
                 listItemSection->setData(ItemSettingNodeId_Role, toSettingNodeId(indexSection));
+                m_vecSearchEntry.push_back({ listItemSection, titleSection, true });
             }
 
             for (int iSetting = 0; iSetting < settingCount; ++iSetting) {
@@ -198,6 +219,13 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                 m_ui->listWidget_Settings->addItem(listItemSetting);
                 m_ui->listWidget_Settings->setItemWidget(listItemSetting, widget);
                 m_mapSettingEditor.insert({ property, widget });
+                m_vecSearchEntry.push_back({
+                    listItemSetting,
+                    to_QString(property->label()) + QLatin1Char(' ')
+                        + to_QString(property->description()) + QLatin1Char(' ')
+                        + to_QString(property->name().key),
+                    false
+                });
             } // endfor(setting)
         } // endfor(section)
     }
@@ -255,6 +283,11 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         if (!indexList.isEmpty())
             m_ui->listWidget_Settings->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);
     });
+
+    QObject::connect(
+        m_ui->lineEdit_SettingsSearch, &QLineEdit::textChanged,
+        this, &DialogOptions::applySettingsSearch
+    );
 
     // Action for "Cancel" button : restore changed properties to their initial values
     QObject::connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &DialogOptions::cancelChanges);
@@ -391,6 +424,42 @@ void DialogOptions::cancelChanges()
 
     m_connSettingsAboutToChange.block(false);
     m_connSettingsChanged.block(false);
+}
+
+void DialogOptions::applySettingsSearch(const QString& text)
+{
+    const QString strSearch = text.trimmed();
+    if (strSearch.isEmpty()) {
+        for (const SearchEntry& entry : m_vecSearchEntry)
+            entry.item->setHidden(false);
+        return;
+    }
+
+    // A setting is visible when its search text contains the searched text
+    std::vector<bool> vecIsMatch(m_vecSearchEntry.size(), false);
+    for (std::size_t i = 0; i < m_vecSearchEntry.size(); ++i) {
+        const SearchEntry& entry = m_vecSearchEntry[i];
+        vecIsMatch[i] = !entry.isHeader && entry.text.contains(strSearch, Qt::CaseInsensitive);
+    }
+
+    // A group/section header is visible as soon as one of its settings is visible
+    for (std::size_t i = m_vecSearchEntry.size(); i > 0; --i) {
+        const std::size_t index = i - 1;
+        if (!m_vecSearchEntry[index].isHeader)
+            continue;
+
+        for (std::size_t j = index + 1; j < m_vecSearchEntry.size(); ++j) {
+            if (m_vecSearchEntry[j].isHeader)
+                break;
+            if (vecIsMatch[j]) {
+                vecIsMatch[index] = true;
+                break;
+            }
+        }
+    }
+
+    for (std::size_t i = 0; i < m_vecSearchEntry.size(); ++i)
+        m_vecSearchEntry[i].item->setHidden(!vecIsMatch[i]);
 }
 
 void DialogOptions::handleTreeViewButtonClick_restoreDefaults(const QModelIndex& index)

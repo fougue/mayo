@@ -256,6 +256,9 @@ PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Proper
     else if (isType<PropertyString>(prop)) {
         return constRef<PropertyString>(prop).value();
     }
+    else if (isType<PropertyKeySequence>(prop)) {
+        return constRef<PropertyKeySequence>(prop).value();
+    }
     else if (isType<PropertyFilePath>(prop)) {
         return constRef<PropertyFilePath>(prop).value().u8string();
     }
@@ -315,6 +318,12 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
             return propertyFromVariant(ptr<PropertyString>(prop), variant, &Variant::toConstRefString);
         else
             return propertyFromVariant(ptr<PropertyString>(prop), variant, &Variant::toString);
+    }
+    else if (isType<PropertyKeySequence>(prop)) {
+        if (variant.isConvertibleToConstRefString())
+            return propertyFromVariant(ptr<PropertyKeySequence>(prop), variant, &Variant::toConstRefString);
+        else
+            return propertyFromVariant(ptr<PropertyKeySequence>(prop), variant, &Variant::toString);
     }
     else if (isType<PropertyFilePath>(prop)) {
         return propertyFromVariantFilePath(ptr<PropertyFilePath>(prop), variant);

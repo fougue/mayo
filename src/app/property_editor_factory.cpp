@@ -12,6 +12,7 @@
 #include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
 #include "app_module_properties.h"
+#include "command_shortcuts.h"
 #include "qstring_utils.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
@@ -20,6 +21,7 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QColorDialog>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QKeySequenceEdit>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLayout>
 #include <QtWidgets/QLineEdit>
@@ -152,6 +154,50 @@ struct PropertyStringEditor : public InterfacePropertyEditor, public QLineEdit {
     }
 
     PropertyString* m_property;
+};
+
+// Editor of a keyboard shortcut : the key combination to assign is captured from the keyboard
+// A warning is displayed when the shortcut is already assigned to another command
+struct PropertyKeySequenceEditor : public InterfacePropertyEditor, public QKeySequenceEdit {
+    PropertyKeySequenceEditor(PropertyKeySequence* property, QWidget* parentWidget)
+        : QKeySequenceEdit(parentWidget), m_property(property)
+    {
+        QObject::connect(this, &QKeySequenceEdit::editingFinished, [=]{
+            property->setValue(to_stdString(
+                this->keySequence().toString(QKeySequence::PortableText)
+            ));
+        });
+    }
+
+    void syncWithProperty() override {
+        const QKeySequence seq = QKeySequence::fromString(
+            to_QString(m_property->value()), QKeySequence::PortableText
+        );
+        this->setKeySequence(seq);
+
+        const CommandShortcuts* shortcuts = CommandShortcuts::instance();
+        const std::string_view name = shortcuts
+            ? shortcuts->commandName(m_property) : std::string_view{};
+        const std::vector<std::string> vecConflictLabel = shortcuts
+            ? shortcuts->findConflicts(name, m_property->value())
+            : std::vector<std::string>{};
+
+        QStringList listLabel;
+        for (const std::string& label : vecConflictLabel)
+            listLabel.push_back(to_QString(label));
+
+        if (listLabel.isEmpty()) {
+            this->setStyleSheet({});
+            this->setToolTip(PropertyEditorI18N::tr("Press the key combination to assign it"));
+        }
+        else {
+            this->setStyleSheet(QStringLiteral("QKeySequenceEdit { border: 1px solid #d9534f; }"));
+            this->setToolTip(PropertyEditorI18N::tr("Also used by: %1")
+                             .arg(listLabel.join(QStringLiteral(", "))));
+        }
+    }
+
+    PropertyKeySequence* m_property;
 };
 
 struct PropertyEnumerationEditor : public InterfacePropertyEditor, public QComboBox {
@@ -352,6 +398,7 @@ DefaultPropertyEditorFactory::DefaultPropertyEditorFactory()
     this->registerPropertyEditor<PropertyDouble, PropertyDoubleEditor>();
     this->registerPropertyEditor<PropertyCheckState, PropertyCheckStateEditor>();
     this->registerPropertyEditor<PropertyString, PropertyStringEditor>();
+    this->registerPropertyEditor<PropertyKeySequence, PropertyKeySequenceEditor>();
     this->registerPropertyEditor<PropertyOccColor, PropertyOccColorEditor>();
     this->registerPropertyEditor<PropertyOccPnt, Property3dCoordsEditor<PropertyOccPnt>>();
     this->registerPropertyEditor<PropertyOccVec, Property3dCoordsEditor<PropertyOccVec>>();

@@ -788,6 +788,18 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <source>Copy to Clipboard</source>
         <translation>复制到剪贴板</translation>
     </message>
+    <message>
+        <source>Fit All</source>
+        <translation>适合所有</translation>
+    </message>
+    <message>
+        <source>Undo visibility change</source>
+        <translation>撤销可见性更改</translation>
+    </message>
+    <message>
+        <source>Redo visibility change</source>
+        <translation>重做可见性更改</translation>
+    </message>
 </context>
 <context>
     <name>Mayo::DialogAbout</name>
@@ -1000,6 +1012,10 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <location filename="../src/app/dialog_options.cpp" line="411"/>
         <source>Restore values for the whole group</source>
         <translation>恢复整个组的值</translation>
+    </message>
+    <message>
+        <source>Search settings ...</source>
+        <translation>搜索设置……</translation>
     </message>
 </context>
 <context>
@@ -2636,6 +2652,14 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <source>Error</source>
         <translation>错误</translation>
     </message>
+    <message>
+        <source>Standard views</source>
+        <translation>标准视图</translation>
+    </message>
+    <message>
+        <source>Visibility</source>
+        <translation>可见性</translation>
+    </message>
 </context>
 <context>
     <name>Mayo::MeasureDisplayI18N</name>
@@ -2760,6 +2784,14 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <location filename="../src/app/property_editor_factory.cpp" line="194"/>
         <source>Choose color ...</source>
         <translation>选择颜色...</translation>
+    </message>
+    <message>
+        <source>Press the key combination to assign it</source>
+        <translation>按下组合键即可分配</translation>
+    </message>
+    <message>
+        <source>Also used by: %1</source>
+        <translation>同时被以下命令使用：%1</translation>
     </message>
 </context>
 <context>
@@ -3914,6 +3946,64 @@ File: `%2`</source>
         <location filename="../src/base/occt_enums.cpp" line="37"/>
         <source>Default</source>
         <translation>默认</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::CommandShortcuts</name>
+    <message>
+        <source>Shortcuts</source>
+        <translation>快捷键</translation>
+    </message>
+    <message>
+        <source>Commands</source>
+        <translation>命令</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::WidgetCommandShortcuts</name>
+    <message>
+        <source>Filter commands by name or shortcut ...</source>
+        <translation>按命令名或快捷键筛选……</translation>
+    </message>
+    <message>
+        <source>Command</source>
+        <translation>命令</translation>
+    </message>
+    <message>
+        <source>Shortcut</source>
+        <translation>快捷键</translation>
+    </message>
+    <message>
+        <source>Other commands</source>
+        <translation>其他命令</translation>
+    </message>
+    <message>
+        <source>Command identifier: %1</source>
+        <translation>命令标识：%1</translation>
+    </message>
+    <message>
+        <source>Press the key combination to assign it, press Backspace to remove it</source>
+        <translation>按下组合键即可分配，按 Backspace 清除</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>无</translation>
+    </message>
+    <message>
+        <source>Restore default shortcut (%1)</source>
+        <translation>恢复默认快捷键（%1）</translation>
+    </message>
+    <message>
+        <source>Also used by: %1</source>
+        <translation>同时被以下命令使用：%1</translation>
+    </message>
+    <message>
+        <source>%1 commands, %2 with a shortcut</source>
+        <translation>共 %1 条命令，其中 %2 条已分配快捷键</translation>
+    </message>
+    <message>
+        <source>Warning: %1 shortcuts are used by several commands</source>
+        <translation>警告：%1 个快捷键被多个命令占用</translation>
     </message>
 </context>
 </TS>

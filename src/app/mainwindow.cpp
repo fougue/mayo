@@ -11,9 +11,12 @@
 #include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "app_context.h"
+#include "app_module.h"
+#include "command_shortcuts.h"
 #include "app_ui_state.h"
 #include "commands_file.h"
 #include "commands_display.h"
+#include "commands_view.h"
 #include "commands_tools.h"
 #include "commands_window.h"
 #include "commands_help.h"
@@ -55,6 +58,9 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
     // Some commands requires WidgetMainControl UI page to exist, ensure it has been created beforehand
     this->createCommands();
     this->createMenus();
+
+    // Keyboard shortcuts are user settings : they require the commands to be created beforehand
+    m_cmdShortcuts = std::make_unique<CommandShortcuts>(AppModule::get()->settings(), &m_cmdContainer);
 
     // WidgetMainControl page depends on some Command objects, ensure they have been created beforehand
     for (auto [code, page] : m_mapWidgetPage)
@@ -129,6 +135,7 @@ void MainWindow::createCommands()
     this->addCommand<CommandZoomOutCurrentDocument>();
     this->addCommand<CommandTurnViewCounterClockWise>();
     this->addCommand<CommandTurnViewClockWise>();
+    this->createViewCommands();
 
     // "Tools" commands
     this->addCommand<CommandSaveViewImage>();
@@ -146,6 +153,39 @@ void MainWindow::createCommands()
     this->addCommand<CommandReportBug>();
     this->addCommand<CommandSystemInformation>();
     this->addCommand<CommandAbout>();
+}
+
+void MainWindow::createViewCommands()
+{
+    this->addCommand<CommandFitAll>();
+
+    for (V3d_TypeOfOrientation orientation : {
+            V3d_XposYnegZpos, V3d_Yneg, V3d_Ypos, V3d_Xneg, V3d_Xpos, V3d_Zpos, V3d_Zneg
+    }) {
+        m_cmdContainer.addCommandWithName<CommandSetViewOrientation>(
+            CommandSetViewOrientation::name(orientation), orientation
+        );
+    }
+
+    for (CommandShowHide::Operation operation : {
+            CommandShowHide::Operation::ShowAll,
+            CommandShowHide::Operation::ShowSelection,
+            CommandShowHide::Operation::HideSelection,
+            CommandShowHide::Operation::ShowOnlySelection
+    }) {
+        m_cmdContainer.addCommandWithName<CommandShowHide>(
+            CommandShowHide::name(operation), operation
+        );
+    }
+
+    for (CommandUndoRedoVisibility::Operation operation : {
+            CommandUndoRedoVisibility::Operation::Undo,
+            CommandUndoRedoVisibility::Operation::Redo
+    }) {
+        m_cmdContainer.addCommandWithName<CommandUndoRedoVisibility>(
+            CommandUndoRedoVisibility::name(operation), operation
+        );
+    }
 }
 
 void MainWindow::createMenus()
@@ -184,6 +224,34 @@ void MainWindow::createMenus()
         fnAddAction(menu, CommandZoomOutCurrentDocument::Name);
         fnAddAction(menu, CommandTurnViewCounterClockWise::Name);
         fnAddAction(menu, CommandTurnViewClockWise::Name);
+        menu->addSeparator();
+        fnAddAction(menu, CommandFitAll::Name);
+        {   // Standard views
+            auto subMenu = menu->addMenu(tr("Standard views"));
+            for (V3d_TypeOfOrientation orientation : {
+                    V3d_XposYnegZpos, V3d_Yneg, V3d_Ypos, V3d_Xneg, V3d_Xpos, V3d_Zpos, V3d_Zneg
+            }) {
+                fnAddAction(subMenu, CommandSetViewOrientation::name(orientation));
+            }
+        }
+        {   // Visibility
+            auto subMenu = menu->addMenu(tr("Visibility"));
+            for (CommandShowHide::Operation operation : {
+                    CommandShowHide::Operation::ShowAll,
+                    CommandShowHide::Operation::ShowSelection,
+                    CommandShowHide::Operation::HideSelection,
+                    CommandShowHide::Operation::ShowOnlySelection
+            }) {
+                fnAddAction(subMenu, CommandShowHide::name(operation));
+            }
+        }
+        menu->addSeparator();
+        for (CommandUndoRedoVisibility::Operation operation : {
+                CommandUndoRedoVisibility::Operation::Undo,
+                CommandUndoRedoVisibility::Operation::Redo
+        }) {
+            fnAddAction(menu, CommandUndoRedoVisibility::name(operation));
+        }
     }
 
     {   // Tools

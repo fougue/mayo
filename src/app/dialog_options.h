@@ -11,6 +11,9 @@
 #include <QtWidgets/QDialog>
 #include <memory>
 #include <unordered_map>
+#include <vector>
+
+class QListWidgetItem;
 
 namespace Mayo {
 
@@ -35,9 +38,18 @@ private:
     void cancelChanges();
 
     void handleTreeViewButtonClick_restoreDefaults(const QModelIndex& index);
+    void applySettingsSearch(const QString& text);
+
+    // Item of the settings list, with the text searched by the settings filter
+    struct SearchEntry {
+        QListWidgetItem* item = nullptr;
+        QString text;
+        bool isHeader = false;
+    };
 
     std::unique_ptr<Ui_DialogOptions> m_ui;
     std::unique_ptr<IPropertyEditorFactory> m_editorFactory;
+    std::vector<SearchEntry> m_vecSearchEntry;
     std::unordered_map<const Property*, QWidget*> m_mapSettingEditor;
     std::unordered_map<Property*, Settings::Variant> m_mapSettingInitialValue;
     Settings* m_settings = nullptr;
