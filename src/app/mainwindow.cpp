@@ -11,6 +11,8 @@
 #include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "app_context.h"
+#include "app_module.h"
+#include "command_shortcuts.h"
 #include "app_ui_state.h"
 #include "commands_file.h"
 #include "commands_display.h"
@@ -56,6 +58,9 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
     // Some commands requires WidgetMainControl UI page to exist, ensure it has been created beforehand
     this->createCommands();
     this->createMenus();
+
+    // Keyboard shortcuts are user settings : they require the commands to be created beforehand
+    m_cmdShortcuts = std::make_unique<CommandShortcuts>(AppModule::get()->settings(), &m_cmdContainer);
 
     // WidgetMainControl page depends on some Command objects, ensure they have been created beforehand
     for (auto [code, page] : m_mapWidgetPage)

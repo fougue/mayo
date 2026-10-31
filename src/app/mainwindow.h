@@ -14,12 +14,14 @@
 #include <QtWidgets/QMainWindow>
 
 #include <functional>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
 namespace Mayo {
 
 class AppUiState;
+class CommandShortcuts;
 class GuiApplication;
 class GuiDocument;
 class IWidgetMainPage;
@@ -86,6 +88,7 @@ private:
     IAppContext* m_appContext = nullptr;
     GuiApplication* m_guiApp = nullptr;
     CommandContainer m_cmdContainer;
+    std::unique_ptr<CommandShortcuts> m_cmdShortcuts;
     TaskManager m_taskMgr;
     class Ui_MainWindow* m_ui = nullptr;
     std::unordered_map<IAppContext::Page, IWidgetMainPage*> m_mapWidgetPage;

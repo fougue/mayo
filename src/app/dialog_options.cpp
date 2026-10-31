@@ -10,11 +10,13 @@
 #include "../qtbackend/qsettings_storage.h"
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
+#include "command_shortcuts.h"
 #include "item_view_buttons.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
 #include "theme.h"
 #include "ui_dialog_options.h"
+#include "widget_command_shortcuts.h"
 
 #include <QtCore/QSettings>
 #include <QtGui/QStandardItemModel>
@@ -167,12 +169,28 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
             QtGuiUtils::FontChange(m_ui->listWidget_Settings->font())
             .bold(true).scalePointSizeF(1.7);
 
+    CommandShortcuts* cmdShortcuts = CommandShortcuts::instance();
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
         const Settings::GroupIndex indexGroup(iGroup);
         const QString titleGroup = to_QString(settings->groupTitle(indexGroup));
         auto listItemGroup = new QListWidgetItem(titleGroup, m_ui->listWidget_Settings);
         listItemGroup->setFont(fontItemGroupSection);
         listItemGroup->setData(ItemSettingNodeId_Role, toSettingNodeId(indexGroup));
+
+        if (cmdShortcuts && indexGroup == cmdShortcuts->groupId_shortcuts) {
+            // All the keyboard shortcuts are edited at once, with a dedicated widget
+            QString strSearchText = titleGroup;
+            for (const CommandShortcuts::Entry& entry : cmdShortcuts->entries())
+                strSearchText += QLatin1Char(' ') + to_QString(entry.label);
+            auto widgetShortcuts = new WidgetCommandShortcuts(cmdShortcuts);
+            auto listItem = new QListWidgetItem;
+            listItem->setData(ItemSettingNodeId_Role, toSettingNodeId(indexGroup));
+            listItem->setSizeHint(widgetShortcuts->sizeHint());
+            m_ui->listWidget_Settings->addItem(listItem);
+            m_ui->listWidget_Settings->setItemWidget(listItem, widgetShortcuts);
+            continue;
+        }
+
         for (int iSection = 0; iSection < settings->sectionCount(indexGroup); ++iSection) {
             const Settings::SectionIndex indexSection(indexGroup, iSection);
             const int settingCount = settings->settingCount(indexSection);
