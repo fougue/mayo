@@ -64,6 +64,7 @@ private:
     void addPage(IAppContext::Page page, IWidgetMainPage* pageWidget);
 
     void createCommands();
+    void createViewCommands();
     void createMenus();
     template<typename CmdType, typename... Args> void addCommand(Args&&... args) {
         m_cmdContainer.addNamedCommand<CmdType>(std::forward<Args>(args)...);
