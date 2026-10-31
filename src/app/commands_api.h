@@ -174,6 +174,13 @@ public:
     // The newly created command is owned by the container and can later be retrieved using findCommand()
     template<typename CmdType, typename... Args> CmdType* addNamedCommand(Args&&... args);
 
+    // Construct and register new Command of type `CmdType` using `name` as identifier
+    // This is meant for command types that are instantiated several times with different
+    // parameters(and therefore cannot rely on a single CmdType::Name)
+    // IMPORTANT `name` must refer to static storage(eg string literal or static constexpr string)
+    template<typename CmdType, typename... Args>
+    CmdType* addCommandWithName(std::string_view name, Args&&... args);
+
     // Deletes all commands owned by the container and clears the internal mapping
     // Notes:
     //   - All Command pointers previously returned by the container become invalid
@@ -226,6 +233,12 @@ CmdType* CommandContainer::addCommand(std::string_view name, Args&&... args)
     auto cmdPtr = cmd.get();
     this->addCommand_impl(name, std::move(cmd));
     return cmdPtr;
+}
+
+template<typename CmdType, typename... Args>
+CmdType* CommandContainer::addCommandWithName(std::string_view name, Args&&... args)
+{
+    return this->addCommand<CmdType>(name, std::forward<Args>(args)...);
 }
 
 template<typename CmdType, typename... Args>
