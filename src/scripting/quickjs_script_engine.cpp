@@ -229,7 +229,11 @@ void QuickJsScriptEngine::startEvaluate()
 
 void QuickJsScriptEngine::stopEvaluate()
 {
-    m_stopRequested.store(true);
+    {
+        std::lock_guard lock(m_mutex);
+        m_stopRequested.store(true);
+    }
+
     m_jobCondition.notify_all();
 }
 
@@ -279,18 +283,19 @@ QuickJsScriptEngine::EvaluationState* QuickJsScriptEngine::getEvaluationState(JS
     return static_cast<QuickJsScriptEngine::EvaluationState*>(JS_GetContextOpaque(context));
 }
 
-void QuickJsScriptEngine::postJob(Job job)
+bool QuickJsScriptEngine::postJob(Job job)
 {
     {
         std::lock_guard lock(m_mutex);
 
         if (!m_isEvaluateRunning || m_stopRequested || m_isEvaluateShuttingDown)
-            return;
+            return false;
 
         m_jobQueue.push(std::move(job));
     }
 
     m_jobCondition.notify_one();
+    return true;
 }
 
 void QuickJsScriptEngine::processJobs()
@@ -310,9 +315,12 @@ void QuickJsScriptEngine::processJobs()
 
 void QuickJsScriptEngine::discardJobs()
 {
-    std::lock_guard lock(m_mutex);
-    while (!m_jobQueue.empty())
-        m_jobQueue.pop();
+    std::queue<Job> pending;
+    {
+        std::lock_guard lock(m_mutex);
+        m_isEvaluateShuttingDown = true; // No more postJob() accepted
+        pending.swap(m_jobQueue);
+    }
 }
 
 void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePath& scriptFilePath)
@@ -357,13 +365,7 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
 
     QuickJsScriptEvaluation evalState;
     this->initEvaluationState(evalState, context.get());
-    auto evaluationShutDown = gsl::finally([&]{
-        {
-            std::lock_guard lock(m_mutex);
-            m_isEvaluateShuttingDown = true;
-        }
-        JS_RunGC(runtime.get());
-    });
+    auto evalShutDown = gsl::finally([&]{ this->evaluateShutDown(runtime.get()); });
 
     JS_SetContextOpaque(context.get(), &evalState);
     installConsole(context.get());
@@ -410,6 +412,12 @@ void QuickJsScriptEngine::evaluateWorker(const std::string& script, const FilePa
     // Success
     result.success = true;    
     result.value = jsValueToAny(defaultValue);
+}
+
+void QuickJsScriptEngine::evaluateShutDown(JSRuntime* runtime)
+{
+    this->discardJobs();
+    JS_RunGC(runtime);
 }
 
 void QuickJsScriptEngine::initEvaluationState(EvaluationState& state, JSContext* context)
@@ -522,6 +530,7 @@ QuickJsScriptEngine::execPendingJobs(const QuickJsValue& promise, JSRuntime* run
 void QuickJsScriptEngine::finalizeEvaluation(const Result& result, EndReason endReason)
 {
     this->signalEvaluateEnded.send(result, endReason);
+    this->discardJobs();
 
     {
         std::lock_guard lock(m_mutex);

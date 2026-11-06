@@ -48,11 +48,12 @@ private:
     friend class QuickJsScriptEvaluation;
 
     using Job = std::function<void()>;
-    void postJob(Job job);
+    bool postJob(Job job);
     void processJobs();
     void discardJobs();
 
     void evaluateWorker(const std::string& script, const FilePath& scriptFilePath);
+    void evaluateShutDown(JSRuntime* runtime);
 
     void initEvaluationState(EvaluationState& state, JSContext* context);
 

@@ -12,18 +12,31 @@
 
 namespace Mayo {
 
+class IThreadDispatch;
 class PropertyValueConversion;
 class TaskProgress;
 namespace IO { class System; }
 namespace IO { class ParametersProvider; }
 
-// Objects and callbacks provided by the Mayo host to its JavaScript API
+// Objects and callbacks provided by the Mayo host to the Scripting API
 struct ScriptHostEnvironment {
+    // Application instance exposed to scripts as `mayo.app`
     ApplicationPtr application;
-    const IO::System* ioSystem = nullptr;
-    const IO::ParametersProvider* ioParametersProvider = nullptr; // TODO Rename to ioDefaultParametersProvider ?
+
+    // Non-owning dispatcher for operations on the host application thread
+    IThreadDispatch* threadDispatch{nullptr};
+
+    // Non-owning access to the host's I/O system
+    const IO::System* ioSystem{nullptr};
+
+    // Non-owning source of default parameters for I/O operations
+    const IO::ParametersProvider* ioParametersProvider{nullptr}; // TODO Rename to ioDefaultParametersProvider?
+
+    // Optional callback applied to imported entities (eg meshing of BRep shapes)
     std::function<void(TDF_Label, TaskProgress*)> ioEntityImportPostProcess;
-    const PropertyValueConversion* propertyValueConverter = nullptr;
+
+    // Non-owning converter for Mayo property values exposed through the scripting API
+    const PropertyValueConversion* propertyValueConverter{nullptr};
 };
 
 } // namespace Mayo

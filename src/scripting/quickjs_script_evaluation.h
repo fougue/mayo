@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "ithread_dispatch.h"
 #include "iscript_engine.h"
 #include "quickjs_promise.h"
 #include "quickjs_value.h"
@@ -15,6 +16,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -50,6 +52,19 @@ public:
     // Starts an asynchronous task and returns a JS Promise that is settled when the task completes
     QuickJsValue startTask(TaskFunction fn, TaskResultConverter resultConv = {});
 
+    class ThreadDispatch : public IThreadDispatch {
+    public:
+        bool isCurrentThread() const override;
+        bool post(std::function<void()> job) override;
+    private:
+        friend class QuickJsScriptEvaluation;
+        ThreadDispatch(QuickJsScriptEngine* engine, std::thread::id threadId);
+        QuickJsScriptEngine* m_engine{nullptr};
+        std::thread::id m_threadId{};
+    };
+
+    ThreadDispatch threadDispatch() const;
+
 private:
     friend class QuickJsScriptEngine;
     friend class QuickJsTask;
@@ -69,7 +84,7 @@ private:
 
     using PendingTasks = std::unordered_map<TaskId, std::unique_ptr<TaskEntry>>;
 
-    // Constructible by QuickJsScriptEngine only
+    // Constructible by QuickJsScriptEngine only, from within evaluateWorker()
     QuickJsScriptEvaluation();
 
     TaskEntry* findTaskEntry(TaskId taskId);
@@ -82,6 +97,7 @@ private:
 
     QuickJsValue getTaskJsResult(const TaskEntry& taskEntry) const;
 
+    const std::thread::id m_threadId;
     QuickJsScriptEngine* m_engine{nullptr};
     JSContext* m_context{nullptr};
 

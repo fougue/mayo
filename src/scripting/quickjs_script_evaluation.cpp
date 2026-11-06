@@ -39,6 +39,7 @@ QuickJsValue toQuickJsValue(JSContext* context, const std::any& value)
 } // namespace
 
 QuickJsScriptEvaluation::QuickJsScriptEvaluation()
+    : m_threadId(std::this_thread::get_id())
 {
 }
 
@@ -67,9 +68,6 @@ QuickJsScriptEvaluation::~QuickJsScriptEvaluation()
     m_connTaskEnded.disconnect();
     m_connTaskProgressChanged.disconnect();
     m_connTaskProgressStep.disconnect();
-
-    // No further completion jobs can be posted by these workers
-    m_engine->discardJobs();
 
     for (const TaskId taskId : taskIds)
         m_taskMgr.destroy(taskId);
@@ -102,6 +100,11 @@ QuickJsValue QuickJsScriptEvaluation::startTask(TaskFunction fn, TaskResultConve
     }
 
     return task;
+}
+
+QuickJsScriptEvaluation::ThreadDispatch QuickJsScriptEvaluation::threadDispatch() const
+{
+    return ThreadDispatch(m_engine, m_threadId);
 }
 
 QuickJsValue QuickJsScriptEvaluation::getTaskJsResult(const TaskEntry& taskEntry) const
@@ -194,6 +197,27 @@ void QuickJsScriptEvaluation::updateTaskProgressMessage(TaskId taskId, std::stri
         taskEntry->progressMessage = std::move(message);
         this->notifyTaskProgressEvent(taskId, m_taskMgr.progress(taskId));
     }
+}
+
+QuickJsScriptEvaluation::ThreadDispatch::ThreadDispatch(
+        QuickJsScriptEngine* engine, std::thread::id threadId
+    )
+    : m_engine(engine),
+      m_threadId(threadId)
+{
+}
+
+bool QuickJsScriptEvaluation::ThreadDispatch::isCurrentThread() const
+{
+    return std::this_thread::get_id() == m_threadId;
+}
+
+bool QuickJsScriptEvaluation::ThreadDispatch::post(std::function<void()> job)
+{
+    if (!m_engine)
+        return false;
+
+    return m_engine->postJob(std::move(job));
 }
 
 } // namespace Mayo
