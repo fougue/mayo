@@ -207,7 +207,7 @@ QuickJsScriptEvaluation::ThreadDispatch::ThreadDispatch(
 {
 }
 
-bool QuickJsScriptEvaluation::ThreadDispatch::isCurrentThread() const
+bool QuickJsScriptEvaluation::ThreadDispatch::isCurrentThread() const noexcept
 {
     return std::this_thread::get_id() == m_threadId;
 }

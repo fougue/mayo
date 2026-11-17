@@ -10,17 +10,23 @@
 #include "quickjs_script_engine.h"
 
 #include "../base/document.h"
+#include "../base/ithread_dispatch.h"
 
+#include <exception>
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace Mayo {
 
-QuickJsMayoDocument::QuickJsMayoDocument(DocumentPtr document)
-    : m_document(std::move(document))
+QuickJsMayoDocument::QuickJsMayoDocument(DocumentPtr document, IThreadDispatch* threadDispatch)
+    : m_threadDispatch(threadDispatch),
+      m_document(std::move(document))
 {}
 
-QuickJsValue QuickJsMayoDocument::create(JSContext* context, DocumentPtr document)
+QuickJsValue QuickJsMayoDocument::create(
+        JSContext* context, DocumentPtr document, IThreadDispatch* threadDispatch
+    )
 {
     if (document.IsNull())
         return QuickJsContext::throwError(context, "Cannot create a Mayo.Document from a null Document");
@@ -29,7 +35,7 @@ QuickJsValue QuickJsMayoDocument::create(JSContext* context, DocumentPtr documen
     if (id == JS_INVALID_CLASS_ID)
         return QuickJsContext::throwInternalError(context, "MayoDocument class is not registered");
 
-    auto opaque = std::make_unique<QuickJsMayoDocument>(std::move(document));
+    auto opaque = std::make_unique<QuickJsMayoDocument>(std::move(document), threadDispatch);
     auto jsObject = QuickJsValue::newObjectClass(context, id);
     if (jsObject.isException())
         return jsObject;
@@ -40,26 +46,47 @@ QuickJsValue QuickJsMayoDocument::create(JSContext* context, DocumentPtr documen
 
 JSValue QuickJsMayoDocument::name(JSContext* context, JSValueConst thisValue)
 {
-    auto doc = getDocumentOrThrow(context, thisValue);
-    return doc
-        ? QuickJsValue::newString(context, doc->name()).release()
-        : JS_EXCEPTION;
+    auto opaque = getOpaqueOrThrow(context, thisValue);
+    if (!opaque)
+        return JS_EXCEPTION;
+
+    auto getName = [opaque](JSContext* ctx) {
+        auto name = IThreadDispatch::invokeIfSet(opaque->m_threadDispatch, [=]{
+            return opaque->m_document->name();
+        });
+        return QuickJsValue::newString(ctx, name).release();
+    };
+    return quickjs_noCppThrowExec(context, getName, "Failed to read document name");
 }
 
 JSValue QuickJsMayoDocument::filePath(JSContext* context, JSValueConst thisValue)
 {
-    auto doc = getDocumentOrThrow(context, thisValue);
-    return doc
-        ? QuickJsValue::newString(context, doc->filePath().u8string()).release()
-        : JS_EXCEPTION;
+    auto opaque = getOpaqueOrThrow(context, thisValue);
+    if (!opaque)
+        return JS_EXCEPTION;
+
+    auto getFilePath = [opaque](JSContext* ctx) {
+        auto filePath = IThreadDispatch::invokeIfSet(opaque->m_threadDispatch, [=]{
+            return opaque->m_document->filePath().u8string();
+        });
+        return QuickJsValue::newString(ctx, filePath).release();
+    };
+    return quickjs_noCppThrowExec(context, getFilePath, "Failed to read document file path");
 }
 
 JSValue QuickJsMayoDocument::entityCount(JSContext* context, JSValueConst thisValue)
 {
-    auto doc = getDocumentOrThrow(context, thisValue);
-    return doc
-        ? QuickJsValue::newInt32(context, doc->entityCount()).release()
-        : JS_EXCEPTION;
+    auto opaque = getOpaqueOrThrow(context, thisValue);
+    if (!opaque)
+        return JS_EXCEPTION;
+
+    auto getEntityCount = [opaque](JSContext* ctx) {
+        auto count = IThreadDispatch::invokeIfSet(opaque->m_threadDispatch, [=]{
+            return opaque->m_document->entityCount();
+        });
+        return QuickJsValue::newInt32(ctx, count).release();
+    };
+    return quickjs_noCppThrowExec(context, getEntityCount, "Failed to read document entity count");
 }
 
 QuickJsValue QuickJsMayoDocument::createPrototype(JSContext* context)
@@ -84,7 +111,7 @@ QuickJsValue QuickJsMayoDocument::createPrototype(JSContext* context)
     return prototype;
 }
 
-DocumentPtr QuickJsMayoDocument::getDocumentOrThrow(JSContext* context, JSValue thisValue)
+QuickJsMayoDocument* QuickJsMayoDocument::getOpaqueOrThrow(JSContext* context, JSValueConst thisValue)
 {
     auto opaque = Binding::getOpaque(context, thisValue);
     if (!opaque)
@@ -95,7 +122,7 @@ DocumentPtr QuickJsMayoDocument::getDocumentOrThrow(JSContext* context, JSValue 
         return {};
     }
 
-    return opaque->m_document;
+    return opaque;
 }
 
 } // namespace Mayo

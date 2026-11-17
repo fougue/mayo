@@ -10,6 +10,9 @@
 
 #include <quickjs.h>
 
+#include <exception>
+#include <utility>
+
 namespace Mayo {
 
 template<typename T>
@@ -41,7 +44,8 @@ public:
         const JSClassID id = classId(context);
         return id != JS_INVALID_CLASS_ID
             ? static_cast<T*>(JS_GetOpaque2(context, thisValue, id))
-            : nullptr;
+            : nullptr
+        ;
     }
 };
 
@@ -55,7 +59,20 @@ inline JSCFunctionListEntry quickjs_createPropertyGetter(
     entry.def_type = JS_DEF_CGETSET;
     entry.u.getset.get.getter = fn;
     return entry;
+}
 
+template<typename Function>
+JSValue quickjs_noCppThrowExec(JSContext* context, Function&& fn, const char* catchAllErrorMsg = "")
+{
+    try {
+        return std::forward<Function>(fn)(context);
+    }
+    catch (const std::exception& ex) {
+        return JS_ThrowInternalError(context, "%s", ex.what());
+    }
+    catch (...) {
+        return JS_ThrowInternalError(context, catchAllErrorMsg);
+    }
 }
 
 } // namespace Mayo

@@ -12,6 +12,7 @@
 
 namespace Mayo {
 
+class IThreadDispatch;
 class QuickJsClassRegistry;
 
 class QuickJsMayoApplication {
@@ -20,16 +21,26 @@ public:
 
     static constexpr const char* className = "MayoApplication";
 
-    QuickJsMayoApplication(ApplicationPtr application, bool graphics);
+    QuickJsMayoApplication(ApplicationPtr application, bool graphics, IThreadDispatch* threadDispatch);
 
-    static QuickJsValue create(JSContext* context, ApplicationPtr application, bool graphics);
+    static QuickJsValue create(
+        JSContext* context,
+        ApplicationPtr application,
+        bool graphics,
+        IThreadDispatch* threadDispatch = nullptr
+    );
+
     static QuickJsValue createPrototype(JSContext* context);
     static QuickJsValue createConstructor(JSContext* context, const QuickJsValue& prototype);
 
 private:
     static JSValue constructor(JSContext* context, JSValueConst thisValue, int argc, JSValueConst* argv);
     static JSValue documentCount(JSContext* context, JSValueConst thisValue);
+    static JSValue newDocument(JSContext* context, JSValueConst thisValue, int argc, JSValueConst* argv);
 
+    static QuickJsMayoApplication* getOpaqueOrThrow(JSContext* context, JSValueConst thisValue);
+
+    IThreadDispatch* m_threadDispatch{nullptr}; // Non-owning
     ApplicationPtr m_application;
     bool m_graphics{false};
 

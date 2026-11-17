@@ -36,6 +36,8 @@ private slots:
     void QuickJsMayoApi_applicationGraphics_test();
     void QuickJsMayoApi_applicationGraphics_test_data();
     void QuickJsMayoApi_applicationRejectsInvalidGraphics_test();
+    void QuickJsMayoApi_applicationNewDocument_test();
+    void QuickJsMayoApi_scriptApplicationNewDocument_test();
 
     void QuickJsScriptEngine_evaluateValue_test();
     void QuickJsScriptEngine_evaluateValue_test_data();

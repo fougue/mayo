@@ -61,7 +61,7 @@ QuickJsValue installMayoApiImpl(
     // The host enables graphics post-processing by providing this callback
     const bool hostHasGraphics = static_cast<bool>(hostEnv.ioEntityImportPostProcess);
     QuickJsValue hostApplication = QuickJsMayoApplication::create(
-        context, hostEnv.application, hostHasGraphics
+        context, hostEnv.application, hostHasGraphics, hostEnv.threadDispatch
     );
     if (hostApplication.isException())
         return hostApplication;

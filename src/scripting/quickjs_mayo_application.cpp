@@ -7,6 +7,9 @@
 
 #include "quickjs_binding_helper.h"
 #include "quickjs_context.h"
+#include "quickjs_mayo_document.h"
+
+#include "../base/ithread_dispatch.h"
 
 #include <exception>
 #include <memory>
@@ -14,12 +17,18 @@
 
 namespace Mayo {
 
-QuickJsMayoApplication::QuickJsMayoApplication(ApplicationPtr application, bool graphics)
-    : m_application(std::move(application)),
+QuickJsMayoApplication::QuickJsMayoApplication(
+        ApplicationPtr application, bool graphics, IThreadDispatch* threadDispatch
+    )
+    : m_threadDispatch(threadDispatch),
+      m_application(std::move(application)),
       m_graphics(graphics)
-{}
+{
+}
 
-QuickJsValue QuickJsMayoApplication::create(JSContext* context, ApplicationPtr application, bool graphics)
+QuickJsValue QuickJsMayoApplication::create(
+        JSContext* context, ApplicationPtr application, bool graphics, IThreadDispatch* threadDispatch
+    )
 {
     if (application.IsNull()) {
         return QuickJsContext::throwError(
@@ -31,7 +40,7 @@ QuickJsValue QuickJsMayoApplication::create(JSContext* context, ApplicationPtr a
     if (id == JS_INVALID_CLASS_ID)
         return QuickJsContext::throwInternalError(context, "MayoApplication class is not registered");
 
-    auto opaque = std::make_unique<QuickJsMayoApplication>(std::move(application), graphics);
+    auto opaque = std::make_unique<QuickJsMayoApplication>(std::move(application), graphics, threadDispatch);
 
     auto jsObject = QuickJsValue::newObjectClass(context, id);
     if (jsObject.isException())
@@ -64,27 +73,46 @@ JSValue QuickJsMayoApplication::constructor(JSContext* context, JSValueConst, in
         }
     }
 
-    try {
-        return QuickJsMayoApplication::create(context, makeOccHandle<Application>(), graphics).release();
-    }
-    catch (const std::exception& ex) {
-        return JS_ThrowInternalError(context, "%s", ex.what());
-    }
-    catch (...) {
-        return JS_ThrowInternalError(context, "Failed to create Mayo.Application");
-    }
+    auto createApp = [graphics](JSContext* ctx){
+        return create(ctx, makeOccHandle<Application>(), graphics).release();
+    };
+    return quickjs_noCppThrowExec(context, createApp, "Failed to create Mayo.Application");
 }
 
 JSValue QuickJsMayoApplication::documentCount(JSContext* context, JSValueConst thisValue)
 {
-    auto opaque = Binding::getOpaque(context, thisValue);
+    auto opaque = getOpaqueOrThrow(context, thisValue);
     if (!opaque)
         return JS_EXCEPTION;
 
-    if (opaque->m_application.IsNull())
-        return JS_ThrowInternalError(context, "Application is no longer available");
+    auto getDocCount = [opaque](JSContext* ctx) {
+        const int count = IThreadDispatch::invokeIfSet(opaque->m_threadDispatch, [=]{
+            return opaque->m_application->documentCount();
+        });
+        return JS_NewInt32(ctx, count);
+    };
+    return quickjs_noCppThrowExec(context, getDocCount, "Failed to read document count");
+}
 
-    return JS_NewInt32(context, opaque->m_application->documentCount());
+JSValue QuickJsMayoApplication::newDocument(
+        JSContext* context, JSValueConst thisValue, int, JSValueConst*
+    )
+{
+    auto opaque = getOpaqueOrThrow(context, thisValue);
+    if (!opaque)
+        return JS_EXCEPTION;
+
+    auto newDoc = [opaque](JSContext* ctx) {
+        auto threadDispatch = opaque->m_threadDispatch;
+        DocumentPtr doc = IThreadDispatch::invokeIfSet(threadDispatch, [=]{
+            return opaque->m_application->newDocument();
+        });
+        return doc.IsNull()
+            ? JS_ThrowInternalError(ctx, "Failed to create document")
+            : QuickJsMayoDocument::create(ctx, std::move(doc), threadDispatch).release()
+        ;
+    };
+    return quickjs_noCppThrowExec(context, newDoc, "Failed to create document");
 }
 
 QuickJsValue QuickJsMayoApplication::createPrototype(JSContext* context)
@@ -97,6 +125,9 @@ QuickJsValue QuickJsMayoApplication::createPrototype(JSContext* context)
         quickjs_createPropertyGetter("documentCount", &QuickJsMayoApplication::documentCount)
     };
     if (JS_SetPropertyFunctionList(context, prototype.get(), prototypeProps, 1) < 0)
+        return { context, JS_EXCEPTION };
+
+    if (!prototype.setFunction("newDocument", &QuickJsMayoApplication::newDocument))
         return { context, JS_EXCEPTION };
 
     const JSClassID id = Binding::classId(context);
@@ -117,6 +148,20 @@ QuickJsValue QuickJsMayoApplication::createConstructor(JSContext* context, const
 
     JS_SetConstructor(context, ctor.get(), prototype.get());
     return ctor;
+}
+
+QuickJsMayoApplication* QuickJsMayoApplication::getOpaqueOrThrow(JSContext* context, JSValueConst thisValue)
+{
+    auto opaque = Binding::getOpaque(context, thisValue);
+    if (!opaque)
+        return {}; // JS_GetOpaque2() already set exception
+
+    if (opaque->m_application.IsNull()) {
+        JS_ThrowInternalError(context, "Application is no longer available");
+        return {};
+    }
+
+    return opaque;
 }
 
 } // namespace Mayo

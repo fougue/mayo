@@ -6,6 +6,7 @@
 #include "test_scripting.h"
 
 #include "../src/base/application.h"
+#include "../src/base/ithread_dispatch.h"
 #include "../src/base/occ_handle.h"
 #include "../src/base/task_progress.h"
 #include "../src/scripting/quickjs_mayo_api.h"
@@ -14,6 +15,8 @@
 #include "../src/scripting/script_host_environment.h"
 
 #include <any>
+#include <atomic>
+#include <functional>
 #include <string>
 
 Q_DECLARE_METATYPE(std::string)
@@ -21,6 +24,23 @@ Q_DECLARE_METATYPE(std::string)
 namespace Mayo {
 
 namespace {
+
+class InlineThreadDispatch : public IThreadDispatch {
+public:
+    bool isCurrentThread() const noexcept override { return false; }
+
+    bool post(std::function<void()> job) override
+    {
+        m_postCount.fetch_add(1);
+        job();
+        return true;
+    }
+
+    int postCount() const { return m_postCount.load(); }
+
+private:
+    std::atomic<int> m_postCount{0};
+};
 
 void installMayoApi(QuickJsScriptEngine& engine, const ScriptHostEnvironment& hostEnvironment)
 {
@@ -109,6 +129,57 @@ void TestScripting::QuickJsMayoApi_applicationRejectsInvalidGraphics_test()
     const auto errorMessage = eval.lastMessage(MessageType::Error);
     QVERIFY(errorMessage);
     QVERIFY(errorMessage->text.find("graphics") != std::string::npos);
+}
+
+void TestScripting::QuickJsMayoApi_applicationNewDocument_test()
+{
+    ScriptHostEnvironment hostEnvironment;
+    hostEnvironment.application = makeOccHandle<Application>();
+    InlineThreadDispatch threadDispatch;
+    hostEnvironment.threadDispatch = &threadDispatch;
+
+    QuickJsScriptEngine engine;
+    installMayoApi(engine, hostEnvironment);
+
+    const auto eval = this->evaluateScript(engine, R"(
+        const docCountBefore = mayo.app.documentCount;
+        const doc = mayo.app.newDocument();
+        export default docCountBefore === 0
+            && mayo.app.documentCount === 1
+            && doc instanceof Object
+            && doc.name === ""
+            && doc.filePath === ""
+            && doc.entityCount === 0;
+    )");
+
+    QVERIFY(eval.result.success);
+    QVERIFY(eval.result.value.has_value());
+    QCOMPARE(std::any_cast<bool>(eval.result.value), true);
+    QCOMPARE(hostEnvironment.application->documentCount(), 1);
+    QCOMPARE(threadDispatch.postCount(), 6);
+}
+
+void TestScripting::QuickJsMayoApi_scriptApplicationNewDocument_test()
+{
+    ScriptHostEnvironment hostEnvironment;
+    hostEnvironment.application = makeOccHandle<Application>();
+
+    QuickJsScriptEngine engine;
+    installMayoApi(engine, hostEnvironment);
+
+    const auto eval = this->evaluateScript(engine, R"(
+        const app = new mayo.Application();
+        const doc = app.newDocument();
+        export default app.documentCount === 1
+            && doc instanceof Object
+            && doc.name === ""
+            && doc.filePath === ""
+            && doc.entityCount === 0;
+    )");
+
+    QVERIFY(eval.result.success);
+    QVERIFY(eval.result.value.has_value());
+    QCOMPARE(std::any_cast<bool>(eval.result.value), true);
 }
 
 } // namespace Mayo

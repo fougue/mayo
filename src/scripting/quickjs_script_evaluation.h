@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include "ithread_dispatch.h"
 #include "iscript_engine.h"
 #include "quickjs_promise.h"
 #include "quickjs_value.h"
 
+#include "../base/ithread_dispatch.h"
 #include "../base/task_manager.h"
 
 #include <any>
@@ -54,7 +54,7 @@ public:
 
     class ThreadDispatch : public IThreadDispatch {
     public:
-        bool isCurrentThread() const override;
+        bool isCurrentThread() const noexcept override;
         bool post(std::function<void()> job) override;
     private:
         friend class QuickJsScriptEvaluation;
