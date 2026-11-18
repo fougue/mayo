@@ -15,6 +15,8 @@ namespace Mayo {
 class IThreadDispatch;
 class QuickJsClassRegistry;
 
+// QuickJS binding for a Mayo Application
+// The wrapper owns an ApplicationPtr and optionally dispatches its operations to the application's thread
 class QuickJsMayoApplication {
 public:
     using Binding = QuickJsBindingHelper<QuickJsMayoApplication>;

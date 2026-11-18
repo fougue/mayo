@@ -28,6 +28,9 @@ struct QuickJsValueTraits {
     }
 };
 
+// Move-only RAII wrapper around a JavaScript value associated with a QuickJS context
+// The value is freed on destruction; release() transfers its ownership to the caller
+// All operations and destruction must occur on the thread that owns the context
 class QuickJsValue : public QuickJsBaseHandle<JSValue, QuickJsValueTraits> {
 private:
     using Base = QuickJsBaseHandle<JSValue, QuickJsValueTraits>;

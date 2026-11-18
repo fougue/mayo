@@ -9,6 +9,8 @@
 
 namespace Mayo {
 
+// Move-only RAII wrapper for a QuickJS handle with cleanup defined by Traits
+// The wrapped handle is destroyed on reset or destruction, while release() transfers it to the caller
 template<typename T, typename Traits>
 class QuickJsBaseHandle {
 public:

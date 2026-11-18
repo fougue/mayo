@@ -56,7 +56,7 @@ JSValue QuickJsMayoDocument::name(JSContext* context, JSValueConst thisValue)
         });
         return QuickJsValue::newString(ctx, name).release();
     };
-    return quickjs_noCppThrowExec(context, getName, "Failed to read document name");
+    return QuickJsContext::noCppThrowExec(context, getName, "Failed to read document name");
 }
 
 JSValue QuickJsMayoDocument::filePath(JSContext* context, JSValueConst thisValue)
@@ -71,7 +71,7 @@ JSValue QuickJsMayoDocument::filePath(JSContext* context, JSValueConst thisValue
         });
         return QuickJsValue::newString(ctx, filePath).release();
     };
-    return quickjs_noCppThrowExec(context, getFilePath, "Failed to read document file path");
+    return QuickJsContext::noCppThrowExec(context, getFilePath, "Failed to read document file path");
 }
 
 JSValue QuickJsMayoDocument::entityCount(JSContext* context, JSValueConst thisValue)
@@ -86,7 +86,7 @@ JSValue QuickJsMayoDocument::entityCount(JSContext* context, JSValueConst thisVa
         });
         return QuickJsValue::newInt32(ctx, count).release();
     };
-    return quickjs_noCppThrowExec(context, getEntityCount, "Failed to read document entity count");
+    return QuickJsContext::noCppThrowExec(context, getEntityCount, "Failed to read document entity count");
 }
 
 QuickJsValue QuickJsMayoDocument::createPrototype(JSContext* context)

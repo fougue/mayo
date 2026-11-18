@@ -14,6 +14,7 @@
 #include "../src/scripting/quickjs_script_evaluation.h"
 #include "../src/scripting/script_host_environment.h"
 
+#include <fmt/format.h>
 #include <any>
 #include <atomic>
 #include <functional>
@@ -65,10 +66,11 @@ void TestScripting::QuickJsMayoApi_hostApplication_test()
     installMayoApi(engine, hostEnvironment);
 
     const auto eval = this->evaluateScript(engine, R"(
-        export default mayo.app instanceof mayo.Application
+        export default
+            mayo.app instanceof mayo.Application
             && mayo.app.documentCount === 2
-            && mayo.app.graphics === true;
-    )");
+            && mayo.app.graphics === true
+    ;)");
 
     QVERIFY(eval.result.success);
     QVERIFY(eval.result.value.has_value());
@@ -77,20 +79,18 @@ void TestScripting::QuickJsMayoApi_hostApplication_test()
 
 void TestScripting::QuickJsMayoApi_applicationGraphics_test_data()
 {
-    QTest::addColumn<std::string>("construction");
+    QTest::addColumn<std::string>("appConstruction");
     QTest::addColumn<bool>("expectedGraphics");
 
-    QTest::newRow("default options")
-        << std::string("new mayo.Application()") << false;
-    QTest::newRow("graphics enabled")
-        << std::string("new mayo.Application({ graphics: true })") << true;
-    QTest::newRow("graphics disabled")
-        << std::string("new mayo.Application({ graphics: false })") << false;
+    using namespace std::string_literals;
+    QTest::newRow("default options")   << "new mayo.Application()"s << false;
+    QTest::newRow("graphics enabled")  << "new mayo.Application({ graphics: true })"s  << true;
+    QTest::newRow("graphics disabled") << "new mayo.Application({ graphics: false })"s << false;
 }
 
 void TestScripting::QuickJsMayoApi_applicationGraphics_test()
 {
-    QFETCH(std::string, construction);
+    QFETCH(std::string, appConstruction);
     QFETCH(bool, expectedGraphics);
 
     ScriptHostEnvironment hostEnvironment;
@@ -99,11 +99,16 @@ void TestScripting::QuickJsMayoApi_applicationGraphics_test()
     QuickJsScriptEngine engine;
     installMayoApi(engine, hostEnvironment);
 
-    const std::string script =
-        "const app = " + construction + "; export default "
-        "app instanceof mayo.Application && app.graphics === "
-        + (expectedGraphics ? "true" : "false")
-        + " && app.documentCount === 0;";
+    const std::string script = fmt::format(R"(
+        const app = {0};
+        export default
+            app instanceof mayo.Application
+            && app.graphics === {1}
+            && app.documentCount === 0
+        ;)",
+        appConstruction,
+        expectedGraphics ? "true" : "false"
+    );
 
     const auto eval = this->evaluateScript(engine, script);
 
@@ -149,8 +154,8 @@ void TestScripting::QuickJsMayoApi_applicationNewDocument_test()
             && doc instanceof Object
             && doc.name === ""
             && doc.filePath === ""
-            && doc.entityCount === 0;
-    )");
+            && doc.entityCount === 0
+    ;)");
 
     QVERIFY(eval.result.success);
     QVERIFY(eval.result.value.has_value());
@@ -174,8 +179,8 @@ void TestScripting::QuickJsMayoApi_scriptApplicationNewDocument_test()
             && doc instanceof Object
             && doc.name === ""
             && doc.filePath === ""
-            && doc.entityCount === 0;
-    )");
+            && doc.entityCount === 0
+    ;)");
 
     QVERIFY(eval.result.success);
     QVERIFY(eval.result.value.has_value());

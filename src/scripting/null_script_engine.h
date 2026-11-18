@@ -9,6 +9,8 @@
 
 namespace Mayo {
 
+// No-op script engine used when script evaluation is unavailable
+// It never starts an evaluation and waitForEvaluateEnd() always returns false
 class NullScriptEngine : public IScriptEngine {
 public:
     void startEvaluate() override;

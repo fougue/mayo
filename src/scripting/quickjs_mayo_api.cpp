@@ -85,15 +85,12 @@ QuickJsValue quickjs_installMayoApi(
         QuickJsScriptEvaluation& evaluation, const ScriptHostEnvironment& hostEnv
     )
 {
-    try {
-        return installMayoApiImpl(evaluation, hostEnv);
-    }
-    catch (const std::exception& err) {
-        return QuickJsContext::throwInternalError(evaluation.context(), err.what());
-    }
-    catch (...) {
-        return QuickJsContext::throwInternalError(evaluation.context(), "Failed to install Mayo API");
-    }
+    auto jsValue = QuickJsContext::noCppThrowExec(
+        evaluation.context(),
+        [&](JSContext*) { return installMayoApiImpl(evaluation, hostEnv).release(); },
+        "Failed to install Mayo API"
+    );
+    return { evaluation.context(), jsValue };
 }
 
 } // namespace Mayo

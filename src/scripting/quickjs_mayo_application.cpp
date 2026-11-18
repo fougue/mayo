@@ -76,7 +76,7 @@ JSValue QuickJsMayoApplication::constructor(JSContext* context, JSValueConst, in
     auto createApp = [graphics](JSContext* ctx){
         return create(ctx, makeOccHandle<Application>(), graphics).release();
     };
-    return quickjs_noCppThrowExec(context, createApp, "Failed to create Mayo.Application");
+    return QuickJsContext::noCppThrowExec(context, createApp, "Failed to create mayo.Application");
 }
 
 JSValue QuickJsMayoApplication::documentCount(JSContext* context, JSValueConst thisValue)
@@ -91,7 +91,7 @@ JSValue QuickJsMayoApplication::documentCount(JSContext* context, JSValueConst t
         });
         return JS_NewInt32(ctx, count);
     };
-    return quickjs_noCppThrowExec(context, getDocCount, "Failed to read document count");
+    return QuickJsContext::noCppThrowExec(context, getDocCount, "Failed to read document count");
 }
 
 JSValue QuickJsMayoApplication::newDocument(
@@ -112,7 +112,7 @@ JSValue QuickJsMayoApplication::newDocument(
             : QuickJsMayoDocument::create(ctx, std::move(doc), threadDispatch).release()
         ;
     };
-    return quickjs_noCppThrowExec(context, newDoc, "Failed to create document");
+    return QuickJsContext::noCppThrowExec(context, newDoc, "Failed to create document");
 }
 
 QuickJsValue QuickJsMayoApplication::createPrototype(JSContext* context)

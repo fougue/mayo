@@ -10,11 +10,10 @@
 
 #include <quickjs.h>
 
-#include <exception>
-#include <utility>
-
 namespace Mayo {
 
+// Provides common QuickJS class registration and opaque-pointer handling for a C++ binding type
+// The registered finalizer deletes the binding object stored in the JavaScript object's opaque slot
 template<typename T>
 class QuickJsBindingHelper {
 public:
@@ -59,20 +58,6 @@ inline JSCFunctionListEntry quickjs_createPropertyGetter(
     entry.def_type = JS_DEF_CGETSET;
     entry.u.getset.get.getter = fn;
     return entry;
-}
-
-template<typename Function>
-JSValue quickjs_noCppThrowExec(JSContext* context, Function&& fn, const char* catchAllErrorMsg = "")
-{
-    try {
-        return std::forward<Function>(fn)(context);
-    }
-    catch (const std::exception& ex) {
-        return JS_ThrowInternalError(context, "%s", ex.what());
-    }
-    catch (...) {
-        return JS_ThrowInternalError(context, catchAllErrorMsg);
-    }
 }
 
 } // namespace Mayo

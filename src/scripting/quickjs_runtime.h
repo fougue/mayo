@@ -20,6 +20,8 @@ struct QuickJsRuntimeTraits {
     void destroy(JSRuntime* runtime) const { JS_FreeRuntime(runtime); }
 };
 
+// Owning RAII wrapper around a QuickJS runtime
+// The runtime must outlive every context and JavaScript value created from it
 class QuickJsRuntime : public QuickJsBaseHandle<JSRuntime*, QuickJsRuntimeTraits> {
 private:
     using Base = QuickJsBaseHandle<JSRuntime*, QuickJsRuntimeTraits>;
