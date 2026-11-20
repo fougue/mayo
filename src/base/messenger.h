@@ -13,10 +13,10 @@ namespace Mayo {
 class Messenger;
 
 enum class MessageType {
-    Trace,
-    Info,
-    Warning,
-    Error
+    Trace = 0,
+    Info = 1,
+    Warning = 2,
+    Error = 3
 };
 
 // Provides stream-like syntax support, eg:
