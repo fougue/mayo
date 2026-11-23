@@ -18,8 +18,10 @@
 #include "widget_measure.h"
 #include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
+#include "object_visibility_menu.h"
 #include "qtwidgets_utils.h"
 
+#include <QtGui/QCursor>
 #include <QtGui/QPainter>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QBoxLayout>
@@ -133,6 +135,18 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
         if (btn == Aspect_VKeyMouse_LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
             gfxScene->select();
             m_qtOccView->redraw();
+        }
+        else if (btn == Aspect_VKeyMouse_RightButton) {
+            const GraphicsOwnerPtr& owner = gfxScene->currentHighlightedOwner();
+            const GraphicsObjectPtr gfxObject = GraphicsObjectPtr::DownCast(
+                owner ? owner->Selectable() : OccHandle<SelectMgr_SelectableObject>{}
+            );
+            if (!gfxObject || GuiDocument::isAisViewCubeObject(gfxObject))
+                return;
+
+            const TreeNodeId nodeId = m_guiDoc->nodeFromGraphicsObject(gfxObject);
+            if (nodeId != 0)
+                popupObjectVisibilityMenu(m_qtOccView->widget(), m_guiDoc, nodeId, QCursor::pos());
         }
     });
     m_controller->signalMultiSelectionToggled.connectSlot([=](bool on) {

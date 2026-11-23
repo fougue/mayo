@@ -313,8 +313,6 @@ void CommandTurnViewClockWise::execute()
         ctrl->turn(V3d_Z, increment);
 }
 
-namespace {
-
 QKeySequence hideSelectionShortcut()
 {
     // Command+H hides the application on macOS, so those letters are bound to the Control key.
@@ -333,6 +331,8 @@ QKeySequence showOnlySelectionShortcut()
     return Qt::CTRL | Qt::SHIFT | Qt::Key_H;
 #endif
 }
+
+namespace {
 
 bool selectionCanBeHidden(const GuiDocument* guiDoc)
 {
