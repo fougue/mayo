@@ -411,6 +411,7 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
 
     // "Show all" action
     QObject::connect(actionShowAll, &QAction::triggered, this, [=]{
+        const GuiDocument::VisibilityChange visibilityChange(m_guiDoc);
         for (TreeNodeId nodeId : doc->allEntityNodeIds())
             m_guiDoc->setNodeVisible(nodeId, true);
         m_guiDoc->graphicsScene()->redraw();
@@ -418,6 +419,7 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
 
     // "Show selection" action
     QObject::connect(actionShowSel, &QAction::triggered, this, [=]{
+        const GuiDocument::VisibilityChange visibilityChange(m_guiDoc);
         for (TreeNodeId nodeId : fnGetDocSelectedNodeIds())
             m_guiDoc->setNodeVisible(nodeId, true);
         m_guiDoc->graphicsScene()->redraw();
@@ -425,6 +427,7 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
 
     // "Hide selection" action
     QObject::connect(actionHideSel, &QAction::triggered, this, [=]{
+        const GuiDocument::VisibilityChange visibilityChange(m_guiDoc);
         for (TreeNodeId nodeId : fnGetDocSelectedNodeIds())
             m_guiDoc->setNodeVisible(nodeId, false);
         m_guiDoc->graphicsScene()->redraw();
@@ -432,6 +435,7 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
 
     // "Show selection only" action
     QObject::connect(actionShowSelOnly, &QAction::triggered, this, [=]{
+        const GuiDocument::VisibilityChange visibilityChange(m_guiDoc);
         // Hide all entities(root nodes)
         for (TreeNodeId nodeId : doc->allEntityNodeIds())
             m_guiDoc->setNodeVisible(nodeId, false);

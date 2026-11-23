@@ -313,4 +313,49 @@ void CommandTurnViewClockWise::execute()
         ctrl->turn(V3d_Z, increment);
 }
 
+CommandUndoVisibilityChange::CommandUndoVisibilityChange(IAppContext* context)
+    : BaseCommandDisplay(context)
+{
+    auto action = this->createAction();
+    action->setText(Command::tr("Undo Visibility"));
+    action->setToolTip(Command::tr("Undo the last show/hide change"));
+    // Text fields accept this shortcut themselves, so editing keeps its own undo
+    action->setShortcut(QKeySequence::StandardKey::Undo);
+}
+
+void CommandUndoVisibilityChange::execute()
+{
+    GuiDocument* guiDoc = this->currentGuiDocument();
+    if (guiDoc)
+        guiDoc->undoVisibilityChange();
+}
+
+bool CommandUndoVisibilityChange::getEnabledStatus() const
+{
+    const GuiDocument* guiDoc = this->currentGuiDocument();
+    return BaseCommandDisplay::getEnabledStatus() && guiDoc && guiDoc->canUndoVisibilityChange();
+}
+
+CommandRedoVisibilityChange::CommandRedoVisibilityChange(IAppContext* context)
+    : BaseCommandDisplay(context)
+{
+    auto action = this->createAction();
+    action->setText(Command::tr("Redo Visibility"));
+    action->setToolTip(Command::tr("Redo the last show/hide change"));
+    action->setShortcut(QKeySequence::StandardKey::Redo);
+}
+
+void CommandRedoVisibilityChange::execute()
+{
+    GuiDocument* guiDoc = this->currentGuiDocument();
+    if (guiDoc)
+        guiDoc->redoVisibilityChange();
+}
+
+bool CommandRedoVisibilityChange::getEnabledStatus() const
+{
+    const GuiDocument* guiDoc = this->currentGuiDocument();
+    return BaseCommandDisplay::getEnabledStatus() && guiDoc && guiDoc->canRedoVisibilityChange();
+}
+
 } // namespace Mayo

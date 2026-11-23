@@ -98,4 +98,22 @@ public:
     static constexpr std::string_view Name = "current-doc-turn-view-cw";
 };
 
+class CommandUndoVisibilityChange : public BaseCommandDisplay {
+public:
+    explicit CommandUndoVisibilityChange(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "undo-visibility-change";
+};
+
+class CommandRedoVisibilityChange : public BaseCommandDisplay {
+public:
+    explicit CommandRedoVisibilityChange(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "redo-visibility-change";
+};
+
 } // namespace Mayo
