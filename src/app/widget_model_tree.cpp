@@ -11,12 +11,16 @@
 #include "../gui/gui_application.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "item_view_buttons.h"
+#include "object_visibility_menu.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 
 #include <QtCore/QtDebug>
 #include <QtCore/QMetaType>
 #include <QtGui/QMouseEvent>
+
+#include <functional>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
@@ -43,6 +47,8 @@ class TreeWidget : public QTreeWidget {
 public:
     using QTreeWidget::QTreeWidget; // Inherit QTreeWidget constructors
 
+    std::function<void(QTreeWidgetItem*, const QPoint&)> onItemRightClicked;
+
     QModelIndex indexFromItem(QTreeWidgetItem* item, int column = 0) const {
         return QTreeWidget::indexFromItem(item, column);
     }
@@ -54,7 +60,9 @@ public:
 protected:
     void mousePressEvent(QMouseEvent* event) override
     {
-        if (event->buttons().testFlag(Qt::RightButton)) {
+        if (event->button() == Qt::RightButton) {
+            if (onItemRightClicked)
+                onItemRightClicked(this->itemAt(event->pos()), QtGuiUtils::globalPosition(event));
         }
         else {
             QTreeWidget::mousePressEvent(event);
@@ -171,6 +179,18 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     });
 
     this->connectTreeModelDataChanged(true);
+
+    m_ui->treeWidget_Model->onItemRightClicked = [this](QTreeWidgetItem* item, const QPoint& globalPos) {
+        if (!item || !m_guiApp || !holdsDocumentTreeNode(item))
+            return;
+
+        const DocumentTreeNode node = Internal::treeItemDocumentTreeNode(item);
+        GuiDocument* guiDoc = m_guiApp->findGuiDocument(node.document());
+        if (!guiDoc)
+            return;
+
+        popupObjectVisibilityMenu(this, guiDoc, node.id(), globalPos);
+    };
 }
 
 WidgetModelTree::~WidgetModelTree()
