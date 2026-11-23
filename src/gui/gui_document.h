@@ -13,6 +13,8 @@
 #include "../graphics/graphics_view_ptr.h"
 #include "v3d_view_camera_animation.h"
 
+#include <gsl/span>
+
 #include <Aspect_TypeOfTriedronPosition.hxx>
 #include <Bnd_Box.hxx>
 #include <V3d_View.hxx>
@@ -110,6 +112,10 @@ public:
     bool canRedoVisibilityChange() const;
     void undoVisibilityChange();
     void redoVisibilityChange();
+
+    std::vector<TreeNodeId> selectedNodeIds() const;
+    void hideNodes(gsl::span<const TreeNodeId> nodeIds);
+    void showOnlyNodes(gsl::span<const TreeNodeId> nodeIds);
 
     // -- Exploding
     double explodingFactor() const { return m_explodingFactor; }

@@ -313,6 +313,85 @@ void CommandTurnViewClockWise::execute()
         ctrl->turn(V3d_Z, increment);
 }
 
+namespace {
+
+QKeySequence hideSelectionShortcut()
+{
+    // Command+H hides the application on macOS, so those letters are bound to the Control key.
+#if defined(Q_OS_MACOS)
+    return Qt::META | Qt::Key_H;
+#else
+    return Qt::CTRL | Qt::Key_H;
+#endif
+}
+
+QKeySequence showOnlySelectionShortcut()
+{
+#if defined(Q_OS_MACOS)
+    return Qt::META | Qt::SHIFT | Qt::Key_H;
+#else
+    return Qt::CTRL | Qt::SHIFT | Qt::Key_H;
+#endif
+}
+
+bool selectionCanBeHidden(const GuiDocument* guiDoc)
+{
+    for (TreeNodeId nodeId : guiDoc->selectedNodeIds()) {
+        if (guiDoc->nodeVisibleState(nodeId) != CheckState::Off)
+            return true;
+    }
+
+    return false;
+}
+
+} // namespace
+
+CommandHideSelection::CommandHideSelection(IAppContext* context)
+    : BaseCommandDisplay(context)
+{
+    auto action = this->createAction();
+    action->setText(Command::tr("Hide Selection"));
+    action->setToolTip(Command::tr("Hide the selected items"));
+    action->setIcon(mayoTheme()->icon(Theme::Icon::VisibilityHideSelection));
+    action->setShortcut(hideSelectionShortcut());
+}
+
+void CommandHideSelection::execute()
+{
+    GuiDocument* guiDoc = this->currentGuiDocument();
+    if (guiDoc)
+        guiDoc->hideNodes(guiDoc->selectedNodeIds());
+}
+
+bool CommandHideSelection::getEnabledStatus() const
+{
+    const GuiDocument* guiDoc = this->currentGuiDocument();
+    return BaseCommandDisplay::getEnabledStatus() && guiDoc && selectionCanBeHidden(guiDoc);
+}
+
+CommandShowOnlySelection::CommandShowOnlySelection(IAppContext* context)
+    : BaseCommandDisplay(context)
+{
+    auto action = this->createAction();
+    action->setText(Command::tr("Show Only Selection"));
+    action->setToolTip(Command::tr("Show the selected items and hide the others"));
+    action->setIcon(mayoTheme()->icon(Theme::Icon::VisibilityShowSelectionOnly));
+    action->setShortcut(showOnlySelectionShortcut());
+}
+
+void CommandShowOnlySelection::execute()
+{
+    GuiDocument* guiDoc = this->currentGuiDocument();
+    if (guiDoc)
+        guiDoc->showOnlyNodes(guiDoc->selectedNodeIds());
+}
+
+bool CommandShowOnlySelection::getEnabledStatus() const
+{
+    const GuiDocument* guiDoc = this->currentGuiDocument();
+    return BaseCommandDisplay::getEnabledStatus() && guiDoc && !guiDoc->selectedNodeIds().empty();
+}
+
 CommandUndoVisibilityChange::CommandUndoVisibilityChange(IAppContext* context)
     : BaseCommandDisplay(context)
 {

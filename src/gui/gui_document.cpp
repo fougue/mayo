@@ -539,6 +539,38 @@ void GuiDocument::redoVisibilityChange()
     m_gfxScene.redraw();
 }
 
+std::vector<TreeNodeId> GuiDocument::selectedNodeIds() const
+{
+    std::vector<TreeNodeId> nodeIds;
+    for (const ApplicationItem& item : m_guiApp->selectionModel()->selectedItems()) {
+        if (item.isDocumentTreeNode() && item.document() == m_document)
+            nodeIds.push_back(item.documentTreeNode().id());
+    }
+
+    return nodeIds;
+}
+
+void GuiDocument::hideNodes(gsl::span<const TreeNodeId> nodeIds)
+{
+    const VisibilityChange visibilityChange(this);
+    for (TreeNodeId nodeId : nodeIds)
+        this->setNodeVisible(nodeId, false);
+
+    m_gfxScene.redraw();
+}
+
+void GuiDocument::showOnlyNodes(gsl::span<const TreeNodeId> nodeIds)
+{
+    const VisibilityChange visibilityChange(this);
+    for (TreeNodeId nodeId : m_document->allEntityNodeIds())
+        this->setNodeVisible(nodeId, false);
+
+    for (TreeNodeId nodeId : nodeIds)
+        this->setNodeVisible(nodeId, true);
+
+    m_gfxScene.redraw();
+}
+
 void GuiDocument::clearVisibilityHistory()
 {
     if (m_undoVisibilityChanges.empty() && m_redoVisibilityChanges.empty())
