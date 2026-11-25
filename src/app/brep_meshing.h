@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../base/quantity.h"
+#include "../base/occ_brep_mesh_parameters.h"
 
 class TopoDS_Shape;
 class TDF_Label;
@@ -61,7 +62,6 @@ struct BRepMeshingOptions {
 
     // Same meaning as IMeshTools_Parameters::Relative
     bool customRelative{false};
-
 };
 
 struct BRepMeshingUtils {
@@ -78,6 +78,12 @@ struct BRepMeshingUtils {
     // Computes the mesh (triangulations) of the shape referenced by the given XDE label
     static void compute(
         const TDF_Label& labelEntity, const BRepMeshingOptions& options, TaskProgress* progress = nullptr
+    );
+
+    // Returns the specified BRep meshing options as OpenCascade meshing parameters, applying either
+    // user-defined settings or quality-based coefficients
+    static OccBRepMeshParameters toOccBRepMeshParameters(
+        const BRepMeshingOptions& options, const TopoDS_Shape& shape
     );
 };
 
