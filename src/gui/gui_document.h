@@ -26,6 +26,7 @@ class GuiApplication;
 class V3dViewCameraAnimation;
 
 // Provides the link between Base::Document and graphical representations(called "graphics objects")
+// TODO Rename to GraphicsDocument
 class GuiDocument {
 public:
     // Applicable flags for function graphicsBoundingBox()
