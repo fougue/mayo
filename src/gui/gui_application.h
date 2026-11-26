@@ -30,6 +30,7 @@ class GuiDocument;
 // GuiApplication acts also as a container of GraphicsObjectDriver objects.
 // Those drivers are used by GuiDocument to automatically create 3D graphics representing the
 // entities owned by the Base::Document
+// TODO Rename to GraphicsApplcation
 class GuiApplication {
 public:
     explicit GuiApplication(const ApplicationPtr& app);

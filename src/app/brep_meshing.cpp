@@ -74,6 +74,29 @@ void BRepMeshingUtils::compute(
         const TopoDS_Shape& shape, const BRepMeshingOptions& options, TaskProgress* progress
     )
 {
+    auto params = toOccBRepMeshParameters(options, shape);
+
+    // NOTE BRepMesh_IncrementalMesh may go to infinite loop on degenerated cases(eg compound shape
+    //      containing one vertex) because of resulting deflection that would be very small and
+    //      not reachable regarding convergence
+    auto containsSubShape = [&](TopAbs_ShapeEnum shapeType) {
+        return BRepUtils::anySubShape(shape, shapeType, [](const TopoDS_Shape&) { return true; });
+    };
+    if (containsSubShape(TopAbs_EDGE) || containsSubShape(TopAbs_FACE))
+        BRepUtils::computeMesh(shape, params, progress);
+}
+
+void BRepMeshingUtils::compute(
+        const TDF_Label& labelEntity, const BRepMeshingOptions& options, TaskProgress* progress
+    )
+{
+    BRepMeshingUtils::compute(XCaf::shape(labelEntity), options, progress);
+}
+
+OccBRepMeshParameters BRepMeshingUtils::toOccBRepMeshParameters(
+        const BRepMeshingOptions& options, const TopoDS_Shape& shape
+    )
+{
     OccBRepMeshParameters params;
     params.InParallel = true;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
@@ -90,22 +113,7 @@ void BRepMeshingUtils::compute(
         params.Angle = UnitSystem::radians(coeffs.angularDeflection * (20 * Quantity_Degree));
     }
 
-    // NOTE BRepMesh_IncrementalMesh may go to infinite loop on degenerated cases(eg compound shape
-    //      containing one vertex) because of resulting deflection that would be very small and
-    //      not reachable regarding convergence
-    auto containsSubShape = [&](TopAbs_ShapeEnum shapeType) {
-        return BRepUtils::anySubShape(shape, shapeType, [](const TopoDS_Shape&) { return true; });
-    };
-    if (containsSubShape(TopAbs_EDGE) || containsSubShape(TopAbs_FACE))
-        BRepUtils::computeMesh(shape, params, progress);
-}
-
-void BRepMeshingUtils::compute(
-        const TDF_Label& labelEntity, const BRepMeshingOptions& options, TaskProgress* progress
-    )
-{
-    if (XCaf::isShape(labelEntity))
-        BRepMeshingUtils::compute(XCaf::shape(labelEntity), options, progress);
+    return params;
 }
 
 } // namespace Mayo

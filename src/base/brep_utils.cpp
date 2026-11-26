@@ -114,6 +114,15 @@ void BRepUtils::computeMesh(
         [[maybe_unused]]TaskProgress* progress
     )
 {
+    // NOTE BRepMesh_IncrementalMesh may go to infinite loop on degenerated cases(eg compound shape
+    //      containing one vertex) because of resulting deflection that would be very small and
+    //      not reachable regarding convergence
+    auto containsSubShape = [&](TopAbs_ShapeEnum shapeType) {
+        return BRepUtils::anySubShape(shape, shapeType, [](const TopoDS_Shape&) { return true; });
+    };
+    if (!containsSubShape(TopAbs_EDGE) && !containsSubShape(TopAbs_FACE))
+        return;
+
 #if OCC_VERSION_HEX >= 0x070500
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     [[maybe_unused]]BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
