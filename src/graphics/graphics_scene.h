@@ -33,6 +33,11 @@ public:
     const OccHandle<StdSelect_ViewerSelector3d>& mainSelector() const;
     bool hiddenLineDrawingOn() const;
 
+    // Sets the tolerance in pixels used by the selector to detect entities(edges, vertices, ...)
+    // nearby the cursor position. Increasing this value makes picking of "small" entities(such as
+    // edges and vertices) less finicky. OCCT default value is 2
+    void setSelectionPixelTolerance(int tolerance);
+
     const OccHandle<Prs3d_Drawer>& drawerDefault() const;
     const OccHandle<Prs3d_Drawer>& drawerHighlight(Prs3d_TypeOfHighlight style) const;
 

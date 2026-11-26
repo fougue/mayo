@@ -78,6 +78,9 @@ private:
     ButtonFlat* m_btnEditClipping = nullptr;
     ButtonFlat* m_btnExplode = nullptr;
     ButtonFlat* m_btnMeasure = nullptr;
+
+    // Menu of pre-defined views popped on long-press(touch input)
+    QMenu* m_menuViewProjections = nullptr;
 };
 
 } // namespace Mayo

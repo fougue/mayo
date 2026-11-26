@@ -128,6 +128,12 @@ bool GraphicsScene::hiddenLineDrawingOn() const
     return d->m_aisContext->DrawHiddenLine();
 }
 
+void GraphicsScene::setSelectionPixelTolerance(int tolerance)
+{
+    if (tolerance > 0)
+        this->mainSelector()->SetPixelTolerance(tolerance);
+}
+
 const OccHandle<Prs3d_Drawer>& GraphicsScene::drawerDefault() const
 {
     return d->m_aisContext->DefaultDrawer();

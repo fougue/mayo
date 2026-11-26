@@ -36,9 +36,19 @@ WidgetFileSystem::WidgetFileSystem(QWidget* parent)
     m_treeWidget->setColumnCount(1);
     m_treeWidget->setIndentation(0);
 
+    // Enable flick scrolling with a finger on touch screens
+    QtWidgetsUtils::enableTouchScrolling(m_treeWidget);
+
     QObject::connect(
         m_treeWidget, &QTreeWidget::itemActivated,
         this, &WidgetFileSystem::onTreeItemActivated
+    );
+    // Touch sessions: a single tap must only highlight/select the entry, opening a file requires
+    // an explicit double-tap(see onTreeItemClicked). Otherwise casual taps while flick-scrolling
+    // would open files
+    QObject::connect(
+        m_treeWidget, &QTreeWidget::itemClicked,
+        this, &WidgetFileSystem::onTreeItemClicked
     );
 }
 
@@ -65,6 +75,12 @@ void WidgetFileSystem::setLocation(const QFileInfo& fiLoc)
 void WidgetFileSystem::onTreeItemActivated(QTreeWidgetItem* item, int column)
 {
     if (item != nullptr && column == 0) {
+        // Guard against duplicate activation of the same entry within a short time frame: a touch
+        // double-tap may both synthesize a native double-click activation(and thus this function
+        // being called) and trigger the manual double-tap detection(see onTreeItemClicked)
+        if (m_activationDetector.isDoubleTap(m_treeWidget->indexFromItem(item)))
+            return;
+
         if (item->text(0) == QLatin1String("..")) {
             QDir dir = Internal::absolutePath(m_location);
             dir.cdUp();
@@ -83,6 +99,20 @@ void WidgetFileSystem::onTreeItemActivated(QTreeWidgetItem* item, int column)
             }
         }
     }
+}
+
+void WidgetFileSystem::onTreeItemClicked(QTreeWidgetItem* item, int column)
+{
+    if (!item || column != 0)
+        return;
+
+    // Desktop sessions: single click only highlights/selects the item, itemActivated() handles
+    // activation on double-click/Enter key
+    if (!QtWidgetsUtils::isTouchSessionActive())
+        return;
+
+    if (m_tapDetector.isDoubleTap(m_treeWidget->indexFromItem(item)))
+        this->onTreeItemActivated(item, column);
 }
 
 void WidgetFileSystem::setCurrentFolder(const QDir& dir)

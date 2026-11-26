@@ -62,6 +62,19 @@ void V3dViewController::zoomAt([[maybe_unused]]const Position& currPos, double d
     this->signalViewScaled.send();
 }
 
+void V3dViewController::zoomByFactor(const Position& anchor, double factor)
+{
+    if (!std::isfinite(factor) || factor <= 0. || factor == 1.)
+        return;
+
+    // Mouse wheel events are expressed in "ticks"(1.0 per wheel notch) and passed as-is to zoomAt()
+    // Convert the(relative) pinch scale factor into that same unit so pinch and wheel zoom feel
+    // consistent. kZoomStepPerTick is the scale change presumed for one wheel tick(matches the 10%
+    // step of zoomIn()/zoomOut())
+    static constexpr double kZoomStepPerTick = 1.1;
+    this->zoomAt(anchor, std::log(factor) / std::log(kZoomStepPerTick));
+}
+
 void V3dViewController::zoomIn()
 {
     d->m_view->SetScale(d->m_view->Scale() * 1.1); // +10%

@@ -11,6 +11,7 @@
 #include "ui_dialog_task_manager.h"
 #include "app_module.h"
 #include "qstring_utils.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
 
 #include <QtCore/QTimer>
@@ -61,6 +62,11 @@ DialogTaskManager::TaskWidget::TaskWidget(QWidget* parent)
     m_progress->setValue(0);
     m_interruptBtn->setIcon(mayoTheme()->icon(Theme::Icon::Stop));
     m_interruptBtn->setAutoRaise(true);
+    if (QtWidgetsUtils::isTouchSessionActive()) {
+        // Touch screens need interaction targets of at least ~9mm
+        m_interruptBtn->setIconSize(QSize{24, 24});
+        m_interruptBtn->setFixedSize(40, 40);
+    }
 
     auto progressLayout = new QHBoxLayout;
     progressLayout->addWidget(m_progress);
@@ -113,6 +119,7 @@ DialogTaskManager::DialogTaskManager(TaskManager* taskMgr, QWidget* parent)
     m_ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
     this->setWindowModality(Qt::WindowModal);
+    QtWidgetsUtils::enableTouchScrolling(m_ui->scrollArea);
 
     taskMgr->signalStarted.connectSlot(&DialogTaskManager::onTaskStarted, this);
     taskMgr->signalEnded.connectSlot(&DialogTaskManager::onTaskEnded, this);

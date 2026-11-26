@@ -220,10 +220,15 @@ void PropertyItemDelegate::paint(
 
     if (index.column() == 1 && !index.data().isNull()) {
         const Property* prop = qvariant_cast<Property*>(index.data());
+        // Display the edit affordance on mouse hover(the classic desktop behavior) but also when
+        // the item is selected: touch input has no hover capability
+        const bool isItemHovered =
+            option.state.testFlag(QStyle::State_MouseOver)
+            || option.state.testFlag(QStyle::State_Selected)
+        ;
         if (!prop->isUserReadOnly()
             && option.state.testFlag(QStyle::State_Enabled)
-            && option.state.testFlag(QStyle::State_MouseOver)
-           )
+            && isItemHovered)
         {
             const QSize itemSize = this->sizeHint(option, index);
             const QSize pixItemSize = option.decorationSize * 0.75;

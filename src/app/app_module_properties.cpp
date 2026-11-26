@@ -86,6 +86,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->defaultShowOriginTrihedron, groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, groupId_graphics);
     settings->addSetting(&this->turnViewAngleIncrement, groupId_graphics);
+    settings->addSetting(&this->selectionPixelTolerance, groupId_graphics);
     // -- Clip planes
     settings->addSetting(&this->clipPlanesCappingOn, sectionId_graphicsClipPlanes);
     settings->addSetting(&this->clipPlanesCappingHatchOn, sectionId_graphicsClipPlanes);
@@ -120,6 +121,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
         this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
+        this->selectionPixelTolerance.setValue(10);
     });
     settings->addResetFunction(groupId_meshing, [this]{
         this->meshingQuality.setValue(BRepMeshingOptions::Quality::Normal);
@@ -242,6 +244,10 @@ void AppModuleProperties::retranslate()
         textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)")
     );
     this->viewCubeCorner.setDescription(textIdTr("Corner where 3D view cube is located"));
+    this->selectionPixelTolerance.setDescription(
+        textIdTr("Tolerance in pixels used to select graphics entities near the cursor position.\n\n"
+                 "Higher values make picking of small entities(edges, vertices) easier")
+    );
 
     // -- Graphics/ClipPlanes
     this->defaultShowOriginTrihedron.setDescription(

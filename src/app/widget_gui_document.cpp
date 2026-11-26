@@ -129,6 +129,16 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     QObject::connect(m_btnMeasure, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetMeasure);
     m_controller->signalDynamicActionStarted.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
     m_controller->signalViewScaled.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
+    // Long-press(touch input) pops up the menu of pre-defined views at the press position
+    QObject::connect(
+        m_controller, &WidgetOccViewController::touchLongPressRequested,
+        this, [=](int xPos, int yPos) {
+            if (m_menuViewProjections) {
+                const QPoint globalPos = m_qtOccView->widget()->mapToGlobal(QPoint(xPos, yPos));
+                m_menuViewProjections->popup(globalPos);
+            }
+        }
+    );
     m_controller->signalMouseButtonClicked.connectSlot([=](Aspect_VKeyMouse btn) {
         if (btn == Aspect_VKeyMouse_LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
             gfxScene->select();
@@ -301,8 +311,13 @@ ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, 
     btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
     btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
     btn->setIcon(mayoTheme()->icon(icon));
-    btn->setIconSize(pxRatio * QSize{24, 24});
-    btn->setFixedSize(pxRatio * QSize{40, 40});
+    // Touch screens need interaction targets of at least ~9mm so that they can be accurately
+    // pressed with a finger
+    const bool touchSession = QtWidgetsUtils::isTouchSessionActive();
+    const QSize iconSize = touchSession ? QSize{28, 28} : QSize{24, 24};
+    const QSize btnSize = touchSession ? QSize{48, 48} : QSize{40, 40};
+    btn->setIconSize(pxRatio * iconSize);
+    btn->setFixedSize(pxRatio * btnSize);
     btn->setToolTip(tooltip);
     return btn;
 }
@@ -356,6 +371,7 @@ void WidgetGuiDocument::createMenuViewProjections(QWidget* container)
     menuBtn->setToolTip(strTemplateTooltip.arg(btnCreationData[0].text));
     menuBtn->setData(static_cast<int>(btnCreationData[0].proj));
     auto menu = this->createViewMenu(menuBtn);
+    m_menuViewProjections = menu;
 
     for (const ButtonCreationData& btnData : btnCreationData) {
         auto action = menu->addAction(mayoTheme()->icon(btnData.icon), btnData.text);

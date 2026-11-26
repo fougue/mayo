@@ -85,6 +85,7 @@ public:
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
     PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };
     PropertyAngle turnViewAngleIncrement{ this, textId("turnViewAngleIncrement") };
+    PropertyInt selectionPixelTolerance{ this, textId("selectionPixelTolerance") };
     // -- Graphics/ClipPlanes
     PropertyBool clipPlanesCappingOn{ this, textId("cappingOn") };
     PropertyBool clipPlanesCappingHatchOn{ this, textId("cappingHatchOn") };

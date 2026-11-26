@@ -5,6 +5,7 @@
 
 #include "widget_properties_editor.h"
 #include "qmeta_property.h"
+#include "qtwidgets_utils.h"
 #include "ui_widget_properties_editor.h"
 #include "../qtcommon/qstring_conv.h"
 
@@ -39,6 +40,7 @@ WidgetPropertiesEditor::WidgetPropertiesEditor(QWidget *parent)
     d->ui->treeWidget_Browser->setIndentation(0);
     d->ui->treeWidget_Browser->setItemsExpandable(false);
     d->ui->treeWidget_Browser->setRootIsDecorated(false);
+    QtWidgetsUtils::enableTouchScrolling(d->ui->treeWidget_Browser);
     d->itemDelegate = new PropertyItemDelegate(d->ui->treeWidget_Browser);
     d->ui->treeWidget_Browser->setItemDelegate(d->itemDelegate);
 }

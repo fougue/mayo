@@ -82,6 +82,7 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     auto guiDocModel = new GuiDocumentListModel(guiApp, this);
     m_ui->combo_GuiDocuments->setModel(guiDocModel);
     m_ui->listView_OpenedDocuments->setModel(guiDocModel);
+    QtWidgetsUtils::enableTouchScrolling(m_ui->listView_OpenedDocuments);
 
     // "Window" actions and navigation in documents
     QObject::connect(
@@ -154,6 +155,7 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
 {
     assert(cmdContainer != nullptr);
 
+    const bool touchSession = QtWidgetsUtils::isTouchSessionActive();
     m_appContext = cmdContainer->appContext();
     auto fnFindAction = [=](std::string_view cmdName) {
         QAction* action = cmdContainer->findCommandAction(cmdName);
@@ -170,10 +172,17 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
     m_listViewBtns->addButton(1, actionCloseDoc->icon(), actionCloseDoc->toolTip());
     m_listViewBtns->setButtonDetection(1, -1, QVariant{});
     m_listViewBtns->setButtonDisplayColumn(1, 0);
-    m_listViewBtns->setButtonDisplayModes(1, ItemViewButtons::DisplayOnDetection);
+    // Touch input has no hover: display the close button on the selected item instead
+    m_listViewBtns->setButtonDisplayModes(
+        1,
+        touchSession ?
+            ItemViewButtons::DisplayWhenItemSelected :
+            ItemViewButtons::DisplayOnDetection
+    );
     m_listViewBtns->setButtonItemSide(1, ItemViewButtons::ItemRightSide);
     const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
-    m_listViewBtns->setButtonIconSize(1, QSize(iconSize * 0.66, iconSize * 0.66));
+    const double btnIconFactor = touchSession ? 1.0 : 0.66;
+    m_listViewBtns->setButtonIconSize(1, QSize(iconSize * btnIconFactor, iconSize * btnIconFactor));
     QObject::connect(m_listViewBtns, &ItemViewButtons::buttonClicked, this, [=](int btnId, QModelIndex index) {
         if (btnId == 1) {
             assert(this->widgetGuiDocument(index.row()) != nullptr);
@@ -522,6 +531,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
     auto widgetCtrl = widget->controller();
     widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
     widgetCtrl->setNavigationStyle(appProps->navigationStyle);
+    gfxScene->setSelectionPixelTolerance(appProps->selectionPixelTolerance.value());
     if (appProps->defaultShowOriginTrihedron) {
         guiDoc->toggleOriginTrihedronVisibility();
         gfxScene->redraw();
@@ -535,6 +545,8 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
                 widgetCtrl->setNavigationStyle(appProps->navigationStyle);
             else if (setting == &appProps->viewCubeCorner)
                 guiDoc->setViewTrihedronCorner(appProps->graphicsViewCubeCornerValue());
+            else if (setting == &appProps->selectionPixelTolerance)
+                gfxScene->setSelectionPixelTolerance(appProps->selectionPixelTolerance.value());
         }
     );
     // NOTE
