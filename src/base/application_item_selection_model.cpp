@@ -9,14 +9,15 @@ namespace Mayo {
 
 namespace {
 
-static bool hasApplicationItem(gsl::span<ApplicationItem> vec, const ApplicationItem& item)
+bool hasApplicationItem(gsl::span<ApplicationItem> vec, const ApplicationItem& item)
 {
     auto itFound = std::find(vec.begin(), vec.end(), item);
     return itFound != vec.end();
 }
 
-static std::vector<ApplicationItem>::iterator findApplicationItem(
-        std::vector<ApplicationItem>& vec, const ApplicationItem& item)
+std::vector<ApplicationItem>::iterator findApplicationItem(
+        std::vector<ApplicationItem>& vec, const ApplicationItem& item
+    )
 {
     return std::find(vec.begin(), vec.end(), item);
 }

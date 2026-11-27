@@ -55,8 +55,7 @@ TaskManager::TaskManager()
 TaskManager::~TaskManager()
 {
     // Make sure all tasks are really finished
-    for (const auto& mapPair : d->mapEntity) {
-        const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
+    for (const auto& [taskId, ptrEntity] : d->mapEntity) {
         if (ptrEntity->control.valid())
             ptrEntity->control.wait();
     }
@@ -155,8 +154,8 @@ bool TaskManager::destroy(TaskId id)
 
 void TaskManager::foreachTask(const std::function<void(TaskId)>& fn)
 {
-    for (const auto& mapPair : d->mapEntity)
-        fn(mapPair.first);
+    for (const auto& [taskId, ptrEntity] : d->mapEntity)
+        fn(taskId);
 }
 
 double TaskManager::progress(TaskId id) const

@@ -20,8 +20,8 @@ double GeomUtils::normalizedU(const Adaptor3d_Curve& curve, double u)
 {
     const double uFirst = curve.FirstParameter();
     const double uLast = curve.LastParameter();
-    const std::pair<double, double> uRange = std::minmax(uFirst, uLast);
-    return MathUtils::mappedValue(u, uRange.first, uRange.second, 0, 1);
+    const auto [uMin, uMax] = std::minmax(uFirst, uLast);
+    return MathUtils::mappedValue(u, uMin, uMax, 0, 1);
 }
 
 gp_Pnt GeomUtils::d0(const Adaptor3d_Curve& curve, double u)

@@ -4,6 +4,7 @@
 ****************************************************************************/
 
 #include "caf_utils.h"
+#include "cpp_utils.h"
 
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
@@ -29,8 +30,7 @@ const TCollection_ExtendedString& CafUtils::labelAttrStdName(const TDF_Label& la
         return attrName->Get();
     }
     else {
-        static const TCollection_ExtendedString nullStr = {};
-        return nullStr;
+        return CppUtils::staticObject<TCollection_ExtendedString>();
     }
 }
 
