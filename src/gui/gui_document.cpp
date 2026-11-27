@@ -652,8 +652,9 @@ void GuiDocument::mapLeafTreeNode(
             gfxEntity->vecObject.emplace_back(gfxObject);
         }
         else {
-            auto gfxInstance = makeOccHandle<AIS_ConnectedInteractive>();
-            gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, leafNodeId));
+            auto gfxInstance = GraphicsUtils::AisObject_createConnected(
+                gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, leafNodeId)
+            );
             gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
             gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
             gfxInstance->SetOwner(gfxProduct->GetOwner());

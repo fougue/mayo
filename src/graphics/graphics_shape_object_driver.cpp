@@ -15,7 +15,12 @@
 #include <AIS_ConnectedInteractive.hxx>
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_DisplayMode.hxx>
+#include <BRepTools.hxx>
+#include <BRep_Tool.hxx>
+#include <Poly_Triangulation.hxx>
+#include <Precision.hxx>
 #include <Prs3d_LineAspect.hxx>
+#include <TopExp_Explorer.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 #include <XCAFPrs_AISObject.hxx>
@@ -24,6 +29,70 @@ namespace Mayo {
 
 namespace {
 struct GraphicsShapeObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsShapeObjectDriver) };
+
+// A face without trimming wires may still have a finite natural domain (eg a
+// sphere or a Bezier surface), or carry a mesh. Keep those faces displayable.
+bool isUnboundedUnmeshedFace(const TopoDS_Face& face)
+{
+    if (TopExp_Explorer(face, TopAbs_WIRE).More() || BRep_Tool::Surface(face).IsNull())
+        return false;
+
+    TopLoc_Location location;
+    const auto& triangulation = BRep_Tool::Triangulation(face, location);
+    if (!triangulation.IsNull() && triangulation->NbTriangles() > 0)
+        return false;
+
+    double uMin, uMax, vMin, vMax;
+    BRepTools::UVBounds(face, uMin, uMax, vMin, vMax);
+    return Precision::IsInfinite(uMin) || Precision::IsInfinite(uMax)
+            || Precision::IsInfinite(vMin) || Precision::IsInfinite(vMax);
+}
+
+class XcafShapeObject : public XCAFPrs_AISObject {
+public:
+    explicit XcafShapeObject(const TDF_Label& label)
+        : XCAFPrs_AISObject(label)
+    {
+    }
+
+    void DispatchStyles(Standard_Boolean toSyncStyles = Standard_False) override
+    {
+        XCAFPrs_AISObject::DispatchStyles(toSyncStyles);
+        m_hasUnboundedFaces = false;
+
+        // OCCT's shaded fallback draws five U/V isocurves for an unmeshed
+        // face. On an unbounded surface these spoil the presentation and its
+        // fit-all bounds. Suppress only that face in the presentation, keeping
+        // the XDE shape, its styles and export geometry intact. Apply this
+        // after every style dispatch: the base implementation clears drawers.
+        BRepUtils::forEachSubFace(this->Shape(), [this](const TopoDS_Face& face) {
+            if (isUnboundedUnmeshedFace(face)) {
+                this->CustomAspects(face)->SetHidden(true);
+                m_hasUnboundedFaces = true;
+            }
+        });
+    }
+
+protected:
+    void ComputeSelection(const OccHandle<SelectMgr_Selection>& selection, int mode) override
+    {
+        // Bounding-box measurement selects compounds. OCCT's compound mode
+        // bypasses hidden child drawers when constructing sensitive geometry.
+        // Mode 0 yields the same original whole-shape owner while respecting
+        // those drawers. The measurement tool also enables compound mode on
+        // shell/solid roots, which otherwise have no compound to select.
+        if (m_hasUnboundedFaces && mode == AIS_Shape::SelectionMode(TopAbs_COMPOUND))
+        {
+            AIS_ColoredShape::ComputeSelection(selection, 0);
+        }
+        else {
+            XCAFPrs_AISObject::ComputeSelection(selection, mode);
+        }
+    }
+
+private:
+    bool m_hasUnboundedFaces = false;
+};
 } // namespace
 
 GraphicsShapeObjectDriver::GraphicsShapeObjectDriver()
@@ -45,7 +114,7 @@ GraphicsObjectDriver::Support GraphicsShapeObjectDriver::supportStatus(const TDF
 GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label) const
 {
     if (XCaf::isShape(label)) {
-        auto object = new XCAFPrs_AISObject(label);
+        auto object = new XcafShapeObject(label);
         object->SetDisplayMode(AIS_Shaded);
         object->SetMaterial(Graphic3d_NOM_PLASTER);
         object->Attributes()->SetFaceBoundaryDraw(true);
