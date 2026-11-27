@@ -10,109 +10,27 @@
 
 #include "test_base.h"
 
-#include "../src/base/application.h"
-#include "../src/base/caf_utils.h"
 #include "../src/base/enumeration.h"
 #include "../src/base/enumeration_fromenum.h"
 #include "../src/base/filepath.h"
 #include "../src/base/filepath_conv.h"
 #include "../src/base/occ_handle.h"
 #include "../src/base/meta_enum.h"
+#include "../src/base/quantity.h"
 #include "../src/base/string_conv.h"
-#include "signal_emit_spy.h"
 
-#include <BRep_Tool.hxx>
 #include <NCollection_String.hxx>
 #include <TopAbs_ShapeEnum.hxx>
-#include <TDataStd_Name.hxx>
 
 #include <QtCore/QtDebug>
 
-#include <gsl/util>
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <climits>
 #include <cstring>
 #include <string>
-#include <utility>
 
 namespace Mayo {
-
-void TestBase::Application_test()
-{
-    auto app = makeOccHandle<Application>();
-    auto fnAddNewShapeEntity = [](DocumentPtr doc, const char* strEntityName) {
-        const TDF_Label shapeLabel = doc->newEntityShapeLabel();
-        TDataStd_Name::Set(shapeLabel, to_OccExtString(strEntityName));
-        doc->addEntityTreeNode(shapeLabel);
-        return shapeLabel;
-    };
-    QCOMPARE(app->documentCount(), 0);
-
-    {   // Add & remove a document
-        SignalEmitSpy spyDocAdded(&app->signalDocumentAdded);
-        DocumentPtr doc = app->newDocument();
-        QVERIFY(!doc.IsNull());
-        QCOMPARE(spyDocAdded.count, 1);
-        QCOMPARE(app->documentCount(), 1);
-        QCOMPARE(app->findIndexOfDocument(doc), 0);
-        QCOMPARE(app->findDocumentByIndex(0).get(), doc.get());
-        QCOMPARE(app->findDocumentByIdentifier(doc->identifier()).get(), doc.get());
-
-        SignalEmitSpy spyDocClosed(&app->signalDocumentAboutToClose);
-        app->closeDocument(doc);
-        QCOMPARE(spyDocClosed.count, 1);
-        QCOMPARE(app->documentCount(), 0);
-    }
-
-    {   // Add & remove an entity
-        DocumentPtr doc = app->newDocument();
-        auto _ = gsl::finally([=]{ app->closeDocument(doc); });
-        QCOMPARE(doc->entityCount(), 0);
-        SignalEmitSpy spyEntityAdded(&app->signalDocumentEntityAdded);
-        fnAddNewShapeEntity(doc, "SomeShape");
-        QCOMPARE(spyEntityAdded.count, 1);
-        QCOMPARE(doc->entityCount(), 1);
-        QVERIFY(XCaf::isShape(doc->firstEntityNodeLabel()));
-        QCOMPARE(CafUtils::labelAttrStdName(doc->firstEntityNodeLabel()), to_OccExtString("SomeShape"));
-
-        SignalEmitSpy spyEntityDestroyed(&app->signalDocumentEntityAboutToBeDestroyed);
-        doc->destroyEntity(doc->firstEntityNodeId());
-        QCOMPARE(spyEntityDestroyed.count, 1);
-        QCOMPARE(doc->entityCount(), 0);
-    }
-
-    {   // Add mesh entity
-        // Add XCAF entity
-        // Try to remove mesh and XCAF entities
-        // Note: order of entities matters
-        QCOMPARE(app->documentCount(), 0);
-        DocumentPtr doc = app->newDocument();
-        auto _ = gsl::finally([=]{ app->closeDocument(doc); });
-        fnAddNewShapeEntity(doc, "Shape1");
-        QCOMPARE(doc->entityCount(), 1);
-
-        fnAddNewShapeEntity(doc, "Shape2");
-        QCOMPARE(doc->entityCount(), 2);
-
-        doc->destroyEntity(doc->firstEntityNodeId());
-        QCOMPARE(doc->entityCount(), 1);
-        doc->destroyEntity(doc->firstEntityNodeId());
-        QCOMPARE(doc->entityCount(), 0);
-    }
-
-    QCOMPARE(app->documentCount(), 0);
-}
-
-void TestBase::DocumentRefCount_test()
-{
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-    QVERIFY(doc->GetRefCount() > 1);
-    app->closeDocument(doc);
-    QCOMPARE(doc->GetRefCount(), 1);
-}
 
 void TestBase::TextId_test()
 {
@@ -228,23 +146,6 @@ void TestBase::Quantity_test()
     const QuantityArea area = (10 * Quantity_Millimeter) * (5 * Quantity_Centimeter);
     QCOMPARE(area.value(), 500.);
     QCOMPARE((Quantity_Millimeter / 5.).value(), 1/5.);
-}
-
-void TestBase::XCaf_userDefinedAttributes_test()
-{
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-
-    auto closeDoc = gsl::finally([=]{ app->closeDocument(doc); });
-
-    // Must not crash for null labels
-    QVERIFY(doc->xcaf().shapeUserDefinedAttributes(TDF_Label{}).IsNull());
-
-    // Must not create user defined attributes if none attached
-    const TDF_Label shapeLabel = doc->newEntityShapeLabel();
-    TDataStd_Name::Set(shapeLabel, L"Shape1");
-    doc->addEntityTreeNode(shapeLabel);
-    QVERIFY(doc->xcaf().shapeUserDefinedAttributes(shapeLabel).IsNull());
 }
 
 } // namespace Mayo

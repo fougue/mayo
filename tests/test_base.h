@@ -15,17 +15,17 @@ class TestBase : public QObject {
 
 private slots:
     // Misc
-    void DocumentRefCount_test();
     void Enumeration_test();
     void FilePath_test();
     void MetaEnum_test();
     void OccHandle_test();
     void Quantity_test();
     void TextId_test();
-    void XCaf_userDefinedAttributes_test();
 
     // Application
-    void Application_test();
+    void Application_documentLifecycle_test();
+    void Application_entityLifecycle_test();
+    void Application_destroyMultipleEntities_test();
     void Application_openDocument_test();
     void Application_findDocumentByIdentifier_test();
     void Application_findDocumentByLocation_test();
@@ -70,14 +70,28 @@ private slots:
     void BRepUtils_anySubShape_multipleShapes_test();
     void BRepUtils_anySubShape_stopOnFirstMatch_test();
     void BRepUtils_anySubShape_shapeType_test();
+    void BRepUtils_computeMesh_test();
+    void BRepUtils_computeMesh_withoutEdgesOrFaces_test();
 
     // CafUtils
     void CafUtils_labelTag_test();
+    void CafUtils_labelAttrStdName_test();
+    void CafUtils_isNullOrEmpty_test();
     void CafUtils_getNamedDataKeys_test();
 
     // CppUtils
     void CppUtils_indexInSpan_test();
     void CppUtils_toggle_test();
+
+    // Document
+    void Document_refCount_test();
+    void Document_name_test();
+    void Document_setName_test();
+    void Document_isEntity_test();
+    void Document_rebuildModelTree_test();
+    void Document_rebuildModelTree_assembly_test();
+    void Document_newEntityLabel_test();
+    void Document_destroyEntity_test();
 
     // LibTask
     void LibTask_runAndTrackProgress_test();
@@ -86,6 +100,10 @@ private slots:
     void LibTask_taskAborted_test();
     void LibTask_taskFailed_test();
     void LibTask_TaskProgress_isRoot_test();
+    void LibTask_TaskManager_destroy_test();
+    void LibTask_TaskManager_title_test();
+    void LibTask_TaskManager_setTitle_test();
+    void LibTask_TaskManager_cleanGarbage_test();
 
     // LibTree
     void LibTree_test();
@@ -97,6 +115,23 @@ private slots:
     void MathUtils_intRound_test_data();
     void MathUtils_mappedValue_test();
     void MathUtils_mappedValue_test_data();
+
+    // GeomUtils
+    void GeomUtils_normalizedU_test();
+    void GeomUtils_normalizedU_test_data();
+    void GeomUtils_d0_test();
+    void GeomUtils_d0_test_data();
+    void GeomUtils_d1_test();
+    void GeomUtils_d1_test_data();
+    void GeomUtils_d0d1_test();
+    void GeomUtils_d0d1_test_data();
+    void GeomUtils_makeTranslation_test();
+    void GeomUtils_makeRotation_test();
+    void GeomUtils_makeMirror_test();
+    void GeomUtils_equalPoint_test();
+    void GeomUtils_equalVector_test();
+    void GeomUtils_isNull_test();
+    void GeomUtils_isNull_test_data();
 
     // MessageCollecter
     void MessageCollecter_ignoreSingleMessageType_test();
@@ -172,6 +207,16 @@ private slots:
     // UnitSystem
     void UnitSystem_test();
     void UnitSystem_test_data();
+
+    // XCaf
+    void XCaf_isNull_test();
+    void XCaf_topLevelFreeShapes_test();
+    void XCaf_shapeSubs_test();
+    void XCaf_shapeColor_test();
+    void XCaf_validationProperties_test();
+    void XCaf_diffTopLevelFreeShapes_test();
+    void XCaf_shapeMaterial_test();
+    void XCaf_userDefinedAttributes_test();
 };
 
 } // namespace Mayo

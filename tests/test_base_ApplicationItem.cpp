@@ -5,7 +5,7 @@
 
 #include "test_base.h"
 
-#include "../src/base/application.h"
+#include "document_fixture.h"
 #include "../src/base/application_item.h"
 
 namespace Mayo {
@@ -23,8 +23,8 @@ void TestBase::ApplicationItem_default_test()
 
 void TestBase::ApplicationItem_document_test()
 {
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
+    DocumentFixture fixture;
+    auto doc = fixture.doc;
 
     ApplicationItem item(doc);
 
@@ -37,8 +37,8 @@ void TestBase::ApplicationItem_document_test()
 
 void TestBase::ApplicationItem_documentTreeNode_test()
 {
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
+    DocumentFixture fixture;
+    auto doc = fixture.doc;
 
     DocumentTreeNode node(doc, 42);
     ApplicationItem item(node);
