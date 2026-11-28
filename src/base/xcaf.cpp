@@ -241,7 +241,7 @@ NCollection_Sequence<TDF_Label> XCaf::layers(const TDF_Label& lbl) const
     return seq;
 }
 
-TCollection_ExtendedString XCaf::layerName(const TDF_Label &lbl) const
+TCollection_ExtendedString XCaf::layerName(const TDF_Label& lbl) const
 {
     TCollection_ExtendedString name;
     auto tool = this->layerTool();

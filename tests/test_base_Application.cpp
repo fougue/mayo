@@ -5,14 +5,79 @@
 
 #include "test_base.h"
 
-#include "../src/base/application.h"
+#include "../src/base/caf_utils.h"
+#include "../src/base/string_conv.h"
+#include "document_fixture.h"
+#include "signal_emit_spy.h"
+
+#include <TDataStd_Name.hxx>
 
 #include <algorithm>
 
 namespace Mayo {
 
-// TODO Once branch tests/io-image is merged then move TestBase::Application_test() here and split
-// the test
+namespace {
+
+TDF_Label addNewShapeEntity(const DocumentPtr& doc, const char* name)
+{
+    const TDF_Label shapeLabel = doc->newEntityShapeLabel();
+    TDataStd_Name::Set(shapeLabel, to_OccExtString(name));
+    doc->addEntityTreeNode(shapeLabel);
+    return shapeLabel;
+}
+
+} // namespace
+
+void TestBase::Application_documentLifecycle_test()
+{
+    auto app = makeOccHandle<Application>();
+    QCOMPARE(app->documentCount(), 0);
+
+    SignalEmitSpy spyDocAdded(&app->signalDocumentAdded);
+    DocumentPtr doc = app->newDocument();
+    QVERIFY(!doc.IsNull());
+    QCOMPARE(spyDocAdded.count, 1);
+    QCOMPARE(app->documentCount(), 1);
+
+    SignalEmitSpy spyDocClosed(&app->signalDocumentAboutToClose);
+    app->closeDocument(doc);
+    QCOMPARE(spyDocClosed.count, 1);
+    QCOMPARE(app->documentCount(), 0);
+}
+
+void TestBase::Application_entityLifecycle_test()
+{
+    DocumentFixture fixture;
+    auto doc = fixture.doc;
+
+    QCOMPARE(doc->entityCount(), 0);
+    SignalEmitSpy spyEntityAdded(&fixture.app->signalDocumentEntityAdded);
+    addNewShapeEntity(doc, "SomeShape");
+    QCOMPARE(spyEntityAdded.count, 1);
+    QCOMPARE(doc->entityCount(), 1);
+    QVERIFY(XCaf::isShape(doc->firstEntityNodeLabel()));
+    QCOMPARE(CafUtils::labelAttrStdName(doc->firstEntityNodeLabel()), to_OccExtString("SomeShape"));
+
+    SignalEmitSpy spyEntityDestroyed(&fixture.app->signalDocumentEntityAboutToBeDestroyed);
+    doc->destroyEntity(doc->firstEntityNodeId());
+    QCOMPARE(spyEntityDestroyed.count, 1);
+    QCOMPARE(doc->entityCount(), 0);
+}
+
+void TestBase::Application_destroyMultipleEntities_test()
+{
+    DocumentFixture fixture;
+    auto doc = fixture.doc;
+
+    addNewShapeEntity(doc, "Shape1");
+    addNewShapeEntity(doc, "Shape2");
+    QCOMPARE(doc->entityCount(), 2);
+
+    doc->destroyEntity(doc->firstEntityNodeId());
+    QCOMPARE(doc->entityCount(), 1);
+    doc->destroyEntity(doc->firstEntityNodeId());
+    QCOMPARE(doc->entityCount(), 0);
+}
 
 void TestBase::Application_openDocument_test()
 {

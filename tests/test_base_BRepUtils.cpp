@@ -7,12 +7,19 @@
 
 #include "../src/base/brep_utils.h"
 #include "../src/base/mesh_utils.h"
+#include "../src/base/occ_brep_mesh_parameters.h"
 
+#include <BRep_Tool.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <Poly_Polygon3D.hxx>
 #include <Poly_Triangulation.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopLoc_Location.hxx>
+#include <TopoDS.hxx>
+
+#include <gp.hxx>
 
 namespace Mayo {
 
@@ -272,6 +279,39 @@ void TestBase::BRepUtils_anySubShape_shapeType_test()
         BRepUtils::anySubShape(shape, TopAbs_EDGE, [](TopoDS_Shape shape) { return shape.ShapeType() == TopAbs_EDGE; }),
         true
     );
+}
+
+void TestBase::BRepUtils_computeMesh_test()
+{
+    const TopoDS_Shape box = BRepPrimAPI_MakeBox(10., 20., 30.).Shape();
+    const OccBRepMeshParameters params{};
+    BRepUtils::computeMesh(box, params);
+
+    int meshedFaceCount = 0;
+    int triangleCount = 0;
+    for (TopExp_Explorer explorer(box, TopAbs_FACE); explorer.More(); explorer.Next()) {
+        TopLoc_Location location;
+        const auto triangulation = BRep_Tool::Triangulation(TopoDS::Face(explorer.Current()), location);
+        if (!triangulation.IsNull()) {
+            ++meshedFaceCount;
+            triangleCount += triangulation->NbTriangles();
+        }
+    }
+
+    QCOMPARE(meshedFaceCount, 6);
+    QVERIFY(triangleCount > 0);
+}
+
+void TestBase::BRepUtils_computeMesh_withoutEdgesOrFaces_test()
+{
+    const OccBRepMeshParameters params{};
+
+    // An empty shape has nothing to mesh
+    BRepUtils::computeMesh(TopoDS_Shape{}, params);
+
+    // A vertex-only shape must be skipped by the mesher
+    const TopoDS_Shape vertex = BRepBuilderAPI_MakeVertex(gp::Origin()).Shape();
+    BRepUtils::computeMesh(vertex, params);
 }
 
 } // namespace Mayo

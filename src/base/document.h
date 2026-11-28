@@ -48,7 +48,7 @@ public:
     TDF_Label rootLabel() const;
 
     int entityCount() const;
-    bool isEntity(TreeNodeId nodeId);
+    bool isEntity(TreeNodeId nodeId) const;
     gsl::span<const TreeNodeId> allEntityNodeIds() const;
     TreeNodeId firstEntityNodeId() const;
     TDF_Label  firstEntityNodeLabel() const;

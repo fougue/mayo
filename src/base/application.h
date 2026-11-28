@@ -33,8 +33,8 @@ public:
         int currentIndex() const { return m_currentIndex; }
     private:
         bool skipForeignDocuments();
-        const Application* m_app = nullptr;
-        int m_currentIndex = -1;
+        const Application* m_app{nullptr};
+        int m_currentIndex{-1};
     };
 
     int documentCount() const;

@@ -83,7 +83,7 @@ TDF_Label Document::rootLabel() const
     return this->GetData()->Root();
 }
 
-bool Document::isEntity(TreeNodeId nodeId)
+bool Document::isEntity(TreeNodeId nodeId) const
 {
     return m_modelTree.nodeIsRoot(nodeId);
 }
@@ -127,7 +127,7 @@ void Document::rebuildModelTree()
     for (TDF_ChildIterator it(this->rootLabel(), !allLevels); it.More(); it.Next()) {
         const TDF_Label childLabel = it.Value();
         if (!CafUtils::isNullOrEmpty(childLabel)
-                && (xcafIsNull || childLabel != this->Main())) // Not XCAF Main label
+            && (xcafIsNull || childLabel != this->Main())) // Not XCAF Main label
         {
             m_modelTree.appendChild(0, childLabel);
         }
