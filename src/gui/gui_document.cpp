@@ -311,6 +311,7 @@ CheckState GuiDocument::nodeVisibleState(TreeNodeId nodeId) const
 
 void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
 {
+    const VisibilityChange visibilityChange(this);
     auto itNode = m_mapTreeNodeCheckState.find(nodeId);
     if (itNode == m_mapTreeNodeCheckState.end())
         return; // Error: unknown tree node
@@ -342,31 +343,8 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
         GraphicsUtils::AisObject_setVisible(gfxObject, on);
     });
 
-    // Keep selection state of the input node: in case the node graphics are "shown" back again then
-    // AIS object selection status is lost
-    const ApplicationItem appItem({ m_document, nodeId });
-    bool isAppItemSelected = m_guiApp->selectionModel()->isSelected(appItem);
-    if (!isAppItemSelected) { // Check if a parent is selected
-        TreeNodeId parentId = docModelTree.nodeParent(nodeId);
-        while (parentId != 0 && !isAppItemSelected) {
-            const ApplicationItem parentAppItem({ m_document, parentId });
-            isAppItemSelected = m_guiApp->selectionModel()->isSelected(parentAppItem);
-            parentId = docModelTree.nodeParent(parentId);
-        }
-    }
-
-    if (on && isAppItemSelected)
-        this->setNodeSelected(nodeId, true);
-
-    // Keep selection state of input node children
-    traverseTree(nodeId, docModelTree, [=](TreeNodeId childNodeId) {
-        if (childNodeId != nodeId) {
-            const ApplicationItem childAppItem({ m_document, childNodeId });
-            const bool isChildNodeSelected = m_guiApp->selectionModel()->isSelected(childAppItem);
-            if (on && isChildNodeSelected)
-                this->setNodeSelected(childNodeId, true);
-        }
-    });
+    if (on)
+        this->restoreNodeSelection(nodeId);
 
     // Parent nodes check state
     TreeNodeId parentId = docModelTree.nodeParent(nodeId);
@@ -395,6 +373,213 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     // Notify all node visibility changes
     if (!mapNodeIdVisibleState.empty())
         this->signalNodesVisibilityChanged.send(mapNodeIdVisibleState);
+}
+
+GuiDocument::VisibilityChange::VisibilityChange(GuiDocument* guiDoc)
+    : m_guiDoc(guiDoc)
+{
+    if (m_guiDoc)
+        m_guiDoc->beginVisibilityChange();
+}
+
+GuiDocument::VisibilityChange::~VisibilityChange()
+{
+    if (m_guiDoc)
+        m_guiDoc->endVisibilityChange();
+}
+
+void GuiDocument::beginVisibilityChange()
+{
+    if (m_visibilityChangeSuspended)
+        return;
+
+    if (m_visibilityChangeDepth == 0)
+        m_visibilityBeforeChange = m_mapTreeNodeCheckState;
+
+    ++m_visibilityChangeDepth;
+}
+
+void GuiDocument::endVisibilityChange()
+{
+    if (m_visibilityChangeSuspended || m_visibilityChangeDepth == 0)
+        return;
+
+    --m_visibilityChangeDepth;
+    if (m_visibilityChangeDepth > 0)
+        return;
+
+    VisibilityChangeRecord record;
+    for (const auto& [nodeId, state] : m_mapTreeNodeCheckState) {
+        const auto itBefore = m_visibilityBeforeChange.find(nodeId);
+        const CheckState stateBefore = itBefore != m_visibilityBeforeChange.cend() ? itBefore->second : CheckState::Off;
+        if (itBefore == m_visibilityBeforeChange.cend() || stateBefore != state) {
+            record.before.insert({ nodeId, stateBefore });
+            record.after.insert({ nodeId, state });
+        }
+    }
+
+    for (const auto& [nodeId, state] : m_visibilityBeforeChange) {
+        if (m_mapTreeNodeCheckState.find(nodeId) == m_mapTreeNodeCheckState.cend()) {
+            record.before.insert({ nodeId, state });
+            record.after.insert({ nodeId, CheckState::Off });
+        }
+    }
+
+    m_visibilityBeforeChange.clear();
+    if (record.before.empty())
+        return;
+
+    m_redoVisibilityChanges.clear();
+    m_undoVisibilityChanges.push_back(std::move(record));
+    constexpr size_t maxVisibilityChangeCount = 100;
+    if (m_undoVisibilityChanges.size() > maxVisibilityChangeCount)
+        m_undoVisibilityChanges.erase(m_undoVisibilityChanges.begin());
+
+    this->signalVisibilityHistoryChanged.send();
+}
+
+void GuiDocument::restoreNodeSelection(TreeNodeId nodeId)
+{
+    const Tree<TDF_Label>& docModelTree = m_document->modelTree();
+    const ApplicationItem appItem({ m_document, nodeId });
+    bool isAppItemSelected = m_guiApp->selectionModel()->isSelected(appItem);
+    if (!isAppItemSelected) {
+        TreeNodeId parentId = docModelTree.nodeParent(nodeId);
+        while (parentId != 0 && !isAppItemSelected) {
+            const ApplicationItem parentAppItem({ m_document, parentId });
+            isAppItemSelected = m_guiApp->selectionModel()->isSelected(parentAppItem);
+            parentId = docModelTree.nodeParent(parentId);
+        }
+    }
+
+    if (isAppItemSelected)
+        this->setNodeSelected(nodeId, true);
+
+    traverseTree(nodeId, docModelTree, [=](TreeNodeId childNodeId) {
+        if (childNodeId == nodeId)
+            return;
+
+        const ApplicationItem childAppItem({ m_document, childNodeId });
+        if (m_guiApp->selectionModel()->isSelected(childAppItem))
+            this->setNodeSelected(childNodeId, true);
+    });
+}
+
+GraphicsObjectPtr GuiDocument::graphicsObject(TreeNodeId nodeId) const
+{
+    const GraphicsEntity* gfxEntity = this->findGraphicsEntity(m_document->modelTree().nodeRoot(nodeId));
+    if (!gfxEntity)
+        return {};
+
+    return CppUtils::findValue(nodeId, gfxEntity->mapTreeNodeGfxObject);
+}
+
+void GuiDocument::applyVisibilityStates(const MapVisibilityByTreeNodeId& states)
+{
+    m_visibilityChangeSuspended = true;
+    MapVisibilityByTreeNodeId applied;
+    for (const auto& [nodeId, state] : states) {
+        auto itNode = m_mapTreeNodeCheckState.find(nodeId);
+        if (itNode == m_mapTreeNodeCheckState.end() || itNode->second == state)
+            continue;
+
+        itNode->second = state;
+        applied.insert({ nodeId, state });
+        if (state == CheckState::Partially)
+            continue;
+
+        const GraphicsObjectPtr gfxObject = this->graphicsObject(nodeId);
+        if (gfxObject)
+            GraphicsUtils::AisObject_setVisible(gfxObject, state == CheckState::On);
+    }
+
+    for (const auto& [nodeId, state] : applied) {
+        if (state == CheckState::On)
+            this->restoreNodeSelection(nodeId);
+    }
+
+    m_visibilityChangeSuspended = false;
+    if (!applied.empty())
+        this->signalNodesVisibilityChanged.send(applied);
+}
+
+bool GuiDocument::canUndoVisibilityChange() const
+{
+    return !m_undoVisibilityChanges.empty();
+}
+
+bool GuiDocument::canRedoVisibilityChange() const
+{
+    return !m_redoVisibilityChanges.empty();
+}
+
+void GuiDocument::undoVisibilityChange()
+{
+    if (!this->canUndoVisibilityChange())
+        return;
+
+    const VisibilityChangeRecord record = std::move(m_undoVisibilityChanges.back());
+    m_undoVisibilityChanges.pop_back();
+    this->applyVisibilityStates(record.before);
+    m_redoVisibilityChanges.push_back(record);
+    this->signalVisibilityHistoryChanged.send();
+    m_gfxScene.redraw();
+}
+
+void GuiDocument::redoVisibilityChange()
+{
+    if (!this->canRedoVisibilityChange())
+        return;
+
+    const VisibilityChangeRecord record = std::move(m_redoVisibilityChanges.back());
+    m_redoVisibilityChanges.pop_back();
+    this->applyVisibilityStates(record.after);
+    m_undoVisibilityChanges.push_back(record);
+    this->signalVisibilityHistoryChanged.send();
+    m_gfxScene.redraw();
+}
+
+std::vector<TreeNodeId> GuiDocument::selectedNodeIds() const
+{
+    std::vector<TreeNodeId> nodeIds;
+    for (const ApplicationItem& item : m_guiApp->selectionModel()->selectedItems()) {
+        if (item.isDocumentTreeNode() && item.document() == m_document)
+            nodeIds.push_back(item.documentTreeNode().id());
+    }
+
+    return nodeIds;
+}
+
+void GuiDocument::hideNodes(gsl::span<const TreeNodeId> nodeIds)
+{
+    const VisibilityChange visibilityChange(this);
+    for (TreeNodeId nodeId : nodeIds)
+        this->setNodeVisible(nodeId, false);
+
+    m_gfxScene.redraw();
+}
+
+void GuiDocument::showOnlyNodes(gsl::span<const TreeNodeId> nodeIds)
+{
+    const VisibilityChange visibilityChange(this);
+    for (TreeNodeId nodeId : m_document->allEntityNodeIds())
+        this->setNodeVisible(nodeId, false);
+
+    for (TreeNodeId nodeId : nodeIds)
+        this->setNodeVisible(nodeId, true);
+
+    m_gfxScene.redraw();
+}
+
+void GuiDocument::clearVisibilityHistory()
+{
+    if (m_undoVisibilityChanges.empty() && m_redoVisibilityChanges.empty())
+        return;
+
+    m_undoVisibilityChanges.clear();
+    m_redoVisibilityChanges.clear();
+    m_visibilityBeforeChange.clear();
+    this->signalVisibilityHistoryChanged.send();
 }
 
 void GuiDocument::setExplodingFactor(double t)
@@ -579,6 +764,7 @@ void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
 {
     this->unmapEntity(entityTreeNodeId);
+    this->clearVisibilityHistory();
     // Recompute bounding box
     m_gfxBoundingBox.SetVoid();
     for (const GraphicsEntity& gfxEntity : m_vecGraphicsEntity)

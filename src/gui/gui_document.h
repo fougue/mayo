@@ -13,6 +13,8 @@
 #include "../graphics/graphics_view_ptr.h"
 #include "v3d_view_camera_animation.h"
 
+#include <gsl/span>
+
 #include <Aspect_TypeOfTriedronPosition.hxx>
 #include <Bnd_Box.hxx>
 #include <V3d_View.hxx>
@@ -94,6 +96,28 @@ public:
     CheckState nodeVisibleState(TreeNodeId nodeId) const;
     void setNodeVisible(TreeNodeId nodeId, bool on);
 
+    // Groups nested setNodeVisible() calls into one undo step
+    class VisibilityChange {
+    public:
+        explicit VisibilityChange(GuiDocument* guiDoc);
+        ~VisibilityChange();
+
+        VisibilityChange(const VisibilityChange&) = delete;
+        VisibilityChange& operator=(const VisibilityChange&) = delete;
+
+    private:
+        GuiDocument* m_guiDoc = nullptr;
+    };
+
+    bool canUndoVisibilityChange() const;
+    bool canRedoVisibilityChange() const;
+    void undoVisibilityChange();
+    void redoVisibilityChange();
+
+    std::vector<TreeNodeId> selectedNodeIds() const;
+    void hideNodes(gsl::span<const TreeNodeId> nodeIds);
+    void showOnlyNodes(gsl::span<const TreeNodeId> nodeIds);
+
     // -- Exploding
     double explodingFactor() const { return m_explodingFactor; }
     void setExplodingFactor(double t); // Must be in [0,1]
@@ -149,6 +173,7 @@ public:
     // Signals
     using MapVisibilityByTreeNodeId = std::unordered_map<TreeNodeId, CheckState>;
     mutable Signal<const MapVisibilityByTreeNodeId&> signalNodesVisibilityChanged;
+    mutable Signal<> signalVisibilityHistoryChanged;
     mutable Signal<const Bnd_Box&> signalGraphicsBoundingBoxChanged;
     mutable Signal<ViewTrihedronMode> signalViewTrihedronModeChanged;
     mutable Signal<Aspect_TypeOfTriedronPosition> signalViewTrihedronCornerChanged;
@@ -163,6 +188,24 @@ private:
     // Maps an entity tree and its leaf nodes to graphics objects
     void mapEntity(TreeNodeId entityTreeNodeId);
     void unmapEntity(TreeNodeId entityTreeNodeId);
+
+    void beginVisibilityChange();
+    void endVisibilityChange();
+    void restoreNodeSelection(TreeNodeId nodeId);
+    GraphicsObjectPtr graphicsObject(TreeNodeId nodeId) const;
+    void applyVisibilityStates(const MapVisibilityByTreeNodeId& states);
+    void clearVisibilityHistory();
+
+    struct VisibilityChangeRecord {
+        MapVisibilityByTreeNodeId before;
+        MapVisibilityByTreeNodeId after;
+    };
+
+    std::vector<VisibilityChangeRecord> m_undoVisibilityChanges;
+    std::vector<VisibilityChangeRecord> m_redoVisibilityChanges;
+    MapVisibilityByTreeNodeId m_visibilityBeforeChange;
+    int m_visibilityChangeDepth = 0;
+    bool m_visibilityChangeSuspended = false;
 
     struct GraphicsEntity {
         struct Object {

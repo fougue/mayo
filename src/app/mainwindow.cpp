@@ -129,6 +129,10 @@ void MainWindow::createCommands()
     this->addCommand<CommandZoomOutCurrentDocument>();
     this->addCommand<CommandTurnViewCounterClockWise>();
     this->addCommand<CommandTurnViewClockWise>();
+    this->addCommand<CommandHideSelection>();
+    this->addCommand<CommandShowOnlySelection>();
+    this->addCommand<CommandUndoVisibilityChange>();
+    this->addCommand<CommandRedoVisibilityChange>();
 
     // "Tools" commands
     this->addCommand<CommandSaveViewImage>();
@@ -184,6 +188,12 @@ void MainWindow::createMenus()
         fnAddAction(menu, CommandZoomOutCurrentDocument::Name);
         fnAddAction(menu, CommandTurnViewCounterClockWise::Name);
         fnAddAction(menu, CommandTurnViewClockWise::Name);
+        menu->addSeparator();
+        fnAddAction(menu, CommandHideSelection::Name);
+        fnAddAction(menu, CommandShowOnlySelection::Name);
+        menu->addSeparator();
+        fnAddAction(menu, CommandUndoVisibilityChange::Name);
+        fnAddAction(menu, CommandRedoVisibilityChange::Name);
     }
 
     {   // Tools
@@ -223,6 +233,8 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
 
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
+    guiDoc->signalVisibilityHistoryChanged.connectSlot(&MainWindow::updateControlsActivation, this);
+
     auto gfxScene = guiDoc->graphicsScene();
     // Configure highlighting aspect
     auto fnConfigureHighlightStyle = [=](Prs3d_Drawer* drawer) {

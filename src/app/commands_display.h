@@ -7,6 +7,7 @@
 
 #include "commands_api.h"
 
+#include <QKeySequence>
 #include <string_view>
 
 class QMenu;
@@ -97,5 +98,44 @@ public:
 
     static constexpr std::string_view Name = "current-doc-turn-view-cw";
 };
+
+class CommandHideSelection : public BaseCommandDisplay {
+public:
+    explicit CommandHideSelection(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "hide-selection";
+};
+
+class CommandShowOnlySelection : public BaseCommandDisplay {
+public:
+    explicit CommandShowOnlySelection(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "show-only-selection";
+};
+
+class CommandUndoVisibilityChange : public BaseCommandDisplay {
+public:
+    explicit CommandUndoVisibilityChange(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "undo-visibility-change";
+};
+
+class CommandRedoVisibilityChange : public BaseCommandDisplay {
+public:
+    explicit CommandRedoVisibilityChange(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "redo-visibility-change";
+};
+
+QKeySequence hideSelectionShortcut();
+QKeySequence showOnlySelectionShortcut();
 
 } // namespace Mayo
